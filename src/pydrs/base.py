@@ -21,8 +21,29 @@ from .utils import (
     uint32_to_hex,
 )
 
+from .consts import (
+    COM_FUNCTION,
+    COM_READ_VAR,
+    COM_REQUEST_CURVE,
+    COM_SEND_WFM_REF,
+    COM_WRITE_VAR,
+    NUM_MAX_COEFFS_DSP,
+    UDC_FIRMWARE_VERSION,
+    DP_MODULE_MAX_COEFF,
+    WRITE_DOUBLE_SIZE_PAYLOAD,
+    WRITE_FLOAT_SIZE_PAYLOAD,
+    type_size,
+    type_format,
+    size_curve_block,
+    num_coeffs_dsp_modules,
+    num_dsp_modules,
+    dsp_classes_names,
+    num_blocks_curves_fax,
+    num_blocks_curves_fbp,
+)
+
 # common_list
-from .constants.common_list import (
+from .consts.common_list import (
     list_ps_models,
     list_common_vars,
     list_curv,
@@ -33,14 +54,14 @@ from .constants.common_list import (
 )
 
 # fbp_const_list
-from .constants.fbp_const_list import (
+from .consts.fbp_const_list import (
     list_fbp_soft_interlocks,
     list_fbp_hard_interlocks,
     list_fbp_dclink_hard_interlocks,
 )
 
 # fac_const_list
-from .constants.fac_const_list import (
+from .consts.fac_const_list import (
     list_fac_acdc_soft_interlocks,
     list_fac_acdc_hard_interlocks,
     list_fac_acdc_iib_is_interlocks,
@@ -76,7 +97,7 @@ from .constants.fac_const_list import (
 )
 
 # fap_const_list
-from .constants.fap_const_list import (
+from .consts.fap_const_list import (
     list_fap_soft_interlocks,
     list_fap_hard_interlocks,
     list_fap_iib_interlocks,
@@ -91,88 +112,12 @@ from .constants.fap_const_list import (
     list_fap_225A_hard_interlocks,
 )
 
-UDC_FIRMWARE_VERSION = "0.42 2021-05-06"
-
-type_format = {
-    "uint8_t": "BBHBB",
-    "uint16_t": "BBHHB",
-    "uint32_t": "BBHIB",
-    "float": "BBHfB",
-}
-
-bytes_format = {"Uint16": "H", "Uint32": "L", "Uint64": "Q", "float": "f"}
-
-type_size = {"uint8_t": 6, "uint16_t": 7, "uint32_t": 9, "float": 9}
-
-num_blocks_curves_fbp = [4, 4, 4]
-num_blocks_curves_fax = [16, 16, 16]
-size_curve_block = [1024, 1024, 1024]
-
-ufm_offset = {
-    "serial": 0,
-    "calibdate": 4,
-    "variant": 9,
-    "rburden": 10,
-    "calibtemp": 12,
-    "vin_gain": 14,
-    "vin_offset": 16,
-    "iin_gain": 18,
-    "iin_offset": 20,
-    "vref_p": 22,
-    "vref_n": 24,
-    "gnd": 26,
-}
-
-hradc_variant = [
-    "HRADC-FBP",
-    "HRADC-FAX-A",
-    "HRADC-FAX-B",
-    "HRADC-FAX-C",
-    "HRADC-FAX-D",
-]
-
-hradc_input_types = [
-    "GND",
-    "Vref_bipolar_p",
-    "Vref_bipolar_n",
-    "Temp",
-    "Vin_bipolar_p",
-    "Vin_bipolar_n",
-    "Iin_bipolar_p",
-    "Iin_bipolar_n",
-]
-
-NUM_MAX_COEFFS_DSP = 12
-num_dsp_classes = 7
-num_dsp_modules = [4, 4, 4, 6, 8, 4, 2, 2]
-num_coeffs_dsp_modules = [0, 1, 1, 4, 8, 16, 2]
-dsp_classes_names = [
-    "DSP_Error",
-    "DSP_SRLim",
-    "DSP_LPF",
-    "DSP_PI",
-    "DSP_IIR_2P2Z",
-    "DSP_IIR_3P3Z",
-    "DSP_VdcLink_FeedForward",
-    "DSP_Vect_Product",
-]
-
 logger = get_logger(name=__file__)
 
 
 class BaseDRS(object):
     def __init__(self):
-        self.master_add = "\x00"
         self.slave_add = "\x01"
-        self.b_cast_add = "\xFF"
-        self.com_write_var = "\x20"
-        self.write_float_size_payload = "\x00\x05"
-        self.write_double_size_payload = "\x00\x03"
-        self.com_read_var = "\x10\x00\x01"
-        self.com_request_curve = "\x40"
-        self.com_send_wfm_ref = "\x41"
-        self.com_function = "\x50"
-        self.dp_module_max_coeff = 16
 
         print(
             "\n pyDRS - compatible UDC firmware version: " + UDC_FIRMWARE_VERSION + "\n"
@@ -223,7 +168,7 @@ class BaseDRS(object):
     # Função de leitura de variável
     def read_var(self, var_id: str, size: int):
         self._reset_input_buffer()
-        return self._transfer(self.com_read_var + var_id, size)
+        return self._transfer(COM_READ_VAR + var_id, size)
 
     """
     ======================================================================
@@ -235,32 +180,28 @@ class BaseDRS(object):
     def turn_on(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function + payload_size + index_to_hex(list_func.index("turn_on"))
+            COM_FUNCTION + payload_size + index_to_hex(list_func.index("turn_on"))
         )
         return self._transfer(send_packet, 6)
 
     def turn_off(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function + payload_size + index_to_hex(list_func.index("turn_off"))
+            COM_FUNCTION + payload_size + index_to_hex(list_func.index("turn_off"))
         )
         return self._transfer(send_packet, 6)
 
     def open_loop(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
-            + payload_size
-            + index_to_hex(list_func.index("open_loop"))
+            COM_FUNCTION + payload_size + index_to_hex(list_func.index("open_loop"))
         )
         return self._transfer(send_packet, 6)
 
     def closed_loop(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
-            + payload_size
-            + index_to_hex(list_func.index("closed_loop"))
+            COM_FUNCTION + payload_size + index_to_hex(list_func.index("closed_loop"))
         )
         return self._transfer(send_packet, 6)
 
@@ -268,7 +209,7 @@ class BaseDRS(object):
         """Resets interlocks on connected DRS device"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("reset_interlocks"))
         )
@@ -311,7 +252,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_slowref"))
             + hex_setpoint
@@ -325,7 +266,7 @@ class BaseDRS(object):
         hex_iRef3 = float_to_hex(iRef3)
         hex_iRef4 = float_to_hex(iRef4)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_slowref_fbp"))
             + hex_iRef1
@@ -339,7 +280,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_slowref_readback_mon"))
             + hex_setpoint
@@ -355,7 +296,7 @@ class BaseDRS(object):
         hex_iRef3 = float_to_hex(iRef3)
         hex_iRef4 = float_to_hex(iRef4)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_slowref_fbp_readback_mon"))
             + hex_iRef1
@@ -374,7 +315,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_slowref_readback_ref"))
             + hex_setpoint
@@ -390,7 +331,7 @@ class BaseDRS(object):
         hex_iRef3 = float_to_hex(iRef3)
         hex_iRef4 = float_to_hex(iRef4)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_slowref_fbp_readback_ref"))
             + hex_iRef1
@@ -417,7 +358,7 @@ class BaseDRS(object):
         hex_n = double_to_hex(n)
         hex_value = float_to_hex(value)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_param"))
             + hex_id
@@ -440,7 +381,7 @@ class BaseDRS(object):
             hex_id = double_to_hex(param_id)
         hex_n = double_to_hex(n)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("get_param"))
             + hex_id
@@ -466,7 +407,7 @@ class BaseDRS(object):
         hex_n = double_to_hex(n)
         hex_type = double_to_hex(type_memory)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("save_param_eeprom"))
             + hex_id
@@ -489,7 +430,7 @@ class BaseDRS(object):
         hex_n = double_to_hex(n)
         hex_type = double_to_hex(type_memory)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("load_param_eeprom"))
             + hex_id
@@ -505,7 +446,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("save_param_bank"))
             + hex_type
@@ -516,7 +457,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("load_param_bank"))
             + hex_type
@@ -605,7 +546,7 @@ class BaseDRS(object):
         hex_dsp_id = double_to_hex(dsp_id)
         hex_coeffs = self.float_list_to_hex(coeffs_list_full)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_dsp_coeffs"))
             + hex_dsp_class
@@ -620,7 +561,7 @@ class BaseDRS(object):
         hex_dsp_id = double_to_hex(dsp_id)
         hex_coeff = double_to_hex(coeff)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("get_dsp_coeff"))
             + hex_dsp_class
@@ -639,7 +580,7 @@ class BaseDRS(object):
         hex_dsp_id = double_to_hex(dsp_id)
         hex_type = double_to_hex(type_memory)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("save_dsp_coeffs_eeprom"))
             + hex_dsp_class
@@ -654,7 +595,7 @@ class BaseDRS(object):
         hex_dsp_id = double_to_hex(dsp_id)
         hex_type = double_to_hex(type_memory)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("load_dsp_coeffs_eeprom"))
             + hex_dsp_class
@@ -667,7 +608,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("save_dsp_modules_eeprom"))
             + hex_type
@@ -678,7 +619,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("load_dsp_modules_eeprom"))
             + hex_type
@@ -692,15 +633,13 @@ class BaseDRS(object):
         if reply == "Y" or reply == "y":
             payload_size = size_to_hex(1)  # Payload: ID
             send_packet = (
-                self.com_function
-                + payload_size
-                + index_to_hex(list_func.index("reset_udc"))
+                COM_FUNCTION + payload_size + index_to_hex(list_func.index("reset_udc"))
             )
             self._transfer_write(send_packet)
 
     def run_bsmp_func(self, id_func, print_msg=0) -> bytes:
         payload_size = size_to_hex(1)  # Payload: ID
-        send_packet = self.com_function + payload_size + index_to_hex(id_func)
+        send_packet = COM_FUNCTION + payload_size + index_to_hex(id_func)
         reply_msg = self._transfer(send_packet, 6)
         if print_msg:
             print(reply_msg)
@@ -726,7 +665,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 4)  # Payload: ID + p_source
         hex_op_mode = uint32_to_hex(p_source)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("cfg_source_scope"))
             + hex_op_mode
@@ -737,7 +676,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 4)  # Payload: ID + freq
         hex_op_mode = float_to_hex(freq)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("cfg_freq_scope"))
             + hex_op_mode
@@ -748,7 +687,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 4)  # Payload: ID + duration
         hex_op_mode = float_to_hex(duration)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("cfg_duration_scope"))
             + hex_op_mode
@@ -758,18 +697,14 @@ class BaseDRS(object):
     def enable_scope(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
-            + payload_size
-            + index_to_hex(list_func.index("enable_scope"))
+            COM_FUNCTION + payload_size + index_to_hex(list_func.index("enable_scope"))
         )
         return self._transfer(send_packet, 6)
 
     def disable_scope(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
-            + payload_size
-            + index_to_hex(list_func.index("disable_scope"))
+            COM_FUNCTION + payload_size + index_to_hex(list_func.index("disable_scope"))
         )
         return self._transfer(send_packet, 6)
 
@@ -784,9 +719,7 @@ class BaseDRS(object):
     def sync_pulse(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
-            + payload_size
-            + index_to_hex(list_func.index("sync_pulse"))
+            COM_FUNCTION + payload_size + index_to_hex(list_func.index("sync_pulse"))
         )
         return self._transfer(send_packet, 6)
 
@@ -794,7 +727,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_op_mode = double_to_hex(list_op_mode.index(op_mode))
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("select_op_mode"))
             + hex_op_mode
@@ -805,7 +738,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_enable = double_to_hex(term_enable)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_serial_termination"))
             + hex_enable
@@ -816,7 +749,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_interface = double_to_hex(interface)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_command_interface"))
             + hex_interface
@@ -827,7 +760,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("unlock_udc"))
             + hex_password
@@ -838,7 +771,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("lock_udc"))
             + hex_password
@@ -848,7 +781,7 @@ class BaseDRS(object):
     def reset_counters(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("reset_counters"))
         )
@@ -868,7 +801,7 @@ class BaseDRS(object):
         hex_aux2 = float_to_hex(aux2)
         hex_aux3 = float_to_hex(aux3)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("cfg_siggen"))
             + hex_sig_type
@@ -889,7 +822,7 @@ class BaseDRS(object):
         hex_amplitude = float_to_hex(amplitude)
         hex_offset = float_to_hex(offset)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("set_siggen"))
             + hex_freq
@@ -901,16 +834,14 @@ class BaseDRS(object):
     def enable_siggen(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
-            + payload_size
-            + index_to_hex(list_func.index("enable_siggen"))
+            COM_FUNCTION + payload_size + index_to_hex(list_func.index("enable_siggen"))
         )
         return self._transfer(send_packet, 6)
 
     def disable_siggen(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("disable_siggen"))
         )
@@ -926,7 +857,7 @@ class BaseDRS(object):
         hex_gain = float_to_hex(gain)
         hex_offset = float_to_hex(offset)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("cfg_wfmref"))
             + hex_idx
@@ -941,7 +872,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2)  # Payload: ID + idx
         hex_idx = double_to_hex(idx)
         send_packet = (
-            self.com_function
+            COM_FUNCTION
             + payload_size
             + index_to_hex(list_func.index("select_wfmref"))
             + hex_idx
@@ -951,9 +882,7 @@ class BaseDRS(object):
     def reset_wfmref(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            self.com_function
-            + payload_size
-            + index_to_hex(list_func.index("reset_wfmref"))
+            COM_FUNCTION + payload_size + index_to_hex(list_func.index("reset_wfmref"))
         )
         return self._transfer(send_packet, 6)
 
@@ -1055,8 +984,8 @@ class BaseDRS(object):
         # TODO: Fix method name
         hex_float = float_to_hex(float_value)
         send_packet = (
-            self.com_write_var
-            + self.write_float_size_payload
+            COM_WRITE_VAR
+            + WRITE_FLOAT_SIZE_PAYLOAD
             + index_to_hex(list_common_vars.index("sigGen_Freq"))
             + hex_float
         )
@@ -1066,8 +995,8 @@ class BaseDRS(object):
         # TODO: Fix method name
         hex_float = float_to_hex(float_value)
         send_packet = (
-            self.com_write_var
-            + self.write_float_size_payload
+            COM_WRITE_VAR
+            + WRITE_FLOAT_SIZE_PAYLOAD
             + index_to_hex(list_common_vars.index("sigGen_Amplitude"))
             + hex_float
         )
@@ -1077,8 +1006,8 @@ class BaseDRS(object):
         # TODO: Fix method name
         hex_float = float_to_hex(float_value)
         send_packet = (
-            self.com_write_var
-            + self.write_float_size_payload
+            COM_WRITE_VAR
+            + WRITE_FLOAT_SIZE_PAYLOAD
             + index_to_hex(list_common_vars.index("sigGen_Offset"))
             + hex_float
         )
@@ -1088,8 +1017,8 @@ class BaseDRS(object):
         # TODO: Fix method name
         hex_float = float_to_hex(float_value)
         send_packet = (
-            self.com_write_var
-            + self.write_float_size_payload
+            COM_WRITE_VAR
+            + WRITE_FLOAT_SIZE_PAYLOAD
             + index_to_hex(list_common_vars.index("sigGen_Aux"))
             + hex_float
         )
@@ -1099,8 +1028,8 @@ class BaseDRS(object):
         # TODO: Fix method name
         hex_double = double_to_hex(double_value)
         send_packet = (
-            self.com_write_var
-            + self.write_double_size_payload
+            COM_WRITE_VAR
+            + WRITE_DOUBLE_SIZE_PAYLOAD
             + index_to_hex(list_common_vars.index("dp_ID"))
             + hex_double
         )
@@ -1110,8 +1039,8 @@ class BaseDRS(object):
         # TODO: Fix method name
         hex_double = double_to_hex(double_value)
         send_packet = (
-            self.com_write_var
-            + self.write_double_size_payload
+            COM_WRITE_VAR
+            + WRITE_DOUBLE_SIZE_PAYLOAD
             + index_to_hex(list_common_vars.index("dp_Class"))
             + hex_double
         )
@@ -1125,7 +1054,7 @@ class BaseDRS(object):
         # while(len(list_full) < self.dp_module_max_coeff):
         #    list_full.append(0)
 
-        list_full = [0 for i in range(self.dp_module_max_coeff)]
+        list_full = [0 for i in range(DP_MODULE_MAX_COEFF)]
         list_full[: len(list_float)] = list_float[:]
 
         for float_value in list_full:
@@ -1133,10 +1062,10 @@ class BaseDRS(object):
             hex_float_list.append(hex_float)
         str_float_list = "".join(hex_float_list)
         payload_size = size_to_hex(
-            1 + 4 * self.dp_module_max_coeff
+            1 + 4 * DP_MODULE_MAX_COEFF
         )  # Payload: ID + 16floats
         send_packet = (
-            self.com_write_var
+            COM_WRITE_VAR
             + payload_size
             + index_to_hex(list_common_vars.index("dp_Coeffs"))
             + str_float_list
@@ -1158,7 +1087,7 @@ class BaseDRS(object):
         payload_size = struct.pack(">H", (len(val) * 4) + 3).decode("ISO-8859-1")
         curva_hex = "".join(val)
         send_packet = (
-            self.com_send_wfm_ref
+            COM_SEND_WFM_REF
             + payload_size
             + index_to_hex(list_curv.index("wfmRef_Curve"))
             + block_hex
@@ -1170,7 +1099,7 @@ class BaseDRS(object):
         block_hex = struct.pack(">H", block_idx).decode("ISO-8859-1")
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
-            self.com_request_curve
+            COM_REQUEST_CURVE
             + payload_size
             + index_to_hex(list_curv.index("wfmRef_Curve"))
             + block_hex
@@ -1186,7 +1115,7 @@ class BaseDRS(object):
         block_hex = struct.pack(">H", 0).decode("ISO-8859-1")
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
-            self.com_request_curve
+            COM_REQUEST_CURVE
             + payload_size
             + index_to_hex(list_curv.index("samplesBuffer"))
             + block_hex
@@ -1209,7 +1138,7 @@ class BaseDRS(object):
         payload_size = struct.pack(">H", (len(val) * 4) + 3).decode("ISO-8859-1")
         curva_hex = "".join(val)
         send_packet = (
-            self.com_send_wfm_ref
+            COM_SEND_WFM_REF
             + payload_size
             + index_to_hex(list_curv.index("fullwfmRef_Curve"))
             + block_hex
@@ -1221,7 +1150,7 @@ class BaseDRS(object):
         block_hex = struct.pack(">H", block_idx).decode("ISO-8859-1")
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
-            self.com_request_curve
+            COM_REQUEST_CURVE
             + payload_size
             + index_to_hex(list_curv.index("fullwfmRef_Curve"))
             + block_hex
@@ -1236,7 +1165,7 @@ class BaseDRS(object):
         block_hex = struct.pack(">H", block_idx).decode("ISO-8859-1")
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
-            self.com_request_curve
+            COM_REQUEST_CURVE
             + payload_size
             + index_to_hex(list_curv.index("samplesBuffer_blocks"))
             + block_hex
@@ -1265,7 +1194,7 @@ class BaseDRS(object):
         block_hex = struct.pack(">H", block_id).decode("ISO-8859-1")
         payload_size = size_to_hex(1 + 2)  # Payload: curve_id + block_id
         send_packet = (
-            self.com_request_curve + payload_size + index_to_hex(curve_id) + block_hex
+            COM_REQUEST_CURVE + payload_size + index_to_hex(curve_id) + block_hex
         )
         # t0 = time.time()
         self._reset_input_buffer()
@@ -1288,7 +1217,7 @@ class BaseDRS(object):
         payload_size = struct.pack(">H", (len(val) * 4) + 3).decode("ISO-8859-1")
         curva_hex = "".join(val)
         send_packet = (
-            self.com_send_wfm_ref
+            COM_SEND_WFM_REF
             + payload_size
             + index_to_hex(curve_id)
             + block_hex

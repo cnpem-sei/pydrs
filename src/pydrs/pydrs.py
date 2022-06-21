@@ -94,7 +94,7 @@ class EthDRS(BaseDRS):
         data_size = self._parse_reply_size(self.socket.recv(5))
         payload = b""
 
-        if size is not None and data_size != size:
+        if size is not None and (data_size - 1) != size:
             raise RuntimeError(
                 "Received {} bytes when {} were expected".format(data_size, size)
             )
