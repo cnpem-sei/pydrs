@@ -4,6 +4,8 @@ import socket
 import struct
 import typing
 
+from .validation import validate
+
 from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST
 from .utils import checksum, get_logger
 import serial
@@ -28,6 +30,11 @@ class SerialDRS(BaseDRS):
     def _transfer_write(self, msg: str):
         full_msg = (self.slave_add + msg).encode("ISO-8859-1")
         self.ser.write(checksum(full_msg))
+
+    @validate
+    def _transfer(self, msg: str, size: int) -> bytes:
+        self._transfer_write(msg)
+        return self.ser.read(size)
 
     def _reset_input_buffer(self):
         self.ser.reset_input_buffer()
@@ -94,11 +101,6 @@ class EthDRS(BaseDRS):
         data_size = self._parse_reply_size(self.socket.recv(5))
         payload = b""
 
-        if size is not None and (data_size - 1) != size:
-            raise RuntimeError(
-                "Received {} bytes when {} were expected".format(data_size, size)
-            )
-
         for _ in range(int(data_size / 4096)):
             payload += self.socket.recv(4096, socket.MSG_WAITALL)
 
@@ -107,18 +109,20 @@ class EthDRS(BaseDRS):
         if payload[0] == ETH_ANSWER_ERR:
             raise TimeoutError("Server timed out waiting for serial response")
 
-        return payload[1:]
+        return (
+            payload[1:] if data_size > size else payload
+        )  # Support for eth-bridge 2.9.0 and 2.8.1
 
+    @validate
     def _transfer(self, msg: str, size: int) -> bytes:
         base_msg = (self.slave_add + msg).encode("ISO-8859-1")
         full_msg = self._format_message(checksum(base_msg), ETH_CMD_REQUEST)
         self.socket.sendall(full_msg)
-
         return self._get_reply(size)
 
     def _transfer_write(self, msg: str):
         base_msg = (self.slave_add + msg).encode("ISO-8859-1")
-        full_msg = self._format_message(checksum(base_msg), b"\x11")
+        full_msg = self._format_message(checksum(base_msg), ETH_CMD_REQUEST)
         self.socket.sendall(full_msg)
         self._get_reply()
 
