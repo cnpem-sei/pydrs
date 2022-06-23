@@ -48,21 +48,87 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.disable_onboard_eeprom">
+<span class="sig-name descname"><span class="pre">disable_onboard_eeprom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.disable_onboard_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disables onboard EEPROM</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.disable_scope">
+<span class="sig-name descname"><span class="pre">disable_scope</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.disable_scope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disables scope</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.disable_siggen">
+<span class="sig-name descname"><span class="pre">disable_siggen</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.disable_siggen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disables signal generator</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.disconnect">
 <span class="sig-name descname"><span class="pre">disconnect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.disconnect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Disconnects current communication bus</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.enable_onboard_eeprom">
+<span class="sig-name descname"><span class="pre">enable_onboard_eeprom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.enable_onboard_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables onboard EEPROM</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.enable_scope">
+<span class="sig-name descname"><span class="pre">enable_scope</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.enable_scope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables scope</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.enable_siggen">
+<span class="sig-name descname"><span class="pre">enable_siggen</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.enable_siggen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables signal generator</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.get_param">
+<span class="sig-name descname"><span class="pre">get_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.get_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameter</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.get_ps_name">
-<span class="sig-name descname"><span class="pre">get_ps_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.get_ps_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_ps_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.get_ps_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets power supply name</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.get_scope_vars">
+<span class="sig-name descname"><span class="pre">get_scope_vars</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.get_scope_vars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns scope variables</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.is_open">
 <span class="sig-name descname"><span class="pre">is_open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.is_open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether or not the current communication bus is open (or equivalent terminology)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.load_param_bank">
+<span class="sig-name descname"><span class="pre">load_param_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.load_param_bank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads all parameter values into param_data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.load_param_eeprom">
+<span class="sig-name descname"><span class="pre">load_param_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.load_param_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load parameter from EEPROM</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.lock_udc">
+<span class="sig-name descname"><span class="pre">lock_udc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">password</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.lock_udc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Locks UDC, disables password protected commands</p>
 </dd></dl>
 
 <dl class="py method">
@@ -84,9 +150,99 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.reset_udc">
+<span class="sig-name descname"><span class="pre">reset_udc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_udc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets UDC firmware</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.reset_wfmref">
+<span class="sig-name descname"><span class="pre">reset_wfmref</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_wfmref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets WfmRef, next sync pulse takes index back to the
+waveform’s start.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.save_param_bank">
+<span class="sig-name descname"><span class="pre">save_param_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.save_param_bank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures all paremeters according to values loaded
+into param_data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.save_param_eeprom">
+<span class="sig-name descname"><span class="pre">save_param_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.save_param_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save parameter to EEPROM</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.select_wfmref">
+<span class="sig-name descname"><span class="pre">select_wfmref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.select_wfmref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects index in current waveform, loads waveform into
+wfmref_data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_param">
+<span class="sig-name descname"><span class="pre">set_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set parameter</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_ps_name">
 <span class="sig-name descname"><span class="pre">set_ps_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.set_ps_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets power supply name</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_siggen">
+<span class="sig-name descname"><span class="pre">set_siggen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.set_siggen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates signal generator parameters in continuous operation.
+Amplitude and offset are updated instantaneously, frequency is
+updated on the next 1 second update cycle. <a href="#id1"><span class="problematic" id="id2">*</span></a>This function cannot be
+applied in trapezoidal mode.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref">
+<span class="sig-name descname"><span class="pre">set_slowref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">setpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets new slowref reference value</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref_fbp">
+<span class="sig-name descname"><span class="pre">set_slowref_fbp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iRef1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef4</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_fbp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets slowref reference value for FBP power supplies</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref_fbp_readback_mon">
+<span class="sig-name descname"><span class="pre">set_slowref_fbp_readback_mon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iRef1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef4</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_fbp_readback_mon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets slowref reference value for FBP power supplies and returns current readback</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref_fbp_readback_ref">
+<span class="sig-name descname"><span class="pre">set_slowref_fbp_readback_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iRef1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef4</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_fbp_readback_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets slowref reference value for FBP power supplies and returns reference current</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref_readback_mon">
+<span class="sig-name descname"><span class="pre">set_slowref_readback_mon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">setpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_readback_mon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets slowref reference value and returns current readback</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref_readback_ref">
+<span class="sig-name descname"><span class="pre">set_slowref_readback_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">setpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_readback_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets slowref reference value and returns reference current</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.store_param_bank_csv">
+<span class="sig-name descname"><span class="pre">store_param_bank_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bank</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.store_param_bank_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves parameter bank to CSV file</p>
 </dd></dl>
 
 <dl class="py property">
@@ -105,6 +261,12 @@
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.turn_on">
 <span class="sig-name descname"><span class="pre">turn_on</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.turn_on" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turns on power supply</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.unlock_udc">
+<span class="sig-name descname"><span class="pre">unlock_udc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">password</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.unlock_udc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unlocks UDC, enables password protected commands to be ran</p>
 </dd></dl>
 
 </dd></dl>

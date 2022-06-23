@@ -23,7 +23,7 @@ class TestRead(TestCase):
         self.drs.get_wfmref_vars(1)
 
     def test_read_curve_block(self):
-        self.assertEquals(len(self.drs.read_curve_block(0, 0), 256))
+        self.assertEquals(len(self.drs.read_curve_block(0, 0)), 256)
 
     def test_get_ps_name(self):
         self.drs.unlock_udc(self.secret["password"])
@@ -35,3 +35,13 @@ class TestRead(TestCase):
             "Jiga FBP para teste de resposta a setpoints do grupo CONS",
         )
         self.drs.lock_udc(self.secret["password"])
+
+    def test_get_param_bank(self):
+        self.drs.get_param_bank()
+
+    def test_get_param_valid(self):
+        self.assertIsInstance(self.drs.get_param(26), float)
+
+    def test_get_param_invalid(self):
+        val = self.drs.get_param(2999)
+        self.assertNotEquals(val, val)

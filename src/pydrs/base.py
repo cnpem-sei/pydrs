@@ -1,14 +1,15 @@
+#!/usr/bin/env python3
 """base.py
 ====================================
 The core for pydrs, from which all child classes are based
 """
-
-#!/usr/bin/env python3
 import csv
 import math
 import os
 import struct
 import time
+
+from .validation import SerialErrPckgLen, SerialInvalidCmd
 
 """
 ======================================================================
@@ -122,6 +123,7 @@ logger = get_logger(name=__file__)
 
 class BaseDRS(object):
     """Base class, originates all communication child classes"""
+
     def __init__(self):
         self.slave_add = "\x01"
 
@@ -245,7 +247,7 @@ class BaseDRS(object):
         for i in range(n + 1, 64):
             self.set_param("PS_Name", i, float(ord(" ")))
 
-    def get_ps_name(self):
+    def get_ps_name(self) -> str:
         # TODO: Turn into property?
         """Gets power supply name"""
         ps_name = ""
@@ -256,7 +258,8 @@ class BaseDRS(object):
                 break
         return ps_name
 
-    def set_slowref(self, setpoint):
+    def set_slowref(self, setpoint: float) -> bytes:
+        """Sets new slowref reference value"""
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
@@ -267,7 +270,8 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def set_slowref_fbp(self, iRef1=0, iRef2=0, iRef3=0, iRef4=0):
+    def set_slowref_fbp(self, iRef1=0, iRef2=0, iRef3=0, iRef4=0) -> bytes:
+        """Sets slowref reference value for FBP power supplies"""
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
         hex_iRef1 = float_to_hex(iRef1)
         hex_iRef2 = float_to_hex(iRef2)
@@ -284,7 +288,8 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def set_slowref_readback_mon(self, setpoint):
+    def set_slowref_readback_mon(self, setpoint: float) -> bytes:
+        """Sets slowref reference value and returns current readback"""
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
@@ -297,7 +302,8 @@ class BaseDRS(object):
         val = struct.unpack("BBHfB", reply_msg)
         return val[3]
 
-    def set_slowref_fbp_readback_mon(self, iRef1=0, iRef2=0, iRef3=0, iRef4=0):
+    def set_slowref_fbp_readback_mon(self, iRef1=0, iRef2=0, iRef3=0, iRef4=0) -> float:
+        """Sets slowref reference value for FBP power supplies and returns current readback"""
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
         hex_iRef1 = float_to_hex(iRef1)
         hex_iRef2 = float_to_hex(iRef2)
@@ -312,14 +318,15 @@ class BaseDRS(object):
             + hex_iRef3
             + hex_iRef4
         )
-        reply_msg = self._transfer(send_packet, 21)
-        if len(reply_msg) == 6:
-            return reply_msg
-        else:
+        try:
+            reply_msg = self._transfer(send_packet, 21)
             val = struct.unpack("BBHffffB", reply_msg)
             return [val[3], val[4], val[5], val[6]]
+        except (SerialErrPckgLen, SerialInvalidCmd):
+            return reply_msg
 
-    def set_slowref_readback_ref(self, setpoint):
+    def set_slowref_readback_ref(self, setpoint: float) -> float:
+        """Sets slowref reference value and returns reference current"""
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
@@ -332,7 +339,8 @@ class BaseDRS(object):
         val = struct.unpack("BBHfB", reply_msg)
         return val[3]
 
-    def set_slowref_fbp_readback_ref(self, iRef1=0, iRef2=0, iRef3=0, iRef4=0):
+    def set_slowref_fbp_readback_ref(self, iRef1=0, iRef2=0, iRef3=0, iRef4=0) -> float:
+        """Sets slowref reference value for FBP power supplies and returns reference current"""
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
         hex_iRef1 = float_to_hex(iRef1)
         hex_iRef2 = float_to_hex(iRef2)
@@ -347,15 +355,15 @@ class BaseDRS(object):
             + hex_iRef3
             + hex_iRef4
         )
-        reply_msg = self._transfer(send_packet, 21)
-        if len(reply_msg) == 6:
-            return reply_msg
-        else:
+        try:
+            reply_msg = self._transfer(send_packet, 21)
             val = struct.unpack("BBHffffB", reply_msg)
             return [val[3], val[4], val[5], val[6]]
+        except (SerialErrPckgLen, SerialInvalidCmd):
+            return reply_msg
 
-    def set_param(self, param_id, n, value) -> bytes:
-        # TODO: Turn into property?
+    def set_param(self, param_id: int, n: int, value: float) -> bytes:
+        """Set parameter"""
         payload_size = size_to_hex(
             1 + 2 + 2 + 4
         )  # Payload: ID + param id + [n] + value
@@ -375,12 +383,10 @@ class BaseDRS(object):
         )
 
         reply_msg = self._transfer(send_packet, 6)
-        if reply_msg[4] == 8:
-            print("Invalid parameter")
         return reply_msg
 
     def get_param(self, param_id, n=0):
-        # TODO: Turn into property?
+        """Get parameter"""
         # Payload: ID + param id + [n]
         payload_size = size_to_hex(1 + 2 + 2)
         if type(param_id) == str:
@@ -396,15 +402,15 @@ class BaseDRS(object):
             + hex_n
         )
         self._reset_input_buffer()
-        reply_msg = self._transfer(send_packet, 9)
-        if len(reply_msg) == 9:
+        try:
+            reply_msg = self._transfer(send_packet, 9)
             val = struct.unpack("BBHfB", reply_msg)
             return val[3]
-        else:
-            # print('Invalid parameter')
+        except SerialInvalidCmd:
             return float("nan")
 
-    def save_param_eeprom(self, param_id, n=0, type_memory=2):
+    def save_param_eeprom(self, param_id, n=0, type_memory=2) -> bytes:
+        """Save parameter to EEPROM"""
         payload_size = size_to_hex(
             1 + 2 + 2 + 2
         )  # Payload: ID + param id + [n] + memory type
@@ -423,11 +429,10 @@ class BaseDRS(object):
             + hex_type
         )
         reply_msg = self._transfer(send_packet, 6)
-        if reply_msg[4] == 8:
-            print("Invalid parameter")
         return reply_msg
 
-    def load_param_eeprom(self, param_id, n=0, type_memory=2):
+    def load_param_eeprom(self, param_id, n=0, type_memory=2) -> bytes:
+        """Load parameter from EEPROM"""
         payload_size = size_to_hex(
             1 + 2 + 2 + 2
         )  # Payload: ID + param id + [n] + memory type
@@ -446,11 +451,11 @@ class BaseDRS(object):
             + hex_type
         )
         reply_msg = self._transfer(send_packet, 6)
-        if reply_msg[4] == 8:
-            print("Invalid parameter")
         return reply_msg
 
     def save_param_bank(self, type_memory=2):
+        """Configures all paremeters according to values loaded
+        into param_data"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
@@ -462,6 +467,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def load_param_bank(self, type_memory=2):
+        """Loads all parameter values into param_data"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
@@ -531,6 +537,7 @@ class BaseDRS(object):
         return param_bank
 
     def store_param_bank_csv(self, bank):
+        """Saves parameter bank to CSV file"""
         filename = input("Digite o nome do arquivo: ")
         with open(filename + ".csv", "w", newline="") as f:
             writer = csv.writer(f, delimiter=",")
@@ -538,10 +545,12 @@ class BaseDRS(object):
                 writer.writerow(param_row)
 
     def enable_onboard_eeprom(self):
+        """Enables onboard EEPROM"""
         self.set_param("Enable_Onboard_EEPROM", 0, 0)
         self.save_param_eeprom("Enable_Onboard_EEPROM", 0, 2)
 
     def disable_onboard_eeprom(self):
+        """Disables onboard EEPROM"""
         self.set_param("Enable_Onboard_EEPROM", 0, 1)
         self.save_param_eeprom("Enable_Onboard_EEPROM", 0, 2)
 
@@ -635,6 +644,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def reset_udc(self):
+        """Resets UDC firmware"""
         reply = input(
             "\nEste comando realiza o reset do firmware da placa UDC, e por isso, so e executado caso a fonte esteja desligada. \nCaso deseje apenas resetar interlocks, utilize o comando reset_interlocks(). \n\nTem certeza que deseja prosseguir? [Y/N]: "
         )
@@ -645,16 +655,14 @@ class BaseDRS(object):
             )
             self._transfer_write(send_packet)
 
-    def run_bsmp_func(self, id_func, print_msg=0) -> bytes:
+    def run_bsmp_func(self, id_func) -> bytes:
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = COM_FUNCTION + payload_size + index_to_hex(id_func)
         reply_msg = self._transfer(send_packet, 6)
-        if print_msg:
-            print(reply_msg)
         return reply_msg
 
     def run_bsmp_func_all_ps(
-        self, p_func, add_list, arg=None, delay=0.5, print_reply=1
+        self, p_func, add_list, arg=None, delay=0.5, print_reply=True
     ):
         old_add = self.get_slave_add()
         for add in add_list:
@@ -703,6 +711,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def enable_scope(self):
+        """Enables scope"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION + payload_size + index_to_hex(list_func.index("enable_scope"))
@@ -710,6 +719,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def disable_scope(self):
+        """Disables scope"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION + payload_size + index_to_hex(list_func.index("disable_scope"))
@@ -717,6 +727,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def get_scope_vars(self):
+        """Returns scope variables"""
         print("\n### Scope Variables ###\n")
         print("Frequency: " + str((round(self.read_bsmp_variable(25, "float"), 3))))
         print("Duration: " + str((round(self.read_bsmp_variable(26, "float"), 3))))
@@ -765,6 +776,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def unlock_udc(self, password):
+        """Unlocks UDC, enables password protected commands to be ran"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
         send_packet = (
@@ -776,6 +788,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def lock_udc(self, password):
+        """Locks UDC, disables password protected commands"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
         send_packet = (
@@ -824,7 +837,11 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def set_siggen(self, freq, amplitude, offset):
+    def set_siggen(self, freq: int, amplitude, offset):
+        """Updates signal generator parameters in continuous operation.
+        Amplitude and offset are updated instantaneously, frequency is
+        updated on the next 1 second update cycle. *This function cannot be
+        applied in trapezoidal mode."""
         payload_size = size_to_hex(1 + 4 + 4 + 4)
         hex_freq = float_to_hex(freq)
         hex_amplitude = float_to_hex(amplitude)
@@ -840,6 +857,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def enable_siggen(self):
+        """Enables signal generator"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION + payload_size + index_to_hex(list_func.index("enable_siggen"))
@@ -847,6 +865,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def disable_siggen(self):
+        """Disables signal generator"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -877,6 +896,8 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def select_wfmref(self, idx):
+        """Selects index in current waveform, loads waveform into
+        wfmref_data."""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + idx
         hex_idx = double_to_hex(idx)
         send_packet = (
@@ -888,6 +909,8 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def reset_wfmref(self):
+        """Resets WfmRef, next sync pulse takes index back to the
+        waveform's start."""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION + payload_size + index_to_hex(list_func.index("reset_wfmref"))
@@ -956,10 +979,8 @@ class BaseDRS(object):
         val = struct.unpack(type_format[type_var], reply_msg)
         return val[3]
 
-    def read_bsmp_variable_gen(self, id_var, size_bytes, print_msg=False):
+    def read_bsmp_variable_gen(self, id_var, size_bytes, print_msg=False) -> bytes:
         reply_msg = self.read_var(index_to_hex(id_var), size_bytes + 5)
-        if print_msg:
-            print(reply_msg)
         return reply_msg
 
     def read_udc_arm_version(self):

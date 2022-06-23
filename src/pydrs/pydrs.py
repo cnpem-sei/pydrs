@@ -18,6 +18,7 @@ logger = get_logger(name=__file__)
 
 class SerialDRS(BaseDRS):
     """DRS communication through serial ports"""
+
     def __init__(self, port: str = None, baud: int = 115200):
         super().__init__()
         self.ser: typing.Optional[serial.Serial] = None
@@ -83,6 +84,7 @@ class SerialDRS(BaseDRS):
 
 class EthDRS(BaseDRS):
     """DRS communication through TCP/IP"""
+
     def __init__(self, address: str = None, port: int = 5000):
         super().__init__()
         if address is None:

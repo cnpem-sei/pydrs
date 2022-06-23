@@ -40,11 +40,6 @@ def validate(func):
         if reply != checksum(reply[:-1]):
             raise SerialErrCheckSum
 
-        if len(reply) != args[2]:
-            raise SerialErrPckgLen(
-                "Expected {} bytes, received {} bytes".format(args[2], len(reply))
-            )
-
         if reply[1] == 0x53:
             if reply[-2] == 4:
                 raise SerialForbidden
@@ -52,6 +47,12 @@ def validate(func):
                 raise SerialInvalidCmd
             # else:
             #    raise SerialError(SERIAL_ERROR[reply[-2]])
+
+        if len(reply) != args[2]:
+            raise SerialErrPckgLen(
+                "Expected {} bytes, received {} bytes".format(args[2], len(reply))
+            )
+
         return reply
 
     return wrapper
