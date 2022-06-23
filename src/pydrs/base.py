@@ -1,3 +1,8 @@
+"""base.py
+====================================
+The core for pydrs, from which all child classes are based
+"""
+
 #!/usr/bin/env python3
 import csv
 import math
@@ -116,6 +121,7 @@ logger = get_logger(name=__file__)
 
 
 class BaseDRS(object):
+    """Base class, originates all communication child classes"""
     def __init__(self):
         self.slave_add = "\x01"
 
@@ -165,8 +171,8 @@ class BaseDRS(object):
     ======================================================================
     """
 
-    # Função de leitura de variável
     def read_var(self, var_id: str, size: int):
+        """Reads a variable with a given ID"""
         self._reset_input_buffer()
         return self._transfer(COM_READ_VAR + var_id, size)
 
@@ -178,6 +184,7 @@ class BaseDRS(object):
     """
 
     def turn_on(self):
+        """Turns on power supply"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION + payload_size + index_to_hex(list_func.index("turn_on"))
@@ -185,6 +192,7 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def turn_off(self):
+        """Turns off power supply"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION + payload_size + index_to_hex(list_func.index("turn_off"))
