@@ -114,9 +114,7 @@ class EthDRS(BaseDRS):
         if payload[0] == ETH_ANSWER_ERR:
             raise TimeoutError("Server timed out waiting for serial response")
 
-        return (
-            payload[1:] if data_size > size else payload
-        )  # Support for eth-bridge 2.9.0 and 2.8.1
+        return payload
 
     @validate
     def _transfer(self, msg: str, size: int) -> bytes:

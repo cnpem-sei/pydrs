@@ -37,8 +37,7 @@ SERIAL_ERROR = [
 def validate(func):
     def wrapper(*args, **kwargs):
         reply = func(*args, **kwargs)
-        if reply != checksum(reply[:-1]):
-            raise SerialErrCheckSum
+        reply = reply[1:] if len(reply) -1 == args[2] else reply
 
         if reply[1] == 0x53:
             if reply[-2] == 4:
@@ -52,6 +51,10 @@ def validate(func):
             raise SerialErrPckgLen(
                 "Expected {} bytes, received {} bytes".format(args[2], len(reply))
             )
+
+        if reply != checksum(reply[:-1]):
+            print(reply)
+            raise SerialErrCheckSum
 
         return reply
 
