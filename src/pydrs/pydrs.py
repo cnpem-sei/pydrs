@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
+
 import re
 import socket
 import struct
 import typing
 
-from .validation import validate
+from .validation import SerialErrPckgLen, validate
 
 from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST
 from .utils import checksum, get_logger
@@ -16,6 +17,8 @@ logger = get_logger(name=__file__)
 
 
 class SerialDRS(BaseDRS):
+    """DRS communication through serial ports"""
+
     def __init__(self, port: str = None, baud: int = 115200):
         super().__init__()
         self.ser: typing.Optional[serial.Serial] = None
@@ -80,6 +83,8 @@ class SerialDRS(BaseDRS):
 
 
 class EthDRS(BaseDRS):
+    """DRS communication through TCP/IP"""
+
     def __init__(self, address: str = None, port: int = 5000):
         super().__init__()
         if address is None:
@@ -102,16 +107,19 @@ class EthDRS(BaseDRS):
         payload = b""
 
         for _ in range(int(data_size / 4096)):
-            payload += self.socket.recv(4096, socket.MSG_WAITALL)
+            payload += self.socket.recv(4096)
 
-        payload += self.socket.recv(int(data_size % 4096), socket.MSG_WAITALL)
+        payload += self.socket.recv(int(data_size % 4096))
 
-        if payload[0] == ETH_ANSWER_ERR:
-            raise TimeoutError("Server timed out waiting for serial response")
+        try:
+            if payload[0] == ETH_ANSWER_ERR:
+                raise TimeoutError("Server timed out waiting for serial response")
+        except IndexError:
+            raise SerialErrPckgLen(
+                "Received empty response, check if the controller is on and connected"
+            )
 
-        return (
-            payload[1:] if data_size > size else payload
-        )  # Support for eth-bridge 2.9.0 and 2.8.1
+        return payload
 
     @validate
     def _transfer(self, msg: str, size: int) -> bytes:
@@ -157,6 +165,7 @@ class EthDRS(BaseDRS):
 
 
 def GenericDRS(com_or_address: str, port_or_baud: int):
+    """Factory for DRS communication classes"""
     if re.match(r"(([0-9]{1,3}\.){3}[0-9]{1,3})", com_or_address):
         return EthDRS(com_or_address, port_or_baud)
     else:

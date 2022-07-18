@@ -2,20 +2,21 @@ from unittest import TestCase
 from pydrs import pydrs
 import json
 
-from pydrs.validation import SerialForbidden, SerialInvalidCmd
+from pydrs.validation import SerialInvalidCmd
 
 
-class TestPerm(TestCase):
+class TestAct(TestCase):
     def setUp(self):
         with open("secrets.json") as f:
             self.secret = json.loads(f.read())
 
         self.drs = pydrs.EthDRS(self.secret["ip"], self.secret["port"])
-        self.drs.lock_udc(self.secret["password"])
 
-    def test_forbidden_set_param(self):
-        with self.assertRaises(SerialForbidden):
-            self.drs.set_ps_name("A Name")
+    def test_turn_on(self):
+        self.drs.turn_on()
+
+    def test_turn_off(self):
+        self.drs.turn_off()
 
     def test_invalid_password(self):
         with self.assertRaises(SerialInvalidCmd):
