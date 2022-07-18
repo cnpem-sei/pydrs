@@ -11,4 +11,3 @@ class TestCreate(TestCase):
 
     def test_turn_off(self):
         self.assertIsInstance(pydrs.GenericDRS("/dev/ttyS1", 3000000), pydrs.SerialDRS)
-

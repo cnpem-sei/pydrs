@@ -5,7 +5,7 @@ import socket
 import struct
 import typing
 
-from .validation import validate
+from .validation import SerialErrPckgLen, validate
 
 from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST
 from .utils import checksum, get_logger
@@ -111,8 +111,13 @@ class EthDRS(BaseDRS):
 
         payload += self.socket.recv(int(data_size % 4096))
 
-        if payload[0] == ETH_ANSWER_ERR:
-            raise TimeoutError("Server timed out waiting for serial response")
+        try:
+            if payload[0] == ETH_ANSWER_ERR:
+                raise TimeoutError("Server timed out waiting for serial response")
+        except IndexError:
+            raise SerialErrPckgLen(
+                "Received empty response, check if the controller is on and connected"
+            )
 
         return payload
 

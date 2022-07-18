@@ -1,3 +1,5 @@
+import warnings
+from src.pydrs.consts import ETH_ANSWER_NOQUEUE
 from .utils import checksum
 
 
@@ -37,15 +39,20 @@ SERIAL_ERROR = [
 def validate(func):
     def wrapper(*args, **kwargs):
         reply = func(*args, **kwargs)
-        reply = reply[1:] if len(reply) -1 == args[2] else reply
+        if len(reply) == 1 and reply[0] == ETH_ANSWER_NOQUEUE:
+            warnings.warn(
+                "Server declared that no data was available in the read queue. If this is a write-only operation, use _transfer_write",
+                RuntimeWarning,
+            )
+            return b""
+
+        reply = reply[1:] if len(reply) - 1 == args[2] else reply
 
         if reply[1] == 0x53:
             if reply[-2] == 4:
                 raise SerialForbidden
             if reply[-2] == 8:
                 raise SerialInvalidCmd
-            # else:
-            #    raise SerialError(SERIAL_ERROR[reply[-2]])
 
         if len(reply) != args[2]:
             raise SerialErrPckgLen(
@@ -53,7 +60,6 @@ def validate(func):
             )
 
         if reply != checksum(reply[:-1]):
-            print(reply)
             raise SerialErrCheckSum
 
         return reply

@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""base.py
-====================================
-The core for pydrs, from which all child classes are based
-"""
+"""The core for pydrs, from which all child classes are based"""
 import csv
 import math
 import os
@@ -11,12 +8,6 @@ import time
 
 from .validation import SerialErrPckgLen, SerialInvalidCmd
 
-"""
-======================================================================
-                    Listas de Entidades BSMP
-        A posição da entidade na lista corresponde ao seu ID BSMP
-======================================================================
-"""
 from .utils import (
     double_to_hex,
     float_to_hex,
@@ -428,8 +419,7 @@ class BaseDRS(object):
             + hex_n
             + hex_type
         )
-        reply_msg = self._transfer(send_packet, 6)
-        return reply_msg
+        return self._transfer(send_packet, 6)
 
     def load_param_eeprom(self, param_id, n=0, type_memory=2) -> bytes:
         """Load parameter from EEPROM"""
@@ -658,8 +648,7 @@ class BaseDRS(object):
     def run_bsmp_func(self, id_func) -> bytes:
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = COM_FUNCTION + payload_size + index_to_hex(id_func)
-        reply_msg = self._transfer(send_packet, 6)
-        return reply_msg
+        return self._transfer(send_packet, 6)
 
     def run_bsmp_func_all_ps(
         self, p_func, add_list, arg=None, delay=0.5, print_reply=True
@@ -4056,7 +4045,7 @@ class BaseDRS(object):
                 "\n *** Aviso: Os coeficientes configurados não foram salvos na memória EEPROM. Caso deseje salvar, utilize o argumento save_eeprom = 1"
             )
 
-    def select_param_bank(self, cfg_dsp_modules=0):
+    def select_param_bank(self, cfg_dsp_modules=0):  # noqa: C901
 
         add = int(
             input(
