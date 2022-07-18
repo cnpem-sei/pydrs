@@ -228,7 +228,6 @@ class BaseDRS(object):
         status["active"] = (val[3] & 0b0000000010000000) >> 7
         status["model"] = list_ps_models[(val[3] & 0b0001111100000000) >> 8]
         status["unlocked"] = (val[3] & 0b0010000000000000) >> 13
-        # print(status)
         return status
 
     def set_ps_name(self, ps_name: str):
@@ -252,6 +251,7 @@ class BaseDRS(object):
 
     def set_slowref(self, setpoint: float) -> bytes:
         """Sets new slowref reference value"""
+        eth-bridge-dict-return
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
@@ -262,8 +262,11 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def set_slowref_fbp(self, iRef1=0, iRef2=0, iRef3=0, iRef4=0) -> bytes:
+    def set_slowref_fbp(
+        self, iRef1: int = 0, iRef2: int = 0, iRef3: int = 0, iRef4: int = 0
+    ) -> bytes:
         """Sets slowref reference value for FBP power supplies"""
+        # TODO: Take int list instead?
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
         hex_iRef1 = float_to_hex(iRef1)
         hex_iRef2 = float_to_hex(iRef2)
@@ -294,8 +297,11 @@ class BaseDRS(object):
         val = struct.unpack("BBHfB", reply_msg)
         return val[3]
 
-    def set_slowref_fbp_readback_mon(self, iRef1=0, iRef2=0, iRef3=0, iRef4=0) -> float:
+    def set_slowref_fbp_readback_mon(
+        self, iRef1: int = 0, iRef2: int = 0, iRef3: int = 0, iRef4: int = 0
+    ):
         """Sets slowref reference value for FBP power supplies and returns current readback"""
+        # TODO: Take int list instead?
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
         hex_iRef1 = float_to_hex(iRef1)
         hex_iRef2 = float_to_hex(iRef2)
@@ -331,8 +337,11 @@ class BaseDRS(object):
         val = struct.unpack("BBHfB", reply_msg)
         return val[3]
 
-    def set_slowref_fbp_readback_ref(self, iRef1=0, iRef2=0, iRef3=0, iRef4=0) -> float:
+    def set_slowref_fbp_readback_ref(
+        self, iRef1: int = 0, iRef2: int = 0, iRef3: int = 0, iRef4: int = 0
+    ):
         """Sets slowref reference value for FBP power supplies and returns reference current"""
+        # TODO: Take int list instead?
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
         hex_iRef1 = float_to_hex(iRef1)
         hex_iRef2 = float_to_hex(iRef2)
@@ -356,6 +365,7 @@ class BaseDRS(object):
 
     def set_param(self, param_id: int, n: int, value: float) -> bytes:
         """Set parameter"""
+        # TODO: Turn into property?
         payload_size = size_to_hex(
             1 + 2 + 2 + 4
         )  # Payload: ID + param id + [n] + value
@@ -401,8 +411,11 @@ class BaseDRS(object):
         except SerialInvalidCmd:
             return float("nan")
 
-    def save_param_eeprom(self, param_id, n=0, type_memory=2) -> bytes:
+    def save_param_eeprom(
+        self, param_id: int, n: int = 0, type_memory: int = 2
+    ) -> bytes:
         """Save parameter to EEPROM"""
+        # TODO: Raise exception instead of printing?
         payload_size = size_to_hex(
             1 + 2 + 2 + 2
         )  # Payload: ID + param id + [n] + memory type
@@ -422,7 +435,9 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def load_param_eeprom(self, param_id, n=0, type_memory=2) -> bytes:
+    def load_param_eeprom(
+        self, param_id: int, n: int = 0, type_memory: int = 2
+    ) -> bytes:
         """Load parameter from EEPROM"""
         payload_size = size_to_hex(
             1 + 2 + 2 + 2
@@ -444,9 +459,8 @@ class BaseDRS(object):
         reply_msg = self._transfer(send_packet, 6)
         return reply_msg
 
-    def save_param_bank(self, type_memory=2):
-        """Configures all paremeters according to values loaded
-        into param_data"""
+    def save_param_bank(self, type_memory: int = 2) -> bytes:
+        """Configures all paremeters according to values loaded into param_data"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
@@ -457,7 +471,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def load_param_bank(self, type_memory=2):
+    def load_param_bank(self, type_memory: int = 2) -> bytes:
         """Loads all parameter values into param_data"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
@@ -469,7 +483,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def set_param_bank(self, param_file):
+    def set_param_bank(self, param_file: str):
         fbp_param_list = []
         with open(param_file, newline="") as f:
             reader = csv.reader(f)
@@ -490,8 +504,11 @@ class BaseDRS(object):
         # self.save_param_bank()
 
     def get_param_bank(
-        self, list_param=list_parameters, timeout=0.5, print_modules=True
-    ):
+        self,
+        list_param: list = list_parameters,
+        timeout: float = 0.5,
+        print_modules: bool = True,
+    ) -> list:
         timeout_old = self.timeout
         # self.ser.timeout = 0.05
         param_bank = []
@@ -527,7 +544,7 @@ class BaseDRS(object):
 
         return param_bank
 
-    def store_param_bank_csv(self, bank):
+    def store_param_bank_csv(self, bank: list):
         """Saves parameter bank to CSV file"""
         filename = input("Digite o nome do arquivo: ")
         with open(filename + ".csv", "w", newline="") as f:
@@ -546,8 +563,11 @@ class BaseDRS(object):
         self.save_param_eeprom("Enable_Onboard_EEPROM", 0, 2)
 
     def set_dsp_coeffs(
-        self, dsp_class, dsp_id, coeffs_list=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ):
+        self,
+        dsp_class: int,
+        dsp_id: int,
+        coeffs_list: list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ) -> bytes:
         coeffs_list_full = format_list_size(coeffs_list, NUM_MAX_COEFFS_DSP)
         payload_size = size_to_hex(1 + 2 + 2 + 4 * NUM_MAX_COEFFS_DSP)
         hex_dsp_class = double_to_hex(dsp_class)
@@ -563,7 +583,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def get_dsp_coeff(self, dsp_class, dsp_id, coeff):
+    def get_dsp_coeff(self, dsp_class: int, dsp_id: int, coeff: int):
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -582,7 +602,9 @@ class BaseDRS(object):
         val = struct.unpack("BBHfB", reply_msg)
         return val[3]
 
-    def save_dsp_coeffs_eeprom(self, dsp_class, dsp_id, type_memory=2) -> bytes:
+    def save_dsp_coeffs_eeprom(
+        self, dsp_class: int, dsp_id: int, type_memory: int = 2
+    ) -> bytes:
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -597,7 +619,9 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def load_dsp_coeffs_eeprom(self, dsp_class, dsp_id, type_memory=2):
+    def load_dsp_coeffs_eeprom(
+        self, dsp_class: int, dsp_id: int, type_memory: int = 2
+    ) -> bytes:
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -612,7 +636,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def save_dsp_modules_eeprom(self, type_memory=2) -> bytes:
+    def save_dsp_modules_eeprom(self, type_memory: int = 2) -> bytes:
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
@@ -623,7 +647,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def load_dsp_modules_eeprom(self, type_memory=2) -> bytes:
+    def load_dsp_modules_eeprom(self, type_memory: int = 2) -> bytes:
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
@@ -646,13 +670,18 @@ class BaseDRS(object):
             )
             self._transfer_write(send_packet)
 
-    def run_bsmp_func(self, id_func) -> bytes:
+    def run_bsmp_func(self, id_func: int) -> bytes:
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = COM_FUNCTION + payload_size + index_to_hex(id_func)
         return self._transfer(send_packet, 6)
 
     def run_bsmp_func_all_ps(
-        self, p_func, add_list, arg=None, delay=0.5, print_reply=True
+        self,
+        p_func,
+        add_list: list,
+        arg=None,
+        delay: float = 0.5,
+        print_reply: bool = True,
     ):
         old_add = self.get_slave_add()
         for add in add_list:
@@ -667,7 +696,7 @@ class BaseDRS(object):
             time.sleep(delay)
         self.set_slave_add(old_add)
 
-    def cfg_source_scope(self, p_source):
+    def cfg_source_scope(self, p_source: int) -> bytes:
         payload_size = size_to_hex(1 + 4)  # Payload: ID + p_source
         hex_op_mode = uint32_to_hex(p_source)
         send_packet = (
@@ -678,7 +707,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def cfg_freq_scope(self, freq):
+    def cfg_freq_scope(self, freq: float) -> bytes:
         payload_size = size_to_hex(1 + 4)  # Payload: ID + freq
         hex_op_mode = float_to_hex(freq)
         send_packet = (
@@ -689,7 +718,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def cfg_duration_scope(self, duration):
+    def cfg_duration_scope(self, duration: float) -> bytes:
         payload_size = size_to_hex(1 + 4)  # Payload: ID + duration
         hex_op_mode = float_to_hex(duration)
         send_packet = (
@@ -700,7 +729,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def enable_scope(self):
+    def enable_scope(self) -> bytes:
         """Enables scope"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
@@ -708,7 +737,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def disable_scope(self):
+    def disable_scope(self) -> bytes:
         """Disables scope"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
@@ -716,23 +745,21 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def get_scope_vars(self):
-        """Returns scope variables"""
-        print("\n### Scope Variables ###\n")
-        print("Frequency: " + str((round(self.read_bsmp_variable(25, "float"), 3))))
-        print("Duration: " + str((round(self.read_bsmp_variable(26, "float"), 3))))
-        print(
-            "Source Data: " + str((round(self.read_bsmp_variable(27, "uint32_t"), 3)))
-        )
+    def get_scope_vars(self) -> dict:
+        return {
+            "frequency": self.read_bsmp_variable(25, "float"),
+            "duration": self.read_bsmp_variable(26, "float"),
+            "source_data": self.read_bsmp_variable(27, "uint32_t"),
+        }
 
-    def sync_pulse(self):
+    def sync_pulse(self) -> bytes:
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION + payload_size + index_to_hex(list_func.index("sync_pulse"))
         )
         return self._transfer(send_packet, 6)
 
-    def select_op_mode(self, op_mode):
+    def select_op_mode(self, op_mode: int) -> bytes:
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_op_mode = double_to_hex(list_op_mode.index(op_mode))
         send_packet = (
@@ -743,7 +770,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def set_serial_termination(self, term_enable):
+    def set_serial_termination(self, term_enable: int) -> bytes:
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_enable = double_to_hex(term_enable)
         send_packet = (
@@ -754,7 +781,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def set_command_interface(self, interface):
+    def set_command_interface(self, interface: int) -> bytes:
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_interface = double_to_hex(interface)
         send_packet = (
@@ -765,7 +792,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def unlock_udc(self, password):
+    def unlock_udc(self, password: int) -> bytes:
         """Unlocks UDC, enables password protected commands to be ran"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
@@ -777,7 +804,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def lock_udc(self, password):
+    def lock_udc(self, password: int) -> bytes:
         """Locks UDC, disables password protected commands"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
@@ -789,7 +816,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def reset_counters(self):
+    def reset_counters(self) -> bytes:
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -799,8 +826,18 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def cfg_siggen(
-        self, sig_type, num_cycles, freq, amplitude, offset, aux0, aux1, aux2, aux3
-    ):
+        self,
+        sig_type: int,
+        num_cycles: int,
+        freq: float,
+        amplitude: float,
+        offset: float,
+        aux0: float,
+        aux1: float,
+        aux2: float,
+        aux3: float,
+    ) -> bytes:
+        # TODO: take aux as list?
         payload_size = size_to_hex(1 + 2 + 2 + 4 + 4 + 4 + 4 * 4)
         hex_sig_type = double_to_hex(list_sig_gen_types.index(sig_type))
         hex_num_cycles = double_to_hex(num_cycles)
@@ -827,7 +864,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def set_siggen(self, freq: int, amplitude, offset):
+    def set_siggen(self, freq: float, amplitude: float, offset: float) -> bytes:
         """Updates signal generator parameters in continuous operation.
         Amplitude and offset are updated instantaneously, frequency is
         updated on the next 1 second update cycle. *This function cannot be
@@ -846,7 +883,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def enable_siggen(self):
+    def enable_siggen(self) -> bytes:
         """Enables signal generator"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
@@ -854,7 +891,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def disable_siggen(self):
+    def disable_siggen(self) -> bytes:
         """Disables signal generator"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
@@ -864,7 +901,14 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def cfg_wfmref(self, idx, sync_mode, frequency, gain=1, offset=0):
+    def cfg_wfmref(
+        self,
+        idx: int,
+        sync_mode: int,
+        frequency: float,
+        gain: float = 1.0,
+        offset: int = 0,
+    ) -> bytes:
         payload_size = size_to_hex(
             1 + 2 + 2 + 4 + 4 + 4
         )  # Payload: ID + idx + sync_mode + frequency + gain + offset
@@ -885,7 +929,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def select_wfmref(self, idx):
+    def select_wfmref(self, idx: int) -> bytes:
         """Selects index in current waveform, loads waveform into
         wfmref_data."""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + idx
@@ -898,7 +942,7 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def reset_wfmref(self):
+    def reset_wfmref(self) -> bytes:
         """Resets WfmRef, next sync pulse takes index back to the
         waveform's start."""
         payload_size = size_to_hex(1)  # Payload: ID
@@ -907,41 +951,29 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def get_wfmref_vars(self, curve_id):
-        print("\n### WfmRef " + str(curve_id) + " Variables ###\n")
-        print(
-            "Length: "
-            + str(
-                (
-                    round(self.read_bsmp_variable(20 + curve_id * 3, "uint32_t"), 3)
-                    - round(self.read_bsmp_variable(19 + curve_id * 3, "uint32_t"), 3)
-                )
-                / 2
-                + 1
+    def get_wfmref_vars(self, curve_id: int):
+        return {
+            "curve_id": curve_id,
+            "length": (
+                self.read_bsmp_variable(20 + curve_id * 3, "uint32_t")
+                - self.read_bsmp_variable(19 + curve_id * 3, "uint32_t")
             )
-        )
-        print(
-            "Index: "
-            + str(
-                (
-                    round(self.read_bsmp_variable(21 + curve_id * 3, "uint32_t"), 3)
-                    - round(self.read_bsmp_variable(19 + curve_id * 3, "uint32_t"), 3)
-                )
-                / 2
-                + 1
+            / 2
+            + 1,
+            "index": (
+                self.read_bsmp_variable(21 + curve_id * 3, "uint32_t")
+                - self.read_bsmp_variable(19 + curve_id * 3, "uint32_t")
             )
-        )
-        print(
-            "WfmRef Selected: " + str(round(self.read_bsmp_variable(14, "uint16_t"), 3))
-        )
-        print("Sync Mode: " + str(round(self.read_bsmp_variable(15, "uint16_t"), 3)))
-        print(
-            "Frequency: " + str(round(self.read_bsmp_variable(16, "float"), 3)) + " Hz"
-        )
-        print("Gain: " + str(round(self.read_bsmp_variable(17, "float"), 3)))
-        print("Offset: " + str(round(self.read_bsmp_variable(18, "float"), 3)))
+            / 2
+            + 1,
+            "wfmref_selected": self.read_bsmp_variable(14, "uint16_t"),
+            "sync_mode": self.read_bsmp_variable(15, "uint16_t"),
+            "frequency": self.read_bsmp_variable(16, "float"),
+            "gain": self.read_bsmp_variable(17, "float"),
+            "offset": self.read_bsmp_variable(18, "float"),
+        }
 
-    def read_csv_file(self, filename, type="float"):
+    def read_csv_file(self, filename: str, type: str = "float") -> list:
         csv_list = []
         with open(filename, newline="") as f:
             reader = csv.reader(f)
@@ -961,7 +993,7 @@ class BaseDRS(object):
     ======================================================================
     """
 
-    def read_bsmp_variable(self, id_var, type_var, print_msg=False):
+    def read_bsmp_variable(self, id_var: int, type_var: int, print_msg: bool = False):
         reply_msg = self.read_var(index_to_hex(id_var), type_size[type_var])
         # TODO: Remove print_msg?
         if print_msg:
@@ -969,24 +1001,21 @@ class BaseDRS(object):
         val = struct.unpack(type_format[type_var], reply_msg)
         return val[3]
 
-    def read_bsmp_variable_gen(self, id_var, size_bytes, print_msg=False) -> bytes:
-        reply_msg = self.read_var(index_to_hex(id_var), size_bytes + 5)
-        return reply_msg
+    def read_bsmp_variable_gen(self, id_var: int, size_bytes: int) -> bytes:
+        return self.read_var(index_to_hex(id_var), size_bytes + 5)
 
-    def read_udc_arm_version(self):
+    def read_udc_arm_version(self) -> str:
         reply_msg = self.read_var(index_to_hex(3), 133)
-        print(reply_msg)
         val = struct.unpack("16s", reply_msg[4:20])
         return val[0].decode("utf-8")
 
-    def read_udc_c28_version(self):
+    def read_udc_c28_version(self) -> str:
         reply_msg = self.read_var(index_to_hex(3), 133)
         val = struct.unpack("16s", reply_msg[20:36])
         return val[0].decode("utf-8")
 
-    def read_udc_version(self):
-        print("\n ARM: " + self.read_udc_arm_version())
-        print(" C28: " + self.read_udc_c28_version())
+    def read_udc_version(self) -> dict:
+        return {"arm": self.read_udc_arm_version(), "c28": self.read_udc_c28_version()}
 
     def read_ps_model(self):
         reply_msg = self.read_ps_model()
@@ -1098,24 +1127,26 @@ class BaseDRS(object):
     ======================================================================
     """
 
-    def send_wfmref_curve(self, block_idx, data):
-        block_hex = struct.pack(">H", block_idx).decode("ISO-8859-1")
+    def send_wfmref_curve(self, block_idx: int, data) -> bytes:
+        # TODO: Could use list comprehension in val
+        block_hex = size_to_hex(block_idx)
         val = []
         for k in range(0, len(data)):
             val.append(float_to_hex(float(data[k])))
-        payload_size = struct.pack(">H", (len(val) * 4) + 3).decode("ISO-8859-1")
-        curva_hex = "".join(val)
+        payload_size = size_to_hex((len(val) * 4) + 3)
+        curve_hex = "".join(val)
         send_packet = (
             COM_SEND_WFM_REF
             + payload_size
             + index_to_hex(list_curv.index("wfmRef_Curve"))
             + block_hex
-            + curva_hex
+            + curve_hex
         )
         return self._transfer(send_packet, 5)
 
-    def recv_wfmref_curve(self, block_idx):
-        block_hex = struct.pack(">H", block_idx).decode("ISO-8859-1")
+    def recv_wfmref_curve(self, block_idx: int) -> list:
+        # TODO: Will always fail, wfmRef_Curve is not in list
+        block_hex = size_to_hex(block_idx)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
             COM_REQUEST_CURVE
@@ -1130,8 +1161,9 @@ class BaseDRS(object):
             val.append(struct.unpack("f", recv_msg[k : k + 4]))
         return val
 
-    def recv_samples_buffer(self):
-        block_hex = struct.pack(">H", 0).decode("ISO-8859-1")
+    def recv_samples_buffer(self) -> list:
+        # TODO: Will always fail, samplesBuffer is not in list
+        block_hex = size_to_hex(0)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
             COM_REQUEST_CURVE
@@ -1149,24 +1181,26 @@ class BaseDRS(object):
             pass
         return val
 
-    def send_full_wfmref_curve(self, block_idx, data):
-        block_hex = struct.pack(">H", block_idx).decode("ISO-8859-1")
+    def send_full_wfmref_curve(self, block_idx: int, data) -> bytes:
+        # TODO: Will always fail, fullwfmRef_Curve is not in list
+        block_hex = size_to_hex(block_idx)
         val = []
         for k in range(0, len(data)):
             val.append(float_to_hex(float(data[k])))
-        payload_size = struct.pack(">H", (len(val) * 4) + 3).decode("ISO-8859-1")
-        curva_hex = "".join(val)
+        payload_size = size_to_hex(len(val) * 4 + 3)
+        curve_hex = "".join(val)
         send_packet = (
             COM_SEND_WFM_REF
             + payload_size
             + index_to_hex(list_curv.index("fullwfmRef_Curve"))
             + block_hex
-            + curva_hex
+            + curve_hex
         )
         return self._transfer(send_packet, 5)
 
-    def recv_full_wfmref_curve(self, block_idx):
-        block_hex = struct.pack(">H", block_idx).decode("ISO-8859-1")
+    def recv_full_wfmref_curve(self, block_idx: int) -> list:
+        # TODO: Will always fail, fullwfmRef_Curve is not in list
+        block_hex = size_to_hex(block_idx)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
             COM_REQUEST_CURVE
@@ -1180,8 +1214,9 @@ class BaseDRS(object):
             val.append(struct.unpack("f", recv_msg[k : k + 4]))
         return val
 
-    def recv_samples_buffer_blocks(self, block_idx):
-        block_hex = struct.pack(">H", block_idx).decode("ISO-8859-1")
+    def recv_samples_buffer_blocks(self, block_idx: int) -> list:
+        # TODO: Will always fail, samplesBuffer_blocks is not in list
+        block_hex = size_to_hex(block_idx)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
             COM_REQUEST_CURVE
@@ -1199,7 +1234,8 @@ class BaseDRS(object):
             val.extend(struct.unpack("f", recv_msg[k : k + 4]))
         return val
 
-    def recv_samples_buffer_allblocks(self):
+    def recv_samples_buffer_allblocks(self) -> list:
+        # TODO: Will fail
         buff = []
         # self.DisableSamplesBuffer()
         for i in range(0, 16):
@@ -1209,8 +1245,8 @@ class BaseDRS(object):
         # self.EnableSamplesBuffer()
         return buff
 
-    def read_curve_block(self, curve_id, block_id):
-        block_hex = struct.pack(">H", block_id).decode("ISO-8859-1")
+    def read_curve_block(self, curve_id: int, block_id: int) -> list:
+        block_hex = size_to_hex(block_id)
         payload_size = size_to_hex(1 + 2)  # Payload: curve_id + block_id
         send_packet = (
             COM_REQUEST_CURVE + payload_size + index_to_hex(curve_id) + block_hex
@@ -1228,26 +1264,26 @@ class BaseDRS(object):
             val.extend(struct.unpack("f", recv_msg[k : k + 4]))
         return val
 
-    def write_curve_block(self, curve_id, block_id, data):
-        block_hex = struct.pack(">H", block_id).decode("ISO-8859-1")
+    def write_curve_block(self, curve_id: int, block_id: int, data) -> bytes:
+        block_hex = size_to_hex(block_id)
         val = []
         for k in range(0, len(data)):
             val.append(float_to_hex(float(data[k])))
-        payload_size = struct.pack(">H", (len(val) * 4) + 3).decode("ISO-8859-1")
-        curva_hex = "".join(val)
+        payload_size = size_to_hex(len(val) * 4 + 3)
+        curve_hex = "".join(val)
         send_packet = (
             COM_SEND_WFM_REF
             + payload_size
             + index_to_hex(curve_id)
             + block_hex
-            + curva_hex
+            + curve_hex
         )
         return self._transfer(send_packet, 5)
 
-    def write_wfmref(self, curve, data):
+    def write_wfmref(self, curve: int, data) -> list:
         # curve = list_curv.index('wfmref')
         block_size = int(size_curve_block[curve] / 4)
-        print(block_size)
+        # print(block_size)
 
         blocks = [data[x : x + block_size] for x in range(0, len(data), block_size)]
 
@@ -1267,9 +1303,10 @@ class BaseDRS(object):
         else:
             for block_id in range(len(blocks)):
                 self.write_curve_block(curve, block_id, blocks[block_id])
-                print(blocks[block_id])
 
-    def read_buf_samples_ctom(self):
+        return blocks
+
+    def read_buf_samples_ctom(self) -> list:
         buf = []
         curve_id = list_curv.index("buf_samples_ctom")
 
@@ -1284,9 +1321,11 @@ class BaseDRS(object):
         return buf
 
     def set_slave_add(self, address):
+        # TODO: Turn into property?
         self.slave_add = struct.pack("B", address).decode("ISO-8859-1")
 
     def get_slave_add(self):
+        # TODO: Turn into property?
         return struct.unpack("B", self.slave_add.encode())[0]
 
     """
@@ -1295,7 +1334,7 @@ class BaseDRS(object):
     ======================================================================
     """
 
-    def read_vars_common(self, print_all=False):
+    def read_vars_common(self, all=False):
 
         loop_state = ["Closed Loop", "Open Loop"]
 
@@ -1312,37 +1351,30 @@ class BaseDRS(object):
         else:
             setpoint_unit = " %"
 
-        print("\nPS Model: " + ps_status["model"])
-        print("State: " + ps_status["state"])
-        print("Loop State: " + loop_state[ps_status["open_loop"]])
+        resp = {
+            "ps_model": ps_status["model"],
+            "state": ps_status["state"],
+            "loop_state": loop_state[ps_status["open_loop"]],
+            "setpoint": str(round(self.read_bsmp_variable(1, "float"), 3))
+            + setpoint_unit,
+            "reference": str(round(self.read_bsmp_variable(2, "float"), 3))
+            + setpoint_unit,
+        }
 
-        print(
-            "\nSetpoint: "
-            + str(round(self.read_bsmp_variable(1, "float"), 3))
-            + setpoint_unit
-        )
-        print(
-            "Reference: "
-            + str(round(self.read_bsmp_variable(2, "float"), 3))
-            + setpoint_unit
-        )
+        if not all:
+            return resp
 
-        if print_all:
-            print(self.read_ps_status())
+        resp_add = {
+            "status": self.read_ps_status(),
+            "counter_set_slowref": self.read_bsmp_variable(4, "uint32_t"),
+            "counter_sync_pulse": self.read_bsmp_variable(5, "uint32_t"),
+            "wfm_ref_0": self.get_wfmref_vars(0),
+            "wfm_ref_1": self.get_wfmref_vars(1),
+            "scope": self.get_scope_vars(),
+            "sig_gen": self.get_siggen_vars(),
+        }
 
-            print(
-                "\nCounter set_slowref: "
-                + str(round(self.read_bsmp_variable(4, "uint32_t"), 3))
-            )
-            print(
-                "Counter sync pulse: "
-                + str(round(self.read_bsmp_variable(5, "uint32_t"), 3))
-            )
-
-            self.get_siggen_vars()
-            self.get_wfmref_vars(0)
-            self.get_wfmref_vars(1)
-            self.get_scope_vars()
+        return {**resp, **resp_add}
 
     def _interlock_unknown_assignment(self, active_interlocks, index):
         active_interlocks.append("bit {}: Reserved".format(index))
@@ -1350,7 +1382,7 @@ class BaseDRS(object):
     def _interlock_name_assigned(self, active_interlocks, index, list_interlocks):
         active_interlocks.append("bit {}: {}".format(index, list_interlocks[index]))
 
-    def decode_interlocks(self, reg_interlocks, list_interlocks):
+    def decode_interlocks(self, reg_interlocks, list_interlocks: list) -> list:
         active_interlocks = []
         for index in range(32):
             if reg_interlocks & (1 << index):
@@ -1361,89 +1393,83 @@ class BaseDRS(object):
                 else:
                     self._interlock_unknown_assignment(active_interlocks, index)
 
-        for interlock in active_interlocks:
-            print(interlock)
         return active_interlocks
 
-    def read_vars_fbp(self, n=1, dt=0.5):
+    def read_vars_fbp(self, n:int=1, dt:float=0.5):
+        vars = []
+        for i in range(n):
+            print(
+                "\n--- Measurement #"
+                + str(i + 1)
+                + " ------------------------------------------\n"
+            )
+            self.read_vars_common()
 
-        try:
-            for i in range(n):
+            soft_itlks = self.read_bsmp_variable(31, "uint32_t")
+            print("\nSoft Interlocks: " + str(soft_itlks))
+            if soft_itlks:
+                self.decode_interlocks(soft_itlks, list_fbp_soft_interlocks)
+                # Add to soft interlocks in dict
 
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-                self.read_vars_common()
+            hard_itlks = self.read_bsmp_variable(32, "uint32_t")
+            print("Hard Interlocks: " + str(hard_itlks))
+            if hard_itlks:
+                self.decode_interlocks(hard_itlks, list_fbp_hard_interlocks)
 
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(soft_itlks, list_fbp_soft_interlocks)
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(hard_itlks, list_fbp_hard_interlocks)
-
-                print(
-                    "\nLoad Current: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Load Voltage: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "Load Resistance: "
-                    + str(
-                        abs(
-                            round(
-                                self.read_bsmp_variable(34, "float")
-                                / self.read_bsmp_variable(33, "float"),
-                                3,
-                            )
+            print(
+                "\nLoad Current: "
+                + str(round(self.read_bsmp_variable(33, "float"), 3))
+                + " A"
+            )
+            print(
+                "Load Voltage: "
+                + str(round(self.read_bsmp_variable(34, "float"), 3))
+                + " V"
+            )
+            print(
+                "Load Resistance: "
+                + str(
+                    abs(
+                        round(
+                            self.read_bsmp_variable(34, "float")
+                            / self.read_bsmp_variable(33, "float"),
+                            3,
                         )
                     )
-                    + " Ohm"
                 )
-                print(
-                    "Load Power: "
-                    + str(
-                        abs(
-                            round(
-                                self.read_bsmp_variable(34, "float")
-                                * self.read_bsmp_variable(33, "float"),
-                                3,
-                            )
+                + " Ohm"
+            )
+            print(
+                "Load Power: "
+                + str(
+                    abs(
+                        round(
+                            self.read_bsmp_variable(34, "float")
+                            * self.read_bsmp_variable(33, "float"),
+                            3,
                         )
                     )
-                    + " W"
                 )
-                print(
-                    "DC-Link Voltage: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "Heat-Sink Temp: "
-                    + str(round(self.read_bsmp_variable(36, "float"), 3))
-                    + " °C"
-                )
-                print(
-                    "Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(37, "float"), 3))
-                    + " %"
-                )
+                + " W"
+            )
+            print(
+                "DC-Link Voltage: "
+                + str(round(self.read_bsmp_variable(35, "float"), 3))
+                + " V"
+            )
+            print(
+                "Heat-Sink Temp: "
+                + str(round(self.read_bsmp_variable(36, "float"), 3))
+                + " °C"
+            )
+            print(
+                "Duty-Cycle: "
+                + str(round(self.read_bsmp_variable(37, "float"), 3))
+                + " %"
+            )
 
-                time.sleep(dt)
+            time.sleep(dt)
 
-        except:
-            pass
 
     def read_vars_fbp_dclink(self, n=1, dt=0.5):
 
@@ -4284,26 +4310,20 @@ class BaseDRS(object):
 
         self.set_slave_add(old_add)
 
-    def get_siggen_vars(self):
-        print("\n### SigGen Variables ###\n")
-        print("Enable: " + str((round(self.read_bsmp_variable(6, "uint16_t"), 3))))
-        print(
-            "Type: "
-            + list_sig_gen_types[int(round(self.read_bsmp_variable(7, "uint16_t"), 3))]
-        )
-        print("Num Cycles: " + str(round(self.read_bsmp_variable(8, "uint16_t"), 3)))
-        print("Index: " + str(round(self.read_bsmp_variable(9, "float"), 3)))
-        print("Frequency: " + str(round(self.read_bsmp_variable(10, "float"), 3)))
-        print("Amplitude: " + str(round(self.read_bsmp_variable(11, "float"), 3)))
-        print("Offset: " + str(round(self.read_bsmp_variable(12, "float"), 3)))
-
+    def get_siggen_vars(self) -> dict:
         reply_msg = self.read_var(index_to_hex(13), 21)
         val = struct.unpack("BBHffffB", reply_msg)
 
-        print("Aux Param 0: " + str(val[3]))
-        print("Aux Param 1: " + str(val[4]))
-        print("Aux Param 2: " + str(val[5]))
-        print("Aux Param 3: " + str(val[6]))
+        return {
+            "enable": self.read_bsmp_variable(6, "uint16_t"),
+            "type": list_sig_gen_types[int(self.read_bsmp_variable(7, "uint16_t"))],
+            "num_cycles": self.read_bsmp_variable(8, "uint16_t"),
+            "index": self.read_bsmp_variable(9, "float"),
+            "frequency": self.read_bsmp_variable(10, "float"),
+            "amplitude": self.read_bsmp_variable(11, "float"),
+            "offset": self.read_bsmp_variable(12, "float"),
+            "aux_params": val[3:7],
+        }
 
     def firmware_initialization(self):
         print("\n ### Inicialização de firmware ### \n")
