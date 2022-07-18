@@ -5,13 +5,12 @@ import socket
 import struct
 import typing
 
-from .validation import SerialErrPckgLen, validate
-
-from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST
-from .utils import checksum, get_logger
 import serial
 
 from .base import BaseDRS
+from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST
+from .utils import checksum, get_logger
+from .validation import SerialErrPckgLen, validate
 
 logger = get_logger(name=__file__)
 

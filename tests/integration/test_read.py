@@ -1,6 +1,7 @@
-from unittest import TestCase
-from pydrs import pydrs
 import json
+from unittest import TestCase
+
+from pydrs import pydrs
 
 
 class TestRead(TestCase):

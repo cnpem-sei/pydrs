@@ -6,109 +6,107 @@ import os
 import struct
 import time
 
-from .validation import SerialErrPckgLen, SerialInvalidCmd
-
-from .utils import (
-    double_to_hex,
-    float_to_hex,
-    format_list_size,
-    get_logger,
-    index_to_hex,
-    size_to_hex,
-    uint32_to_hex,
-    float_list_to_hex,
-)
-
 from .consts import (
     COM_FUNCTION,
     COM_READ_VAR,
     COM_REQUEST_CURVE,
     COM_SEND_WFM_REF,
     COM_WRITE_VAR,
+    DP_MODULE_MAX_COEFF,
     NUM_MAX_COEFFS_DSP,
     UDC_FIRMWARE_VERSION,
-    DP_MODULE_MAX_COEFF,
     WRITE_DOUBLE_SIZE_PAYLOAD,
     WRITE_FLOAT_SIZE_PAYLOAD,
-    type_size,
-    type_format,
-    size_curve_block,
-    num_coeffs_dsp_modules,
-    num_dsp_modules,
     dsp_classes_names,
     num_blocks_curves_fax,
     num_blocks_curves_fbp,
+    num_coeffs_dsp_modules,
+    num_dsp_modules,
+    size_curve_block,
+    type_format,
+    type_size,
 )
 
 # common_list
 from .consts.common_list import (
-    list_ps_models,
     list_common_vars,
     list_curv,
     list_func,
     list_op_mode,
-    list_sig_gen_types,
     list_parameters,
-)
-
-# fbp_const_list
-from .consts.fbp_const_list import (
-    list_fbp_soft_interlocks,
-    list_fbp_hard_interlocks,
-    list_fbp_dclink_hard_interlocks,
+    list_ps_models,
+    list_sig_gen_types,
 )
 
 # fac_const_list
 from .consts.fac_const_list import (
-    list_fac_acdc_soft_interlocks,
-    list_fac_acdc_hard_interlocks,
-    list_fac_acdc_iib_is_interlocks,
-    list_fac_acdc_iib_is_alarms,
-    list_fac_acdc_iib_cmd_interlocks,
-    list_fac_acdc_iib_cmd_alarms,
-    list_fac_dcdc_soft_interlocks,
-    list_fac_dcdc_hard_interlocks,
-    list_fac_dcdc_iib_interlocks,
-    list_fac_dcdc_iib_alarms,
-    list_fac_2s_acdc_soft_interlocks,
+    list_fac_2p4s_dcdc_hard_interlocks,
+    list_fac_2p4s_dcdc_iib_alarms,
+    list_fac_2p4s_dcdc_iib_interlocks,
+    list_fac_2p4s_dcdc_soft_interlocks,
+    list_fac_2p_acdc_imas_hard_interlocks,
+    list_fac_2p_acdc_imas_soft_interlocks,
+    list_fac_2p_dcdc_imas_hard_interlocks,
+    list_fac_2p_dcdc_imas_soft_interlocks,
     list_fac_2s_acdc_hard_interlocks,
-    list_fac_2s_acdc_iib_is_interlocks,
+    list_fac_2s_acdc_iib_cmd_alarms,
     list_fac_2s_acdc_iib_cmd_interlocks,
     list_fac_2s_acdc_iib_is_alarms,
-    list_fac_2s_acdc_iib_cmd_alarms,
-    list_fac_2s_dcdc_soft_interlocks,
+    list_fac_2s_acdc_iib_is_interlocks,
+    list_fac_2s_acdc_soft_interlocks,
     list_fac_2s_dcdc_hard_interlocks,
-    list_fac_2s_dcdc_iib_interlocks,
     list_fac_2s_dcdc_iib_alarms,
-    list_fac_2p4s_dcdc_soft_interlocks,
-    list_fac_2p4s_dcdc_hard_interlocks,
-    list_fac_2p4s_dcdc_iib_interlocks,
-    list_fac_2p4s_dcdc_iib_alarms,
-    list_fac_dcdc_ema_soft_interlocks,
+    list_fac_2s_dcdc_iib_interlocks,
+    list_fac_2s_dcdc_soft_interlocks,
+    list_fac_acdc_hard_interlocks,
+    list_fac_acdc_iib_cmd_alarms,
+    list_fac_acdc_iib_cmd_interlocks,
+    list_fac_acdc_iib_is_alarms,
+    list_fac_acdc_iib_is_interlocks,
+    list_fac_acdc_soft_interlocks,
     list_fac_dcdc_ema_hard_interlocks,
-    list_fac_dcdc_ema_iib_interlocks,
     list_fac_dcdc_ema_iib_alarms,
-    list_fac_2p_acdc_imas_soft_interlocks,
-    list_fac_2p_acdc_imas_hard_interlocks,
-    list_fac_2p_dcdc_imas_soft_interlocks,
-    list_fac_2p_dcdc_imas_hard_interlocks,
+    list_fac_dcdc_ema_iib_interlocks,
+    list_fac_dcdc_ema_soft_interlocks,
+    list_fac_dcdc_hard_interlocks,
+    list_fac_dcdc_iib_alarms,
+    list_fac_dcdc_iib_interlocks,
+    list_fac_dcdc_soft_interlocks,
 )
 
 # fap_const_list
 from .consts.fap_const_list import (
-    list_fap_soft_interlocks,
-    list_fap_hard_interlocks,
-    list_fap_iib_interlocks,
-    list_fap_iib_alarms,
-    list_fap_4p_soft_interlocks,
-    list_fap_4p_hard_interlocks,
-    list_fap_4p_iib_interlocks,
-    list_fap_4p_iib_alarms,
-    list_fap_2p2s_soft_interlocks,
     list_fap_2p2s_hard_interlocks,
-    list_fap_225A_soft_interlocks,
+    list_fap_2p2s_soft_interlocks,
+    list_fap_4p_hard_interlocks,
+    list_fap_4p_iib_alarms,
+    list_fap_4p_iib_interlocks,
+    list_fap_4p_soft_interlocks,
     list_fap_225A_hard_interlocks,
+    list_fap_225A_soft_interlocks,
+    list_fap_hard_interlocks,
+    list_fap_iib_alarms,
+    list_fap_iib_interlocks,
+    list_fap_soft_interlocks,
 )
+
+# fbp_const_list
+from .consts.fbp_const_list import (
+    list_fbp_dclink_hard_interlocks,
+    list_fbp_hard_interlocks,
+    list_fbp_soft_interlocks,
+)
+from .utils import (
+    double_to_hex,
+    float_list_to_hex,
+    float_to_hex,
+    format_list_size,
+    get_logger,
+    index_to_hex,
+    size_to_hex,
+    uint32_to_hex,
+)
+from .validation import SerialErrPckgLen, SerialInvalidCmd
 
 logger = get_logger(name=__file__)
 
