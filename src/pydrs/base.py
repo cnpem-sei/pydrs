@@ -16,7 +16,7 @@ from .utils import (
     index_to_hex,
     size_to_hex,
     uint32_to_hex,
-    float_list_to_hex
+    float_list_to_hex,
 )
 
 from .consts import (
