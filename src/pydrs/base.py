@@ -16,6 +16,7 @@ from .utils import (
     index_to_hex,
     size_to_hex,
     uint32_to_hex,
+    float_list_to_hex
 )
 
 from .consts import (
@@ -551,7 +552,7 @@ class BaseDRS(object):
         payload_size = size_to_hex(1 + 2 + 2 + 4 * NUM_MAX_COEFFS_DSP)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
-        hex_coeffs = self.float_list_to_hex(coeffs_list_full)
+        hex_coeffs = float_list_to_hex(coeffs_list_full)
         send_packet = (
             COM_FUNCTION
             + payload_size
