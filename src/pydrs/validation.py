@@ -1,5 +1,5 @@
 import warnings
-from src.pydrs.consts import ETH_ANSWER_NOQUEUE
+from .consts import ETH_ANSWER_NOQUEUE
 from .utils import checksum
 
 
