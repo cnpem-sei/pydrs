@@ -1394,11 +1394,6 @@ class BaseDRS(object):
 
     def read_vars_fbp(self, n: int = 1, dt: float = 0.5):
         for i in range(n):
-            print(
-                "\n--- Measurement #"
-                + str(i + 1)
-                + " ------------------------------------------\n"
-            )
             self.read_vars_common()
 
             soft_itlks = self.read_bsmp_variable(31, "uint32_t")
@@ -1517,7 +1512,7 @@ class BaseDRS(object):
         except:
             pass
 
-    def read_vars_fac_acdc(self, n=1, dt=0.5, iib=1):
+    def read_vars_fac_acdc(self, n=1, dt:float=0.5, iib:bool=True):
 
         # try:
         for i in range(n):
