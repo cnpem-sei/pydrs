@@ -86,7 +86,7 @@ class EthDRS(BaseDRS):
 
     def __init__(self, address: str = None, port: int = 5000):
         super().__init__()
-        self.timeout = 2
+        self.serial_timeout = 50
         if address is None:
             print(
                 "From 2.0.0 onwards, creating the object then using 'connect' to connect will be deprecated. Please use 'EthDRS(address, port)' instead."
@@ -95,7 +95,7 @@ class EthDRS(BaseDRS):
             self.connect(address, port)
 
     def _format_message(self, msg: bytes, msg_type: bytes) -> bytes:
-        msg = msg_type + struct.Struct(">f").pack(self.timeout) + msg
+        msg = msg_type + struct.Struct(">f").pack(self.serial_timeout) + msg
         return msg[0:1] + struct.pack(">I", (len(msg) - 1)) + msg[1:]
 
     @staticmethod
@@ -141,7 +141,6 @@ class EthDRS(BaseDRS):
     @timeout.setter
     def timeout(self, new_timeout: float):
         self.socket.settimeout(new_timeout)
-        self.timeout = new_timeout
 
     def is_open(self) -> bool:
         try:

@@ -249,7 +249,6 @@ class BaseDRS(object):
 
     def set_slowref(self, setpoint: float) -> bytes:
         """Sets new slowref reference value"""
-        eth-bridge-dict-return
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
@@ -1393,8 +1392,7 @@ class BaseDRS(object):
 
         return active_interlocks
 
-    def read_vars_fbp(self, n:int=1, dt:float=0.5):
-        vars = []
+    def read_vars_fbp(self, n: int = 1, dt: float = 0.5):
         for i in range(n):
             print(
                 "\n--- Measurement #"
@@ -1467,7 +1465,6 @@ class BaseDRS(object):
             )
 
             time.sleep(dt)
-
 
     def read_vars_fbp_dclink(self, n=1, dt=0.5):
 
