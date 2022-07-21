@@ -1,6 +1,6 @@
 from unittest import TestCase
-from serial.serialutil import SerialException
 
+from serial.serialutil import SerialException
 
 from pydrs.bsmp import SerialInterface
 

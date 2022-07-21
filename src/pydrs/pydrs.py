@@ -5,13 +5,12 @@ import socket
 import struct
 import typing
 
-from .validation import SerialErrPckgLen, validate
-
-from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST
-from .utils import checksum, get_logger
 import serial
 
 from .base import BaseDRS
+from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST
+from .utils import checksum, get_logger
+from .validation import SerialErrPckgLen, validate
 
 logger = get_logger(name=__file__)
 
@@ -87,6 +86,7 @@ class EthDRS(BaseDRS):
 
     def __init__(self, address: str = None, port: int = 5000):
         super().__init__()
+        self.serial_timeout = 50
         if address is None:
             print(
                 "From 2.0.0 onwards, creating the object then using 'connect' to connect will be deprecated. Please use 'EthDRS(address, port)' instead."
@@ -95,7 +95,7 @@ class EthDRS(BaseDRS):
             self.connect(address, port)
 
     def _format_message(self, msg: bytes, msg_type: bytes) -> bytes:
-        msg = msg_type + struct.Struct(">f").pack(self.timeout) + msg
+        msg = msg_type + struct.Struct(">f").pack(self.serial_timeout) + msg
         return msg[0:1] + struct.pack(">I", (len(msg) - 1)) + msg[1:]
 
     @staticmethod
