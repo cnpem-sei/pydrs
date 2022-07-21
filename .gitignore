@@ -31,3 +31,5 @@ sdist/
 share/python-wheels/
 var/
 wheels/
+secrets.json
+.pytest_cache

@@ -52,7 +52,6 @@ setup(
     ),
     package_dir={"": "src"},
     python_requires=">=3.6",
-    scripts=["scripts/hradc_scope.py", "scripts/update_hradc.py"],
     test_suite="tests",
     zip_safe=False,
 )

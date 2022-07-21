@@ -4,6 +4,7 @@ import typing
 import serial
 import serial.serialutil
 from siriuspy.bsmp.serial import IOInterface as _IOInterface
+
 from pydrs.bsmp.exceptions import create_value_error
 
 
