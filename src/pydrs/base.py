@@ -507,7 +507,6 @@ class BaseDRS(object):
         print_modules: bool = True,
     ) -> list:
         timeout_old = self.timeout
-        # self.ser.timeout = 0.05
         param_bank = []
 
         for param_name in list_param:
@@ -1013,10 +1012,6 @@ class BaseDRS(object):
 
     def read_udc_version(self) -> dict:
         return {"arm": self.read_udc_arm_version(), "c28": self.read_udc_c28_version()}
-
-    def read_ps_model(self):
-        reply_msg = self.read_ps_model()
-        return list_ps_models[reply_msg[3]]
 
     """
     ======================================================================
