@@ -466,7 +466,13 @@ class BaseDRS(object):
             + index_to_hex(list_func.index("save_param_bank"))
             + hex_type
         )
-        return self._transfer(send_packet, 6)
+        
+        # User defined timeout is temporarily changed to a "safe" value to prevent lockups
+        old_timeout = self.timeout
+        self.timeout = 10
+        ret = self._transfer(send_packet, 6)
+        self.timeout = old_timeout
+        return ret
 
     def load_param_bank(self, type_memory: int = 2) -> bytes:
         """Loads all parameter values into param_data"""

@@ -7,6 +7,7 @@
 ### Changed:
 - Empty reply always throws exception
 - Fixed exception type on error response (proper `SerialError` response instead of `SerialErrPckgLen`)
+- Fixed leftover "broken" messages on a new command when another command times out
 
 ### Removed:
 - Removed `get_ps_model`
