@@ -23,10 +23,10 @@ class SerialInterface(_IOInterface):
         super().__init__()
 
         if not path or type(path) != str:
-            raise create_value_error(parameter="path", input=path)
+            create_value_error(parameter="path", input=path)
 
         if (not baudrate) or type(baudrate) != int or baudrate < 0:
-            raise create_value_error(parameter="baudrate", input=baudrate)
+            create_value_error(parameter="baudrate", input=baudrate)
 
         self._port: str = path
         self._baudrate: int = baudrate

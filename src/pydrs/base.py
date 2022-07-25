@@ -1507,7 +1507,7 @@ class BaseDRS(object):
         except:
             pass
 
-    def read_vars_fac_acdc(self, n=1, dt:float=0.5, iib:bool=True):
+    def read_vars_fac_acdc(self, n=1, dt: float = 0.5, iib: bool = True):
 
         # try:
         for i in range(n):
@@ -3798,7 +3798,7 @@ class BaseDRS(object):
             self.set_slave_add(old_add)
         except:
             self.set_slave_add(old_add)
-            raise
+            raise  # TODO: Raise proper exception
 
     def read_vars_fac_2p_dcdc_imas(self, n=1, com_add=1, dt=0.5, iib=0):
 
@@ -3896,7 +3896,7 @@ class BaseDRS(object):
             self.set_slave_add(old_add)
         except:
             self.set_slave_add(old_add)
-            raise
+            raise  # TODO: Raise proper exception
 
     def check_param_bank(self, param_file):
         fbp_param_list = []

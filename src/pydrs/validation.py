@@ -42,6 +42,7 @@ def validate(func):
     def wrapper(*args, **kwargs):
         reply = func(*args, **kwargs)
         if len(reply) == 1 and reply[0] == ETH_ANSWER_NOQUEUE:
+            args[0]._reset_input_buffer()
             raise SerialErrPckgLen(
                 "Received empty response, check if the controller is on and connected"
             )
@@ -58,7 +59,11 @@ def validate(func):
             )
 
         if reply != checksum(reply[:-1]):
-            raise SerialErrCheckSum
+            raise SerialErrCheckSum(
+                "Expected {} as checksum, received {}",
+                checksum(reply[:-1])[-1],
+                reply[-1],
+            )
 
         return reply
 
@@ -68,6 +73,8 @@ def validate(func):
 def check_serial_error(reply: bytes):
     if reply[1] == 0x53:
         if reply[-2] == 4:
-            raise SerialForbidden
+            raise SerialForbidden(
+                "Command blocked by UDC, unlock with unlock_udc() first"
+            )
         if reply[-2] == 8:
             raise SerialInvalidCmd
