@@ -30,7 +30,7 @@ class SerialDRS(BaseDRS):
             self.connect(port, baud)
 
     def _transfer_write(self, msg: str):
-        full_msg = (self.slave_add + msg).encode("ISO-8859-1")
+        full_msg = (self._slave_addr + msg).encode("ISO-8859-1")
         self.ser.write(checksum(full_msg))
 
     @validate
@@ -119,13 +119,13 @@ class EthDRS(BaseDRS):
 
     @validate
     def _transfer(self, msg: str, size: int) -> bytes:
-        base_msg = (self.slave_add + msg).encode("ISO-8859-1")
+        base_msg = (self._slave_addr + msg).encode("ISO-8859-1")
         full_msg = self._format_message(checksum(base_msg), ETH_CMD_REQUEST)
         self.socket.sendall(full_msg)
         return self._get_reply(size)
 
     def _transfer_write(self, msg: str):
-        base_msg = (self.slave_add + msg).encode("ISO-8859-1")
+        base_msg = (self._slave_addr + msg).encode("ISO-8859-1")
         full_msg = self._format_message(checksum(base_msg), ETH_CMD_REQUEST)
         self.socket.sendall(full_msg)
         self._get_reply()

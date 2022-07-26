@@ -1,3 +1,4 @@
+from distutils.log import ERROR
 import warnings
 
 from .consts import ETH_ANSWER_NOQUEUE
@@ -37,31 +38,56 @@ SERIAL_ERROR = [
     "Invalid command",
 ]
 
+ERROR_RESPONSE = {
+    0xe1: "Malformed message",
+    0xe2: "Operation not supported",
+    0xe3: "Invalid ID",
+    0xe4: "Invalid value",
+    0xe5: "Invalid payload size",
+    0xe6: "Read-only",
+    0xe7: "Insufficient memory",
+    0xe8: "Resource busy"
+}
+
 
 def validate(func):
     def wrapper(*args, **kwargs):
         reply = func(*args, **kwargs)
-        if len(reply) == 1 and reply[0] == ETH_ANSWER_NOQUEUE:
-            warnings.warn(
-                "Server declared that no data was available in the read queue. If this is a write-only operation, use _transfer_write",
-                RuntimeWarning,
+        if len(reply) == 0 or (len(reply) == 1 and reply[0] == ETH_ANSWER_NOQUEUE):
+            args[0]._reset_input_buffer()
+            raise SerialErrPckgLen(
+                "Received empty response, check if the controller is on and connected"
             )
-            return b""
 
         reply = reply[1:] if len(reply) - 1 == args[2] else reply
-
-        if reply[1] == 0x53:
-            if reply[-2] == 4:
-                raise SerialForbidden
-            if reply[-2] == 8:
-                raise SerialInvalidCmd
+        check_serial_error(reply)
 
         if len(reply) != args[2]:
-            raise SerialErrPckgLen("Expected {} bytes, received {} bytes".format(args[2], len(reply)))
+            raise SerialErrPckgLen(
+                "Expected {} bytes, received {} bytes".format(args[2], len(reply))
+            )
 
         if reply != checksum(reply[:-1]):
-            raise SerialErrCheckSum
+            raise SerialErrCheckSum(
+                "Expected {} as checksum, received {}".format(
+                checksum(reply[:-1])[-1],
+                reply[-1]
+                )
+            )
 
         return reply
 
     return wrapper
+
+
+def check_serial_error(reply: bytes):
+    error_index = 2 if reply[0] == 0x21 else 1
+    if reply[error_index] == 0x53:
+        if reply[-2] == 4:
+            raise SerialForbidden(
+                "Command blocked by UDC, unlock with unlock_udc() first"
+            )
+        if reply[-2] == 8:
+            raise SerialInvalidCmd
+    elif reply[error_index] in ERROR_RESPONSE:
+        raise SerialInvalidCmd(ERROR_RESPONSE[reply[error_index]])

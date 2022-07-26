@@ -115,7 +115,7 @@ class BaseDRS(object):
     """Base class, originates all communication child classes"""
 
     def __init__(self):
-        self.slave_add = "\x01"
+        self.slave_addr = 1
 
         print("\n pyDRS - compatible UDC firmware version: " + UDC_FIRMWARE_VERSION + "\n")
 
@@ -154,6 +154,14 @@ class BaseDRS(object):
     @timeout.setter
     def timeout(self, new_timeout: float):
         pass
+    
+    @property
+    def slave_addr(self) -> int:
+        return struct.unpack("B", self._slave_addr.encode())[0]
+
+    @slave_addr.setter
+    def slave_addr(self, address: int):
+        self._slave_addr = struct.pack("B", address).decode("ISO-8859-1")
 
     """
     ======================================================================
@@ -597,9 +605,9 @@ class BaseDRS(object):
         delay: float = 0.5,
         print_reply: bool = True,
     ):
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         for add in add_list:
-            self.set_slave_add(add)
+            self.slave_addr = add
             if arg is None:
                 r = p_func()
             else:
@@ -608,7 +616,7 @@ class BaseDRS(object):
                 print("\n Add " + str(add))
                 print(r)
             time.sleep(delay)
-        self.set_slave_add(old_add)
+        self.slave_addr = old_add
 
     def cfg_source_scope(self, p_source: int) -> bytes:
         payload_size = size_to_hex(1 + 4)  # Payload: ID + p_source
@@ -1107,14 +1115,6 @@ class BaseDRS(object):
 
         return buf
 
-    @property
-    def slave_addr(self) -> int:
-        return struct.unpack("B", self.slave_add.encode())[0]
-
-    @slave_addr.setter
-    def slave_addr(self, address: int):
-        self.slave_add = struct.pack("B", address).decode("ISO-8859-1")
-
     """
     ======================================================================
                       Funções auxiliares
@@ -1451,12 +1451,12 @@ class BaseDRS(object):
 
     def read_vars_fac_2s_acdc(self, n=1, add_mod_a=2, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_add
 
         try:
             for i in range(n):
 
-                self.set_slave_add(add_mod_a)
+                self.slave_add = add_mod_a
 
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
                 self.read_vars_common()
@@ -1538,7 +1538,7 @@ class BaseDRS(object):
                     print("IIB Cmd Interlocks: " + str(round(self.read_bsmp_variable(57, "uint32_t"), 3)))
                     print("IIB Cmd Alarms: " + str(round(self.read_bsmp_variable(58, "uint32_t"), 3)))
 
-                self.set_slave_add(add_mod_a + 1)
+                self.slave_add = add_mod_a + 1
 
                 print("\n *** MODULE B ***")
 
@@ -1619,19 +1619,19 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_add = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fac_2s_dcdc(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         iib_offset = 14 * (iib - 1)
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
 
@@ -1723,21 +1723,21 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fac_2p4s_acdc(self, n=1, add_mod_a=1, dt=0.5, iib=0):
         self.read_vars_fac_2s_acdc(n, add_mod_a, dt, iib)
 
     def read_vars_fac_2p4s_dcdc(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
 
@@ -1831,18 +1831,18 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fap(self, n=1, com_add=1, dt=0.5, iib=1):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
                 self.read_vars_common()
@@ -1921,19 +1921,19 @@ class BaseDRS(object):
                     print("IIB Alarms: " + str(round(self.read_bsmp_variable(57, "uint32_t"), 3)))
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fap_4p(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
                 self.read_vars_common()
@@ -2104,21 +2104,20 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
         except Exception as e:
-            print(e)
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fap_2p2s(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
                 self.read_vars_common()
@@ -2291,20 +2290,19 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
         except Exception as e:
-            print(e)
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fap_225A(self, n=1, com_add=1, dt=0.5):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
                 self.read_vars_common()
@@ -2329,18 +2327,18 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fac_2p_acdc_imas(self, n=1, add_mod_a=2, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(add_mod_a)
+                self.slave_addr = add_mod_a
 
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
                 self.read_vars_common()
@@ -2362,7 +2360,7 @@ class BaseDRS(object):
                 print("Rectifier Current: " + str(round(self.read_bsmp_variable(34, "float"), 3)) + " A")
                 print("Duty-Cycle: " + str(round(self.read_bsmp_variable(35, "float"), 3)) + " %")
 
-                self.set_slave_add(add_mod_a + 1)
+                self.slave_addr = add_mod_a + 1
 
                 print("\n *** MODULE B ***")
 
@@ -2383,19 +2381,19 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
-            raise  # TODO: Raise proper exception
+            self.slave_addr = old_add
+            # TODO: Raise proper exception
 
     def read_vars_fac_2p_dcdc_imas(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
 
@@ -2430,9 +2428,9 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
             raise  # TODO: Raise proper exception
 
     def check_param_bank(self, param_file):
@@ -2480,19 +2478,19 @@ class BaseDRS(object):
                 writer.writerow([val])
 
     def read_vars_fac_n(self, n=1, dt=0.5):
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         try:
             for i in range(n):
                 print("\n--- Measurement #" + str(i + 1) + " ------------------------------------------\n")
-                self.set_slave_add(1)
+                self.slave_addr = 1
                 self.read_vars_fac_dcdc()
                 print("\n-----------------------\n")
-                self.set_slave_add(2)
+                self.slave_addr = 2
                 self.read_vars_fac_acdc()
                 time.sleep(dt)
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def set_buf_samples_freq(self, fs):
         self.set_param("Freq_TimeSlicer", 1, fs)
@@ -2576,8 +2574,8 @@ class BaseDRS(object):
 
         add = int(input("\n Digite o endereco serial atual do controlador a ser configurado: "))
 
-        old_add = self.get_slave_add()
-        self.set_slave_add(add)
+        old_add = self.slave_addr
+        self.slave_addr = add
 
         # areas = ["IA", "LA", "PA"]
 
@@ -2748,7 +2746,7 @@ class BaseDRS(object):
         if (r != "Y") and (r != "y"):
             print(" \n *** OPERAÇÃO CANCELADA ***\n")
             return
-        self.set_slave_add(add)
+        self.slave_addr = add
 
         if ps_model == 0 and cfg_dsp_modules == 1:
             print("\n Enviando parametros de controle para controlador ...")
@@ -2778,7 +2776,7 @@ class BaseDRS(object):
 
         print("\n Pronto! Não se esqueça de utilizar o novo endereço serial para se comunicar com esta fonte! :)\n")
 
-        self.set_slave_add(old_add)
+        self.slave_addr = old_add
 
     def get_siggen_vars(self) -> dict:
         reply_msg = self.read_var(index_to_hex(13), 21)
