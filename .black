@@ -1,7 +1,0 @@
-[tool.black]
-include = '\.pyi?$'
-exclude = '''
-/(
-\.git
-)/
-'''

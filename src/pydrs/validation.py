@@ -41,7 +41,7 @@ SERIAL_ERROR = [
 def validate(func):
     def wrapper(*args, **kwargs):
         reply = func(*args, **kwargs)
-        if len(reply) == 1 and reply[0] == ETH_ANSWER_NOQUEUE:
+        if len(reply) == 0 or (len(reply) == 1 and reply[0] == ETH_ANSWER_NOQUEUE):
             args[0]._reset_input_buffer()
             raise SerialErrPckgLen(
                 "Received empty response, check if the controller is on and connected"

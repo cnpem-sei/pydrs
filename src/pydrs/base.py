@@ -466,7 +466,7 @@ class BaseDRS(object):
             + index_to_hex(list_func.index("save_param_bank"))
             + hex_type
         )
-        
+
         # User defined timeout is temporarily changed to a "safe" value to prevent lockups
         old_timeout = self.timeout
         self.timeout = 10

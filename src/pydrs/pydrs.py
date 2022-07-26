@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import re
 import socket
 import struct
@@ -140,7 +138,7 @@ class EthDRS(BaseDRS):
 
     @timeout.setter
     def timeout(self, new_timeout: float):
-        self._serial_timeout = new_timeout*1000
+        self._serial_timeout = new_timeout * 1000
         self.socket.settimeout(new_timeout)
 
     def is_open(self) -> bool:
