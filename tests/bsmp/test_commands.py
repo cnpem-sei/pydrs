@@ -14,9 +14,7 @@ class TestSerialCommandsx0(TestCase):
         self._serial = SerialInterface(path="/serial", baudrate=9600)
         self._entities = EntitiesPS()
 
-        self._pwrsupply = CommonPSBSMP(
-            iointerface=self._serial, entities=self._entities, slave_address=1
-        )
+        self._pwrsupply = CommonPSBSMP(iointerface=self._serial, entities=self._entities, slave_address=1)
 
     def test_query_protocol_version(self):
         """Test"""
@@ -31,6 +29,4 @@ class TestSerialCommandsx0(TestCase):
 
     def test_write_parameter(self):
         """Test"""
-        self._pwrsupply.parameter_write(
-            var_id=ConstPSBSMP.P_PS_NAME, value="pv_test_name", timeout=500
-        )
+        self._pwrsupply.parameter_write(var_id=ConstPSBSMP.P_PS_NAME, value="pv_test_name", timeout=500)

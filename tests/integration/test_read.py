@@ -28,9 +28,7 @@ class TestRead(TestCase):
 
     def test_get_ps_name(self):
         self.drs.unlock_udc(self.secret["password"])
-        self.drs.set_ps_name(
-            "Jiga FBP para teste de resposta a setpoints do grupo CONS"
-        )
+        self.drs.set_ps_name("Jiga FBP para teste de resposta a setpoints do grupo CONS")
         self.assertEqual(
             self.drs.get_ps_name(),
             "Jiga FBP para teste de resposta a setpoints do grupo CONS",

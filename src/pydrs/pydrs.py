@@ -61,9 +61,7 @@ class SerialDRS(BaseDRS):
             )
             return False
         try:
-            self.ser = serial.Serial(
-                port, baud, timeout=1
-            )  # port format should be 'COM'+number
+            self.ser = serial.Serial(port, baud, timeout=1)  # port format should be 'COM'+number
             return True
         except Exception:
             logger.exception("Failed to open serial port ({}, {})".format(port, baud))
@@ -115,9 +113,7 @@ class EthDRS(BaseDRS):
             if payload[0] == ETH_ANSWER_ERR:
                 raise TimeoutError("Server timed out waiting for serial response")
         except IndexError:
-            raise SerialErrPckgLen(
-                "Received empty response, check if the controller is on and connected"
-            )
+            raise SerialErrPckgLen("Received empty response, check if the controller is on and connected")
 
         return payload
 

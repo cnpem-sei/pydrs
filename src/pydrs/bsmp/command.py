@@ -26,9 +26,7 @@ class CommonPSBSMP(_PSBSMP):
     _sleep_disable_scope = 0.5  # [s]
     _sleep_select_op_mode = 0.030  # [s]
 
-    def __init__(
-        self, iointerface: _IOInterface, slave_address: int, entities: _EntitiesPS
-    ):
+    def __init__(self, iointerface: _IOInterface, slave_address: int, entities: _EntitiesPS):
         super().__init__(iointerface, slave_address, entities)
         self._entities: _EntitiesPS
 

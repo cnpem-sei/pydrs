@@ -7,9 +7,7 @@ from .entities import EntitiesPS as _EntitiesPS
 
 class GenericPowerPS:
     def __init__(self, iointerf: _IOInterface, address: int) -> None:
-        self._bsmp: _CommonPSBSMP = _CommonPSBSMP(
-            iointerface=iointerf, entities=_EntitiesPS(), slave_address=address
-        )
+        self._bsmp: _CommonPSBSMP = _CommonPSBSMP(iointerface=iointerf, entities=_EntitiesPS(), slave_address=address)
 
     def turn_on(self):
         ack, data = self._bsmp.execute_function(

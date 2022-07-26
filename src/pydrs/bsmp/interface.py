@@ -68,17 +68,13 @@ class SerialInterface(_IOInterface):
         _decoded = _response.decode(self._encoding)
         return [s for s in _decoded]
 
-    def UART_write(
-        self, stream: typing.List[str], timeout: float
-    ) -> typing.Optional[typing.Any]:
+    def UART_write(self, stream: typing.List[str], timeout: float) -> typing.Optional[typing.Any]:
         if not self._serial:
             raise Exception("Serial not defined")
 
         return self._serial.write(stream)
 
-    def UART_request(
-        self, stream: typing.List[str], timeout: float
-    ) -> typing.Optional[typing.List[str]]:
+    def UART_request(self, stream: typing.List[str], timeout: float) -> typing.Optional[typing.List[str]]:
         """Read and Write OP"""
         self.UART_write(stream, timeout=timeout)
         return self.UART_read()
