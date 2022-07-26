@@ -1,3 +1,4 @@
+from distutils.log import ERROR
 import warnings
 
 from .consts import ETH_ANSWER_NOQUEUE
@@ -37,6 +38,17 @@ SERIAL_ERROR = [
     "Invalid command",
 ]
 
+ERROR_RESPONSE = {
+    0xE1: "Malformed message",
+    0xE2: "Operation not supported",
+    0xE3: "Invalid ID",
+    0xE4: "Invalid value",
+    0xE5: "Invalid payload size",
+    0xE6: "Read-only",
+    0xE7: "Insufficient memory",
+    0xE8: "Resource busy",
+}
+
 
 def validate(func):
     def wrapper(*args, **kwargs):
@@ -60,9 +72,9 @@ def validate(func):
 
         if reply != checksum(reply[:-1]):
             raise SerialErrCheckSum(
-                "Expected {} as checksum, received {}",
-                checksum(reply[:-1])[-1],
-                reply[-1],
+                "Expected {} as checksum, received {}".format(
+                    checksum(reply[:-1])[-1], reply[-1]
+                )
             )
 
         return reply
@@ -71,10 +83,13 @@ def validate(func):
 
 
 def check_serial_error(reply: bytes):
-    if reply[1] == 0x53:
+    error_index = 2 if reply[0] == 0x21 else 1
+    if reply[error_index] == 0x53:
         if reply[-2] == 4:
             raise SerialForbidden(
                 "Command blocked by UDC, unlock with unlock_udc() first"
             )
         if reply[-2] == 8:
             raise SerialInvalidCmd
+    elif reply[error_index] in ERROR_RESPONSE:
+        raise SerialInvalidCmd(ERROR_RESPONSE[reply[error_index]])

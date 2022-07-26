@@ -115,7 +115,7 @@ class BaseDRS(object):
     """Base class, originates all communication child classes"""
 
     def __init__(self):
-        self.slave_add = "\x01"
+        self.slave_addr = 1
 
         print(
             "\n pyDRS - compatible UDC firmware version: " + UDC_FIRMWARE_VERSION + "\n"
@@ -156,6 +156,14 @@ class BaseDRS(object):
     @timeout.setter
     def timeout(self, new_timeout: float):
         pass
+
+    @property
+    def slave_addr(self) -> int:
+        return struct.unpack("B", self._slave_addr.encode())[0]
+
+    @slave_addr.setter
+    def slave_addr(self, address: int):
+        self._slave_addr = struct.pack("B", address).decode("ISO-8859-1")
 
     """
     ======================================================================
@@ -219,14 +227,14 @@ class BaseDRS(object):
         """Gets power supply status"""
         reply_msg = self.read_var(index_to_hex(list_common_vars.index("ps_status")), 7)
         val = struct.unpack("BBHHB", reply_msg)
-        status = {}
-        status["state"] = list_op_mode[(val[3] & 0b0000000000001111)]
-        status["open_loop"] = (val[3] & 0b0000000000010000) >> 4
-        status["interface"] = (val[3] & 0b0000000001100000) >> 5
-        status["active"] = (val[3] & 0b0000000010000000) >> 7
-        status["model"] = list_ps_models[(val[3] & 0b0001111100000000) >> 8]
-        status["unlocked"] = (val[3] & 0b0010000000000000) >> 13
-        return status
+        return {
+            "state": list_op_mode[(val[3] & 0b0000000000001111)],
+            "open_loop": (val[3] & 0b0000000000010000) >> 4,
+            "interface": (val[3] & 0b0000000001100000) >> 5,
+            "active": (val[3] & 0b0000000010000000) >> 7,
+            "model": list_ps_models[(val[3] & 0b0001111100000000) >> 8],
+            "unlocked": (val[3] & 0b0010000000000000) >> 13,
+        }
 
     def set_ps_name(self, ps_name: str):
         # TODO: Turn into property?
@@ -685,9 +693,9 @@ class BaseDRS(object):
         delay: float = 0.5,
         print_reply: bool = True,
     ):
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         for add in add_list:
-            self.set_slave_add(add)
+            self.slave_addr = add
             if arg is None:
                 r = p_func()
             else:
@@ -696,7 +704,7 @@ class BaseDRS(object):
                 print("\n Add " + str(add))
                 print(r)
             time.sleep(delay)
-        self.set_slave_add(old_add)
+        self.slave_addr = old_add
 
     def cfg_source_scope(self, p_source: int) -> bytes:
         payload_size = size_to_hex(1 + 4)  # Payload: ID + p_source
@@ -1292,10 +1300,10 @@ class BaseDRS(object):
         if (wfmref_selected == curve) and (
             ps_status["state"] == "RmpWfm" or ps_status["state"] == "MigWfm"
         ):
-            print(
-                "\n The specified curve ID is currently selected and PS is on "
-                + ps_status["state"]
-                + " state. Choose a different curve ID to proceed.\n"
+            raise RuntimeError(
+                "The specified curve ID is currently selected and PS is on {} state. Choose a different curve ID.".format(
+                    ps_status["state"]
+                )
             )
 
         else:
@@ -1317,14 +1325,6 @@ class BaseDRS(object):
                 buf.extend(self.read_curve_block(curve_id, i))
 
         return buf
-
-    def set_slave_add(self, address):
-        # TODO: Turn into property?
-        self.slave_add = struct.pack("B", address).decode("ISO-8859-1")
-
-    def get_slave_add(self):
-        # TODO: Turn into property?
-        return struct.unpack("B", self.slave_add.encode())[0]
 
     """
     ======================================================================
@@ -1380,6 +1380,21 @@ class BaseDRS(object):
     def _interlock_name_assigned(self, active_interlocks, index, list_interlocks):
         active_interlocks.append("bit {}: {}".format(index, list_interlocks[index]))
 
+    def _include_interlocks(self, vars: dict):
+        soft_itlks = self.read_bsmp_variable(31, "uint32_t")
+        if soft_itlks != 0:
+            vars["soft_interlocks"] = self.decode_interlocks(
+                soft_itlks, list_fbp_soft_interlocks
+            )
+
+        hard_itlks = self.read_bsmp_variable(32, "uint32_t")
+        if hard_itlks != 0:
+            vars["hard_interlocks"] = self.decode_interlocks(
+                hard_itlks, list_fbp_hard_interlocks
+            )
+
+        return vars
+
     def decode_interlocks(self, reg_interlocks, list_interlocks: list) -> list:
         active_interlocks = []
         for index in range(32):
@@ -1394,33 +1409,16 @@ class BaseDRS(object):
         return active_interlocks
 
     def read_vars_fbp(self, n: int = 1, dt: float = 0.5):
-        for i in range(n):
+        vars_list = []
+        for _ in range(n):
             self.read_vars_common()
 
-            soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-            print("\nSoft Interlocks: " + str(soft_itlks))
-            if soft_itlks:
-                self.decode_interlocks(soft_itlks, list_fbp_soft_interlocks)
-                # Add to soft interlocks in dict
-
-            hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-            print("Hard Interlocks: " + str(hard_itlks))
-            if hard_itlks:
-                self.decode_interlocks(hard_itlks, list_fbp_hard_interlocks)
-
-            print(
-                "\nLoad Current: "
-                + str(round(self.read_bsmp_variable(33, "float"), 3))
-                + " A"
-            )
-            print(
-                "Load Voltage: "
-                + str(round(self.read_bsmp_variable(34, "float"), 3))
-                + " V"
-            )
-            print(
-                "Load Resistance: "
-                + str(
+            vars = {
+                "load_current": str(round(self.read_bsmp_variable(33, "float"), 3))
+                + " A",
+                "load_voltage": str(round(self.read_bsmp_variable(34, "float"), 3))
+                + " V",
+                "load_resistance": str(
                     abs(
                         round(
                             self.read_bsmp_variable(34, "float")
@@ -1429,11 +1427,8 @@ class BaseDRS(object):
                         )
                     )
                 )
-                + " Ohm"
-            )
-            print(
-                "Load Power: "
-                + str(
+                + " Ohm",
+                "load_power": str(
                     abs(
                         round(
                             self.read_bsmp_variable(34, "float")
@@ -1442,80 +1437,55 @@ class BaseDRS(object):
                         )
                     )
                 )
-                + " W"
-            )
-            print(
-                "DC-Link Voltage: "
-                + str(round(self.read_bsmp_variable(35, "float"), 3))
-                + " V"
-            )
-            print(
-                "Heat-Sink Temp: "
-                + str(round(self.read_bsmp_variable(36, "float"), 3))
-                + " °C"
-            )
-            print(
-                "Duty-Cycle: "
-                + str(round(self.read_bsmp_variable(37, "float"), 3))
-                + " %"
-            )
+                + " W",
+                "dc_link_voltage": str(round(self.read_bsmp_variable(35, "float"), 3))
+                + " V",
+                "heatsink_temp": str(round(self.read_bsmp_variable(36, "float"), 3))
+                + " °C",
+                "duty_cycle": str(round(self.read_bsmp_variable(37, "float"), 3))
+                + " %",
+            }
+
+            vars_list.append(self._include_interlocks(vars))
 
             time.sleep(dt)
+        return vars_list
 
-    def read_vars_fbp_dclink(self, n=1, dt=0.5):
-
+    def read_vars_fbp_dclink(self, n: int = 1, dt: float = 0.5) -> list:
+        vars_list = []
         try:
             for i in range(n):
-
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
                 self.read_vars_common()
 
+                vars = {
+                    "measurement_number": i + 1,
+                    "modules_status": self.read_bsmp_variable(33, "uint32_t"),
+                    "dc-link_voltage": str(
+                        round(self.read_bsmp_variable(34, "float"), 3)
+                    )
+                    + " V",
+                    "ps1_voltage": str(round(self.read_bsmp_variable(35, "float"), 3))
+                    + " V",
+                    "ps2_voltage": str(round(self.read_bsmp_variable(36, "float"), 3))
+                    + " V",
+                    "ps3_voltage": str(round(self.read_bsmp_variable(37, "float"), 3))
+                    + " V",
+                    "dig_pot_tap": self.read_bsmp_variable(38, "uint8_t"),
+                }
+
                 hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("\nHard Interlocks: " + str(hard_itlks))
                 if hard_itlks:
-                    self.decode_interlocks(hard_itlks, list_fbp_dclink_hard_interlocks)
+                    vars["hard_interlocks"] = self.decode_interlocks(
+                        hard_itlks, list_fbp_dclink_hard_interlocks
+                    )
 
-                print(
-                    "\nModules status: "
-                    + str(round(self.read_bsmp_variable(33, "uint32_t"), 3))
-                )
-                print(
-                    "DC-Link Voltage: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "PS1 Voltage: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "PS2 Voltage: "
-                    + str(round(self.read_bsmp_variable(36, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "PS3 Voltage: "
-                    + str(round(self.read_bsmp_variable(37, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "Dig Pot Tap: "
-                    + str(round(self.read_bsmp_variable(38, "uint8_t"), 3))
-                )
-
+                vars_list.append(vars)
                 time.sleep(dt)
 
-        except:
+        except Exception:
             pass
 
     def read_vars_fac_acdc(self, n=1, dt: float = 0.5, iib: bool = True):
-
-        # try:
         for i in range(n):
 
             print(
@@ -1981,12 +1951,12 @@ class BaseDRS(object):
 
     def read_vars_fac_2s_acdc(self, n=1, add_mod_a=2, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_add
 
         try:
             for i in range(n):
 
-                self.set_slave_add(add_mod_a)
+                self.slave_add = add_mod_a
 
                 print(
                     "\n--- Measurement #"
@@ -2166,7 +2136,7 @@ class BaseDRS(object):
                         + str(round(self.read_bsmp_variable(58, "uint32_t"), 3))
                     )
 
-                self.set_slave_add(add_mod_a + 1)
+                self.slave_add = add_mod_a + 1
 
                 print("\n *** MODULE B ***")
 
@@ -2341,19 +2311,19 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_add = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fac_2s_dcdc(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         iib_offset = 14 * (iib - 1)
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print(
                     "\n--- Measurement #"
@@ -2510,21 +2480,21 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fac_2p4s_acdc(self, n=1, add_mod_a=1, dt=0.5, iib=0):
         self.read_vars_fac_2s_acdc(n, add_mod_a, dt, iib)
 
     def read_vars_fac_2p4s_dcdc(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print(
                     "\n--- Measurement #"
@@ -2796,18 +2766,18 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fap(self, n=1, com_add=1, dt=0.5, iib=1):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print(
                     "\n--- Measurement #"
@@ -2987,19 +2957,19 @@ class BaseDRS(object):
                     )
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fap_4p(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print(
                     "\n--- Measurement #"
@@ -3310,21 +3280,20 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
         except Exception as e:
-            print(e)
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fap_2p2s(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print(
                     "\n--- Measurement #"
@@ -3645,20 +3614,19 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
         except Exception as e:
-            print(e)
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fap_225A(self, n=1, com_add=1, dt=0.5):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print(
                     "\n--- Measurement #"
@@ -3711,18 +3679,18 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def read_vars_fac_2p_acdc_imas(self, n=1, add_mod_a=2, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(add_mod_a)
+                self.slave_addr = add_mod_a
 
                 print(
                     "\n--- Measurement #"
@@ -3764,7 +3732,7 @@ class BaseDRS(object):
                     + " %"
                 )
 
-                self.set_slave_add(add_mod_a + 1)
+                self.slave_addr = add_mod_a + 1
 
                 print("\n *** MODULE B ***")
 
@@ -3801,19 +3769,19 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
-            raise  # TODO: Raise proper exception
+            self.slave_addr = old_add
+            # TODO: Raise proper exception
 
     def read_vars_fac_2p_dcdc_imas(self, n=1, com_add=1, dt=0.5, iib=0):
 
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
 
         try:
             for i in range(n):
 
-                self.set_slave_add(com_add)
+                self.slave_addr = com_add
 
                 print(
                     "\n--- Measurement #"
@@ -3899,9 +3867,9 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
             raise  # TODO: Raise proper exception
 
     def check_param_bank(self, param_file):
@@ -3955,7 +3923,7 @@ class BaseDRS(object):
                 writer.writerow([val])
 
     def read_vars_fac_n(self, n=1, dt=0.5):
-        old_add = self.get_slave_add()
+        old_add = self.slave_addr
         try:
             for i in range(n):
                 print(
@@ -3963,15 +3931,15 @@ class BaseDRS(object):
                     + str(i + 1)
                     + " ------------------------------------------\n"
                 )
-                self.set_slave_add(1)
+                self.slave_addr = 1
                 self.read_vars_fac_dcdc()
                 print("\n-----------------------\n")
-                self.set_slave_add(2)
+                self.slave_addr = 2
                 self.read_vars_fac_acdc()
                 time.sleep(dt)
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
         except:
-            self.set_slave_add(old_add)
+            self.slave_addr = old_add
 
     def set_buf_samples_freq(self, fs):
         self.set_param("Freq_TimeSlicer", 1, fs)
@@ -4014,8 +3982,8 @@ class BaseDRS(object):
                         coeff = self.get_dsp_coeff(dsp_class, dsp_id, dsp_coeff)
                         if dsp_class == 3 and dsp_coeff == 1:
                             coeff *= self.get_param("Freq_ISR_Controller", 0)
-                        dsp_module.append(coeff)
-                    except:
+                            dsp_module.append(coeff)
+                    except SerialInvalidCmd:
                         dsp_module.append("nan")
                 dsp_modules_bank.append(dsp_module)
                 if print_modules:
@@ -4071,8 +4039,8 @@ class BaseDRS(object):
             )
         )
 
-        old_add = self.get_slave_add()
-        self.set_slave_add(add)
+        old_add = self.slave_addr
+        self.slave_addr = add
 
         # areas = ["IA", "LA", "PA"]
 
@@ -4256,7 +4224,7 @@ class BaseDRS(object):
         if (r != "Y") and (r != "y"):
             print(" \n *** OPERAÇÃO CANCELADA ***\n")
             return
-        self.set_slave_add(add)
+        self.slave_addr = add
 
         if ps_model == 0 and cfg_dsp_modules == 1:
             print("\n Enviando parametros de controle para controlador ...")
@@ -4299,7 +4267,7 @@ class BaseDRS(object):
             "\n Pronto! Não se esqueça de utilizar o novo endereço serial para se comunicar com esta fonte! :)\n"
         )
 
-        self.set_slave_add(old_add)
+        self.slave_addr = old_add
 
     def get_siggen_vars(self) -> dict:
         reply_msg = self.read_var(index_to_hex(13), 21)
