@@ -1,6 +1,4 @@
 import unittest
-from unittest.mock import MagicMock, patch
-from pydrs import EthDRS
 from pydrs.validation import (
     SerialErrCheckSum,
     SerialErrPckgLen,
