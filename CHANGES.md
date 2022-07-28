@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.2] - 2022-07-28
+### Added:
+- Error messages for BSMP return errors (0xE_)
+
+### Changed:
+- `set_slave_add` is now a property, `slave_addr`
+- `EthDRS`, `GenericDRS` and `SerialDRS` can be imported from the base module
+- Fixed BSMP errors appearing as checksum errors
+- Fixed eth-bridge version compatibility troubles (such as including the response status byte in the checksum)
+
 ## [1.2.1] - 2022-07-25
 ### Added:
 - Resolution steps on error message
