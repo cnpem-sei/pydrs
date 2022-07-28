@@ -59,12 +59,13 @@ def validate(func):
         reply = reply[1:] if len(reply) - 1 == args[2] else reply
         check_serial_error(reply)
 
-        if len(reply) != args[2]:
+        if len(reply) != args[2] or (len(reply)-1 != args[2] and reply[0] == 0x21):
+            offset = 1 if reply[0] == 0x21 else 0 
             if len(reply) > 5:
-                check_serial_error(reply[1 if reply[0] == 0x21 else 0 :])
+                check_serial_error(reply[offset:])
 
             raise SerialErrPckgLen(
-                "Expected {} bytes, received {} bytes".format(args[2], len(reply))
+                "Expected {} bytes, received {} bytes".format(args[2], len(reply) - offset)
             )
 
         if reply != checksum(reply[:-1]):

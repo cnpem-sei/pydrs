@@ -4,4 +4,4 @@ set -eux
 . ./scripts-dev/clean.sh
 
 python3 -m build
-twine upload --repository pydrs dist/*
+twine upload --repository pypi dist/*
