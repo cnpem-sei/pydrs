@@ -113,6 +113,7 @@ class EthDRS(BaseDRS):
             if payload[0] == ETH_ANSWER_ERR:
                 raise TimeoutError("Server timed out waiting for serial response")
         except IndexError:
+            self._reset_input_buffer()
             raise SerialErrPckgLen(
                 "Received empty response, check if the controller is on and connected"
             )

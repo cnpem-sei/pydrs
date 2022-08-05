@@ -64,11 +64,13 @@ def validate(func):
             if len(reply) > 5:
                 check_serial_error(reply[offset:])
 
+            args[0]._reset_input_buffer()
             raise SerialErrPckgLen(
                 "Expected {} bytes, received {} bytes".format(args[2], len(reply) - offset)
             )
 
         if reply != checksum(reply[:-1]):
+            args[0]._reset_input_buffer()
             raise SerialErrCheckSum(
                 "Expected {} as checksum, received {}".format(
                     checksum(reply[:-1])[-1], reply[-1]
