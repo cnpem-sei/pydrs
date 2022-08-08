@@ -3,6 +3,7 @@
 import csv
 import math
 import os
+from pprint import pprint
 import struct
 import time
 
@@ -164,6 +165,18 @@ class BaseDRS(object):
     @slave_addr.setter
     def slave_addr(self, address: int):
         self._slave_addr = struct.pack("B", address).decode("ISO-8859-1")
+
+    def set_slave_add(self, address: int):
+        print(
+            f"From 2.0.0 onwards, the slave address will be a property. Use 'slave_addr = {address}' instead"
+        )
+        self.slave_addr = address
+
+    def get_slave_add(self) -> int:
+        print(
+            "From 2.0.0 onwards, the slave address will be a property. Use 'slave_addr' instead"
+        )
+        return self.slave_addr
 
     """
     ======================================================================
@@ -1409,7 +1422,10 @@ class BaseDRS(object):
         return active_interlocks
 
     def read_vars_fbp(self, n: int = 1, dt: float = 0.5):
-        vars_list = []
+        vars = {}
+        print(
+            "From 2.0.0, read_vars_fbp will not loop or print implicitly. It will only return a dictionary."
+        )
         for _ in range(n):
             self.read_vars_common()
 
@@ -1446,13 +1462,16 @@ class BaseDRS(object):
                 + " %",
             }
 
-            vars_list.append(self._include_interlocks(vars))
+            pprint(vars)
 
             time.sleep(dt)
-        return vars_list
+        return vars
 
     def read_vars_fbp_dclink(self, n: int = 1, dt: float = 0.5) -> list:
-        vars_list = []
+        vars = {}
+        print(
+            "From 2.0.0, read_vars_fbp_dclink will not loop or print implicitly. It will only return a dictionary."
+        )
         try:
             for i in range(n):
                 self.read_vars_common()
@@ -1479,11 +1498,13 @@ class BaseDRS(object):
                         hard_itlks, list_fbp_dclink_hard_interlocks
                     )
 
-                vars_list.append(vars)
+                pprint(vars)
                 time.sleep(dt)
 
         except Exception:
             pass
+
+        return vars
 
     def read_vars_fac_acdc(self, n=1, dt: float = 0.5, iib: bool = True):
         for i in range(n):

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.3] - 2022-08-08
+### Added:
+- Deprecation messages for substituted/altered functions
+
 ## [1.2.2] - 2022-07-28
 ### Added:
 - Error messages for BSMP return errors (0xE_)

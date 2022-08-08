@@ -53,20 +53,22 @@ def validate(func):
         if len(reply) == 0 or (len(reply) == 1 and reply[0] == ETH_ANSWER_NOQUEUE):
             args[0]._reset_input_buffer()
             raise SerialErrPckgLen(
-                "Received empty response, check if the controller is on and connected"
+                "Received empty response, check if the controller is on and connected. If you receive garbled output, try disconnecting and reconnecting."
             )
 
         reply = reply[1:] if len(reply) - 1 == args[2] else reply
         check_serial_error(reply)
 
-        if len(reply) != args[2] or (len(reply)-1 != args[2] and reply[0] == 0x21):
-            offset = 1 if reply[0] == 0x21 else 0 
+        if len(reply) != args[2] or (len(reply) - 1 != args[2] and reply[0] == 0x21):
+            offset = 1 if reply[0] == 0x21 else 0
             if len(reply) > 5:
                 check_serial_error(reply[offset:])
 
             args[0]._reset_input_buffer()
             raise SerialErrPckgLen(
-                "Expected {} bytes, received {} bytes".format(args[2], len(reply) - offset)
+                "Expected {} bytes, received {} bytes".format(
+                    args[2], len(reply) - offset
+                )
             )
 
         if reply != checksum(reply[:-1]):

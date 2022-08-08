@@ -115,7 +115,7 @@ class EthDRS(BaseDRS):
         except IndexError:
             self._reset_input_buffer()
             raise SerialErrPckgLen(
-                "Received empty response, check if the controller is on and connected"
+                "Received empty response, check if the controller is on and connected. If you receive garbled output, try disconnecting and reconnecting."
             )
 
         return payload
