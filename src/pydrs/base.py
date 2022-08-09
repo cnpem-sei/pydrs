@@ -4003,7 +4003,7 @@ class BaseDRS(object):
                         coeff = self.get_dsp_coeff(dsp_class, dsp_id, dsp_coeff)
                         if dsp_class == 3 and dsp_coeff == 1:
                             coeff *= self.get_param("Freq_ISR_Controller", 0)
-                            dsp_module.append(coeff)
+                        dsp_module.append(coeff)
                     except SerialInvalidCmd:
                         dsp_module.append("nan")
                 dsp_modules_bank.append(dsp_module)
