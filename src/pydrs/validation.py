@@ -91,6 +91,7 @@ def print_deprecated(func):
         )
 
         return func(*args, **kwargs)
+
     return wrapper
 
 

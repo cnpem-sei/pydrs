@@ -519,14 +519,19 @@ class BaseDRS(object):
 
         for param in fbp_param_list.keys():
             if param == "PS_Name":
-                #print(str(param[0]) + "[0]: " + str(param[1]))
+                # print(str(param[0]) + "[0]: " + str(param[1]))
                 self.set_ps_name(str(fbp_param_list[param][0]))
             else:
                 for n in range(64):
                     try:
-                        #print(str(param[0]) + "[" + str(n) + "]: " + str(param[n + 1]))
-                        _, param_hex = self.set_param(param, n, float(fbp_param_list[param][n]))
-                        fbp_param_list[param][n] = [fbp_param_list[param][n], param_hex.encode('latin-1')]
+                        # print(str(param[0]) + "[" + str(n) + "]: " + str(param[n + 1]))
+                        _, param_hex = self.set_param(
+                            param, n, float(fbp_param_list[param][n])
+                        )
+                        fbp_param_list[param][n] = [
+                            fbp_param_list[param][n],
+                            param_hex.encode("latin-1"),
+                        ]
                     except:
                         break
         return fbp_param_list
@@ -537,28 +542,26 @@ class BaseDRS(object):
         list_param: list = list_parameters.keys(),
         timeout: float = 0.5,
         print_modules: bool = True,
+        return_msg: bool = False,
     ) -> list:
         # TODO: return dict instead
         timeout_old = self.timeout
         param_bank = {}
 
         for param_name in list_param:
-
             param_row = []
-
             for n in range(64):
+                p = None
                 if param_name == "PS_Name":
-
-                    p = self.get_ps_name()
-                    param_row.append(p)
+                    param_row.append(self.get_ps_name())
                     # if(print_modules):
                     # print('PS_Name: ' + p)
                     self.timeout = timeout
                     break
 
                 else:
-                    p = self.get_param(param_name, n, return_floathex=True)
-                    
+                    p = self.get_param(param_name, n, return_floathex=False)
+
                     if type(p) is not list:
                         if math.isnan(p):
                             break
@@ -566,10 +569,15 @@ class BaseDRS(object):
                     # if(print_modules):
                     # print(param_name + "[" + str(n) + "]: " + str(p))
 
+            try:
+                param_bank[param_name] = (
+                    param_row[0] if len(param_row) < 2 else param_row
+                )
+            except IndexError:
+                pass
+
             if print_modules:
                 print(param_row)
-
-            param_bank[param_name] = param_row
 
         self.timeout = timeout_old
 
@@ -612,9 +620,11 @@ class BaseDRS(object):
             + hex_dsp_id
             + hex_coeffs
         )
-        return self._transfer(send_packet, 6), hex_coeffs[:4*len(coeffs_list)]
+        return self._transfer(send_packet, 6), hex_coeffs[: 4 * len(coeffs_list)]
 
-    def get_dsp_coeff(self, dsp_class: int, dsp_id: int, coeff: int, return_floathex=False):
+    def get_dsp_coeff(
+        self, dsp_class: int, dsp_id: int, coeff: int, return_floathex=False
+    ):
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -3587,21 +3597,35 @@ class BaseDRS(object):
         self.save_param_bank(type_memory)
 
     def get_dsp_modules_bank(
-        self, list_dsp_classes=[1, 2, 3, 4, 5, 6], print_modules=1
+        self, list_dsp_classes=[1, 2, 3, 4, 5, 6], print_modules=True, return_msg=False
     ):
         dsp_modules_bank = {}
         for dsp_class in list_dsp_classes:
-            dsp_modules_bank[dsp_classes_names[dsp_class]] = {"class":dsp_class, "coeffs":[[],b""]}
+            dsp_modules_bank[dsp_classes_names[dsp_class]] = {
+                "class": dsp_class,
+                "coeffs": [[], b""] if return_msg else [],
+            }
             for dsp_id in range(num_dsp_modules[dsp_class]):
                 dsp_module = [dsp_classes_names[dsp_class], dsp_class, dsp_id]
                 for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
                     try:
-                        coeff, coeff_hex = self.get_dsp_coeff(dsp_class, dsp_id, dsp_coeff, return_floathex=True)
+                        coeff, coeff_hex = self.get_dsp_coeff(
+                            dsp_class, dsp_id, dsp_coeff, return_floathex=True
+                        )
                         if dsp_class == 3 and dsp_coeff == 1:
                             coeff *= self.get_param("Freq_ISR_Controller", 0)
                         dsp_module.append(coeff)
-                        dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][0].append(coeff)
-                        dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][1] += coeff_hex
+                        if return_msg:
+                            dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
+                                0
+                            ].append(coeff)
+                            dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
+                                1
+                            ] += coeff_hex
+                        else:
+                            dsp_modules_bank[dsp_classes_names[dsp_class]][
+                                "coeffs"
+                            ].append(coeff)
                     except SerialInvalidCmd:
                         dsp_module.append("nan")
                 if print_modules:
@@ -3623,7 +3647,7 @@ class BaseDRS(object):
 
             for dsp_module in reader:
                 if dsp_module[0] not in dsp_coeffs.keys():
-                    dsp_coeffs[dsp_module[0]] = {"class":9, "coeffs":[]}
+                    dsp_coeffs[dsp_module[0]] = {"class": 9, "coeffs": []}
                 if not dsp_module == []:
                     if not dsp_module[0][0] == "#":
                         list_coeffs = []
@@ -3637,8 +3661,9 @@ class BaseDRS(object):
                         _, hexcoeffs = self.set_dsp_coeffs(
                             int(dsp_module[1]), int(dsp_module[2]), list_coeffs
                         )
-                        dsp_coeffs[dsp_module[0]]["coeffs"].append([list_coeffs, hexcoeffs])
-                
+                        dsp_coeffs[dsp_module[0]]["coeffs"].append(
+                            [list_coeffs, hexcoeffs]
+                        )
 
         if save_eeprom:
             self.save_dsp_modules_eeprom()
@@ -3899,11 +3924,11 @@ class BaseDRS(object):
         }
 
     def clear_bid(self, password, clear_ps=True, clear_dsp=True):
-        
+
         self.unlock_udc(password)
         time.sleep(1)
 
-        if(clear_ps):
+        if clear_ps:
             # CLEAR PS PARAMETERS
             for param in list(list_parameters.keys())[:51]:
                 for n in range(list_parameters[param]["n"]):
@@ -3919,7 +3944,7 @@ class BaseDRS(object):
             self.set_param(list_parameters["RS485_Termination"]["id"], 0, 1)
             self.set_param(list_parameters["Buzzer_Volume"]["id"], 0, 1)
 
-        if(clear_dsp):
+        if clear_dsp:
             # CLEAR DSP PARAMETERS
             for dsp_class in [1, 2, 3, 4, 5, 6]:
                 for dsp_id in range(num_dsp_modules[dsp_class]):
@@ -4110,4 +4135,3 @@ class BaseDRS(object):
 
         print("\n Salvando coeficientes de controle na memoria offboard ...")
         print(self.save_dsp_modules_eeprom(type_memory=1))
-
