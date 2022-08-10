@@ -4313,7 +4313,11 @@ class BaseDRS(object):
             "aux_params": val[3:7],
         }
 
-    def clear_bid(self, clear_ps=True, clear_dsp=True):
+    def clear_bid(self, password, clear_ps=True, clear_dsp=True):
+        
+        self.unlock_udc(password)
+        time.sleep(1)
+
         if(clear_ps):
             # CLEAR PS PARAMETERS
             for param in list(list_parameters.keys())[:51]:
