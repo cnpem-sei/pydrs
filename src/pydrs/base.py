@@ -93,6 +93,7 @@ from .consts.fbp import (
     list_fbp_hard_interlocks,
     list_fbp_soft_interlocks,
 )
+
 from .utils import (
     double_to_hex,
     float_list_to_hex,
@@ -565,12 +566,7 @@ class BaseDRS(object):
                     # if(print_modules):
                     # print(param_name + "[" + str(n) + "]: " + str(p))
 
-            try:
-                param_bank[param_name] = (
-                    param_row[0] if len(param_row) < 2 else param_row
-                )
-            except IndexError:
-                pass
+                param_bank[param_name] = param_row
 
             if print_modules:
                 print(param_row)
