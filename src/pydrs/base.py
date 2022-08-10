@@ -388,7 +388,7 @@ class BaseDRS(object):
             1 + 2 + 2 + 4
         )  # Payload: ID + param id + [n] + value
         if type(param_id) == str:
-            hex_id = double_to_hex(list_parameters.index(param_id))
+            hex_id = double_to_hex(list_parameters[param_id]["id"])
         if type(param_id) == int:
             hex_id = double_to_hex(param_id)
         hex_n = double_to_hex(n)
@@ -410,7 +410,7 @@ class BaseDRS(object):
         # Payload: ID + param id + [n]
         payload_size = size_to_hex(1 + 2 + 2)
         if type(param_id) == str:
-            hex_id = double_to_hex(list_parameters.index(param_id))
+            hex_id = double_to_hex(list_parameters[param_id]["id"])
         if type(param_id) == int:
             hex_id = double_to_hex(param_id)
         hex_n = double_to_hex(n)
@@ -441,7 +441,7 @@ class BaseDRS(object):
             1 + 2 + 2 + 2
         )  # Payload: ID + param id + [n] + memory type
         if type(param_id) == str:
-            hex_id = double_to_hex(list_parameters.index(param_id))
+            hex_id = double_to_hex(list_parameters[param_id]["id"])
         if type(param_id) == int:
             hex_id = double_to_hex(param_id)
         hex_n = double_to_hex(n)
@@ -534,7 +534,7 @@ class BaseDRS(object):
 
     def get_param_bank(
         self,
-        list_param: list = list_parameters,
+        list_param: list = list_parameters.keys(),
         timeout: float = 0.5,
         print_modules: bool = True,
     ) -> list:
@@ -4313,6 +4313,37 @@ class BaseDRS(object):
             "aux_params": val[3:7],
         }
 
+    def clear_bid(self, clear_ps=True, clear_dsp=True):
+        if(clear_ps):
+            # CLEAR PS PARAMETERS
+            for param in list(list_parameters.keys())[:51]:
+                for n in range(list_parameters[param]["n"]):
+                    self.set_param(param, n, 0)
+            # ARM - Defaults
+            self.set_param(list_parameters["PS_Model"]["id"], 0, 31)
+            self.set_param(list_parameters["Num_PS_Modules"]["id"], 0, 1)
+            self.set_param(list_parameters["RS485_Baudrate"]["id"], 0, 6000000)
+            self.set_param(list_parameters["RS485_Address"]["id"], 0, 1)
+            self.set_param(list_parameters["RS485_Address"]["id"], 1, 30)
+            self.set_param(list_parameters["RS485_Address"]["id"], 2, 30)
+            self.set_param(list_parameters["RS485_Address"]["id"], 3, 30)
+            self.set_param(list_parameters["RS485_Termination"]["id"], 0, 1)
+            self.set_param(list_parameters["Buzzer_Volume"]["id"], 0, 1)
+
+        if clear_dsp:
+            # CLEAR DSP PARAMETERS
+            for dsp_class in [1, 2, 3, 4, 5, 6]:
+                for dsp_id in range(num_dsp_modules[dsp_class]):
+                    for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
+                        coeff, coeff_hex = self.set_dsp_coeffs(dsp_class, dsp_id, [0])
+
+        # Store values into BID
+        time.sleep(0.5)
+        self.save_param_bank(type_memory=1)
+        time.sleep(0.5)
+        self.save_dsp_modules_eeprom(type_memory=1)
+        time.sleep(0.5)
+
     def firmware_initialization(self):
         print("\n ### Inicialização de firmware ### \n")
 
@@ -4408,10 +4439,10 @@ class BaseDRS(object):
 
         print("\n Banco de parametros da memoria onboard:\n")
 
-        max_param = list_parameters.index("Scope_Source")
+        max_param = list_parameters["Scope_Source"]["id"]
         param_bank_onboard = []
 
-        for param in list_parameters[0:max_param]:
+        for param in list_parameters.keys()[0:max_param]:
             val = self.get_param(param, 0)
             print(param + ":", val)
             param_bank_onboard.append(val)
@@ -4440,7 +4471,7 @@ class BaseDRS(object):
         try:
             param_bank_offboard = []
 
-            for param in list_parameters[0:max_param]:
+            for param in list_parameters.keys()[0:max_param]:
                 val = self.get_param(param, 0)
                 print(param, val)
                 param_bank_offboard.append(val)
@@ -4490,3 +4521,4 @@ class BaseDRS(object):
 
         print("\n Salvando coeficientes de controle na memoria offboard ...")
         print(self.save_dsp_modules_eeprom(type_memory=1))
+
