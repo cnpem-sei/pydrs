@@ -4330,7 +4330,7 @@ class BaseDRS(object):
             self.set_param(list_parameters["RS485_Termination"]["id"], 0, 1)
             self.set_param(list_parameters["Buzzer_Volume"]["id"], 0, 1)
 
-        if clear_dsp:
+        if(clear_dsp):
             # CLEAR DSP PARAMETERS
             for dsp_class in [1, 2, 3, 4, 5, 6]:
                 for dsp_id in range(num_dsp_modules[dsp_class]):
