@@ -28,8 +28,7 @@ from .consts import (
     type_size,
 )
 
-# common_list
-from .consts.common_list import (
+from .consts.common import (
     list_common_vars,
     list_curv,
     list_func,
@@ -39,8 +38,7 @@ from .consts.common_list import (
     list_sig_gen_types,
 )
 
-# fac_const_list
-from .consts.fac_const_list import (
+from .consts.fac import (
     list_fac_2p4s_dcdc_hard_interlocks,
     list_fac_2p4s_dcdc_iib_alarms,
     list_fac_2p4s_dcdc_iib_interlocks,
@@ -75,8 +73,7 @@ from .consts.fac_const_list import (
     list_fac_dcdc_soft_interlocks,
 )
 
-# fap_const_list
-from .consts.fap_const_list import (
+from .consts.fap import (
     list_fap_2p2s_hard_interlocks,
     list_fap_2p2s_soft_interlocks,
     list_fap_4p_hard_interlocks,
@@ -91,8 +88,7 @@ from .consts.fap_const_list import (
     list_fap_soft_interlocks,
 )
 
-# fbp_const_list
-from .consts.fbp_const_list import (
+from .consts.fbp import (
     list_fbp_dclink_hard_interlocks,
     list_fbp_hard_interlocks,
     list_fbp_soft_interlocks,
@@ -560,7 +556,7 @@ class BaseDRS(object):
                     break
 
                 else:
-                    p = self.get_param(param_name, n, return_floathex=False)
+                    p = self.get_param(param_name, n, return_floathex=return_msg)
 
                     if type(p) is not list:
                         if math.isnan(p):
