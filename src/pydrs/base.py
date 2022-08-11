@@ -532,6 +532,28 @@ class BaseDRS(object):
         return fbp_param_list
         # self.save_param_bank()
 
+    def read_csv_param_bank(self, param_csv_file: str):
+        csv_param_list = {}
+        with open(param_csv_file, newline="") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                csv_param_list[str(row[0])] = row[1:]
+
+        for param in csv_param_list.keys():
+            if param == "PS_Name":
+                csv_param_list[param] = str(csv_param_list[param][0])
+                print(csv_param_list[param])
+            else:
+                plist = []
+                for n in range(64):
+                    try:
+                        plist.append(float(csv_param_list[param][n]))
+                    except:
+                        break
+                csv_param_list[param] = plist
+
+        return csv_param_list
+
     def get_param_bank(
         self,
         list_param: list = list_parameters.keys(),
@@ -4006,21 +4028,25 @@ class BaseDRS(object):
     ):
         dsp_modules_bank = {}
         for dsp_class in list_dsp_classes:
-            dsp_modules_bank[dsp_classes_names[dsp_class]] = {"class":dsp_class, "coeffs":[[],b""]}
+            dsp_modules_bank[dsp_classes_names[dsp_class]] = {"class":dsp_class, "coeffs":[]}
             for dsp_id in range(num_dsp_modules[dsp_class]):
-                dsp_module = [dsp_classes_names[dsp_class], dsp_class, dsp_id]
+                dsp_coeffs = []
+                dsp_coeffs_hex = b''
                 for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
                     try:
                         coeff, coeff_hex = self.get_dsp_coeff(dsp_class, dsp_id, dsp_coeff, return_floathex=True)
                         if dsp_class == 3 and dsp_coeff == 1:
                             coeff *= self.get_param("Freq_ISR_Controller", 0)
-                        dsp_module.append(coeff)
-                        dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][0].append(coeff)
-                        dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][1] += coeff_hex
+                        dsp_coeffs.append(coeff)
+                        dsp_coeffs_hex += coeff_hex
                     except SerialInvalidCmd:
-                        dsp_module.append("nan")
+                        dsp_coeffs.append("nan")
+                        dsp_coeffs_hex += b'\x00\x00\x00\x00'
+
+                dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append([dsp_coeffs, dsp_coeffs_hex])
+
                 if print_modules:
-                    print(dsp_module)
+                    print(dsp_modules_bank[dsp_classes_names[dsp_class]])
 
         return dsp_modules_bank
 
@@ -4052,13 +4078,39 @@ class BaseDRS(object):
                         _, hexcoeffs = self.set_dsp_coeffs(
                             int(dsp_module[1]), int(dsp_module[2]), list_coeffs
                         )
-                        dsp_coeffs[dsp_module[0]]["coeffs"].append([list_coeffs, hexcoeffs])
-                
+                        
+                        dsp_coeffs[dsp_module[0]]["coeffs"].append([list_coeffs, hexcoeffs.encode('latin-1')])         
 
         if save_eeprom:
             self.save_dsp_modules_eeprom()
 
         return dsp_coeffs
+
+    def read_csv_dsp_modules_bank(self, dsp_modules_file_csv):
+        '''
+        Returns:
+        dict[dsp_class_name] = {"class":int, "coeffs":[float]}
+        '''
+        dsp_coeffs_from_csv = {}
+        with open(dsp_modules_file_csv, newline="") as f:
+            reader = csv.reader(f)
+
+            for dsp_module in reader:
+                if dsp_module[0] not in dsp_coeffs_from_csv.keys():
+                    dsp_coeffs_from_csv[dsp_module[0]] = {"class":9, "coeffs":[]}
+                if not dsp_module == []:
+                    if not dsp_module[0][0] == "#":
+                        list_coeffs = []
+                        dsp_coeffs_from_csv[dsp_module[0]]["class"] = int(dsp_module[1])
+
+                        for coeff in dsp_module[
+                            3 : 3 + num_coeffs_dsp_modules[int(dsp_module[1])]
+                        ]:
+                            list_coeffs.append(float(coeff))
+                        
+                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)         
+
+        return dsp_coeffs_from_csv
 
     def select_param_bank(self, cfg_dsp_modules=0):  # noqa: C901
 
