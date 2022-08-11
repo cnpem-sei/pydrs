@@ -534,6 +534,7 @@ class BaseDRS(object):
         return fbp_param_list
         # self.save_param_bank()
 
+    @print_deprecated
     def get_param_bank(
         self,
         list_param: list = list_parameters.keys(),
@@ -566,10 +567,10 @@ class BaseDRS(object):
                     # if(print_modules):
                     # print(param_name + "[" + str(n) + "]: " + str(p))
 
-                param_bank[param_name] = param_row
+            param_bank[param_name] = param_row
 
-            if print_modules:
-                print(param_row)
+        if print_modules:
+            pprint(param_bank, width=1024)
 
         self.timeout = timeout_old
 
@@ -3588,6 +3589,7 @@ class BaseDRS(object):
         self.set_param("Freq_TimeSlicer", 1, freq)
         self.save_param_bank(type_memory)
 
+    @print_deprecated
     def get_dsp_modules_bank(
         self, list_dsp_classes=[1, 2, 3, 4, 5, 6], print_modules=True, return_msg=False
     ):
@@ -3620,8 +3622,8 @@ class BaseDRS(object):
                             ].append(coeff)
                     except SerialInvalidCmd:
                         dsp_module.append("nan")
-                if print_modules:
-                    print(dsp_module)
+        if print_modules:
+            pprint(dsp_modules_bank, width=1024)
 
         return dsp_modules_bank
 
