@@ -540,9 +540,8 @@ class BaseDRS(object):
         list_param: list = list_parameters.keys(),
         timeout: float = 0.5,
         print_modules: bool = True,
-        return_msg: bool = False,
+        return_floathex: bool = False,
     ) -> list:
-        # TODO: return dict instead
         timeout_old = self.timeout
         param_bank = {}
 
@@ -558,7 +557,7 @@ class BaseDRS(object):
                     break
 
                 else:
-                    p = self.get_param(param_name, n, return_floathex=return_msg)
+                    p = self.get_param(param_name, n, return_floathex=return_floathex)
 
                     if type(p) is not list:
                         if math.isnan(p):
@@ -576,7 +575,7 @@ class BaseDRS(object):
 
         return param_bank
 
-    def store_param_bank_csv(self, bank: dict, filename:str):
+    def store_param_bank_csv(self, bank: dict, filename: str):
         """Saves parameter bank to CSV file"""
         with open(filename, "w", newline="") as f:
             writer = csv.writer(f, delimiter=",")
@@ -3567,8 +3566,6 @@ class BaseDRS(object):
     def calc_pi(self, r_load, l_load, f_bw, v_dclink, send_drs=0, dsp_id=0):
         kp = 2 * 3.1415 * f_bw * l_load / v_dclink
         ki = kp * r_load / l_load
-        print("\n  Kp = " + str(kp))
-        print("  Ki = " + str(ki) + "\n")
         if send_drs:
             self.set_dsp_coeffs(3, dsp_id, [kp, ki, 0.95, -0.95])
         return [kp, ki]
@@ -3590,13 +3587,16 @@ class BaseDRS(object):
 
     @print_deprecated
     def get_dsp_modules_bank(
-        self, list_dsp_classes=[1, 2, 3, 4, 5, 6], print_modules=True, return_msg=False
+        self,
+        list_dsp_classes=[1, 2, 3, 4, 5, 6],
+        print_modules=True,
+        return_floathex=False,
     ):
         dsp_modules_bank = {}
         for dsp_class in list_dsp_classes:
             dsp_modules_bank[dsp_classes_names[dsp_class]] = {
                 "class": dsp_class,
-                "coeffs": [[], b""] if return_msg else [],
+                "coeffs": [[], b""] if return_floathex else [],
             }
             for dsp_id in range(num_dsp_modules[dsp_class]):
                 dsp_module = [dsp_classes_names[dsp_class], dsp_class, dsp_id]
@@ -3608,7 +3608,7 @@ class BaseDRS(object):
                         if dsp_class == 3 and dsp_coeff == 1:
                             coeff *= self.get_param("Freq_ISR_Controller", 0)
                         dsp_module.append(coeff)
-                        if return_msg:
+                        if return_floathex:
                             dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
                                 0
                             ].append(coeff)
@@ -3625,13 +3625,6 @@ class BaseDRS(object):
             pprint(dsp_modules_bank, width=1024)
 
         return dsp_modules_bank
-
-    def store_dsp_modules_bank_csv(self, bank):
-        filename = input("Digite o nome do arquivo: ")
-        with open(filename + ".csv", "w", newline="") as f:
-            writer = csv.writer(f, delimiter=",")
-            for dsp_module in bank:
-                writer.writerow(dsp_module)
 
     def set_dsp_modules_bank(self, dsp_modules_file, save_eeprom=0):
         dsp_coeffs = {}
