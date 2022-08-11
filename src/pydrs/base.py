@@ -576,13 +576,12 @@ class BaseDRS(object):
 
         return param_bank
 
-    def store_param_bank_csv(self, bank: list):
+    def store_param_bank_csv(self, bank: dict, filename:str):
         """Saves parameter bank to CSV file"""
-        filename = input("Digite o nome do arquivo: ")
-        with open(filename + ".csv", "w", newline="") as f:
+        with open(filename, "w", newline="") as f:
             writer = csv.writer(f, delimiter=",")
-            for param_row in bank:
-                writer.writerow(param_row)
+            for param, val in bank.items():
+                writer.writerow([param] + [val])
 
     def enable_onboard_eeprom(self):
         """Enables onboard EEPROM"""
