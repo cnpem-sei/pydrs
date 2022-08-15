@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.5] - 2022-08-15
+### Added:
+- `read_csv_dsp_modules_bank`
+- `read_csv_param_bank`
+- `close_loop` as a gramatically correct alias for `closed_loop`
+
+### Changed:
+- Removes redundant functions
+
+## [1.2.4] - 2022-08-12
+### Changed:
+- Fix identation bug on `get_dsp_modules_bank()`
+- List into dict (get/set params) and also returns digital value for FP 
+- Returns dict for certain FAC/FBP/FAP read_vars() functions
+
 ## [1.2.3] - 2022-08-08
 ### Added:
 - Deprecation messages for substituted/altered functions
