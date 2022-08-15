@@ -216,12 +216,16 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def closed_loop(self):
+    def close_loop(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION + payload_size + index_to_hex(list_func.index("closed_loop"))
         )
         return self._transfer(send_packet, 6)
+
+    def closed_loop(self):
+        print("This function will be replaced by the more aptly named close_loop in 2.0.0")
+        self.close_loop(self)
 
     def reset_interlocks(self):
         """Resets interlocks on connected DRS device"""
@@ -1027,7 +1031,7 @@ class BaseDRS(object):
     ======================================================================
     """
 
-    def read_bsmp_variable(self, id_var: int, type_var: int):
+    def read_bsmp_variable(self, id_var: int, type_var: str):
         reply_msg = self.read_var(index_to_hex(id_var), type_size[type_var])
         val = struct.unpack(type_format[type_var], reply_msg)
         return val[3]
@@ -1384,7 +1388,7 @@ class BaseDRS(object):
             return resp
 
         resp_add = {
-            "status": self.read_ps_status(),
+            "status": ps_status,
             "counter_set_slowref": self.read_bsmp_variable(4, "uint32_t"),
             "counter_sync_pulse": self.read_bsmp_variable(5, "uint32_t"),
             "wfm_ref_0": self.get_wfmref_vars(0),
@@ -1429,8 +1433,6 @@ class BaseDRS(object):
     def read_vars_fbp(self, n: int = 1, dt: float = 0.5) -> dict:
         vars = {}
         for _ in range(n):
-            self.read_vars_common()
-
             vars = {
                 "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
                 "load_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
@@ -1473,8 +1475,6 @@ class BaseDRS(object):
         vars = {}
         try:
             for _ in range(n):
-                self.read_vars_common()
-
                 vars = {
                     "modules_status": self.read_bsmp_variable(33, "uint32_t"),
                     "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
@@ -1502,8 +1502,6 @@ class BaseDRS(object):
     def read_vars_fac_acdc(self, n=1, dt: float = 0.5, iib: bool = True) -> dict:
         vars = {}
         for _ in range(n):
-            self.read_vars_common()
-
             vars = {
                 "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
                 "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
@@ -1574,7 +1572,6 @@ class BaseDRS(object):
         vars = {}
         try:
             for _ in range(n):
-                self.read_vars_common()
                 # TODO: Is this rounding really necessary?
                 wref_index = (
                     round(self.read_bsmp_variable(20, "uint32_t"), 3)
@@ -1635,8 +1632,6 @@ class BaseDRS(object):
         vars = {}
         try:
             for _ in range(n):
-                self.read_vars_common()
-
                 vars = {
                     "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
                     "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
