@@ -6,8 +6,8 @@
 - `read_csv_param_bank`
 - `close_loop` as a gramatically correct alias for `closed_loop`
 
-### Changed:
-- Removes redundant functions
+### Removed:
+- Redundant and unused `read_ps_status` calls in var reading functions
 
 ## [1.2.4] - 2022-08-12
 ### Changed:
