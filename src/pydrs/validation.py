@@ -84,6 +84,17 @@ def validate(func):
     return wrapper
 
 
+def print_deprecated(func):
+    def wrapper(*args, **kwargs):
+        print(
+            f"From 2.0.0, {func.__name__} will not print or loop implicitly. Only a dict will be returned."
+        )
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 def check_serial_error(reply: bytes):
     error_index = 2 if reply[0] == 0x21 else 1
     if reply[error_index] == 0x53:
