@@ -562,7 +562,7 @@ class BaseDRS(object):
         list_param: list = list_parameters.keys(),
         timeout: float = 0.5,
         print_modules: bool = True,
-        hex_values: bool = False
+        hex_values: bool = False,
         return_floathex: bool = False,
     ) -> list:
         timeout_old = self.timeout
