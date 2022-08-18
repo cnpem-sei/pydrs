@@ -136,7 +136,7 @@ Although old method names and operations are still supported and work as expecte
 
 - `drs.set_slave_add` and `drs.get_slave_add` were replaced by a property. Set the slave address with `drs.slave_addr = 5` and get with `address = drs.slave_addr`
 - `drs.set_timeout` and `drs.get_timeout` are also proprerties. Set with `drs.timeout = 5` and get with `timeout = drs.timeout`
-- `drs.closed_loop` is now `drs.close_lopp` (verb form) to indicate that is an action.
+- `drs.closed_loop` is now `drs.close_loop` (verb form) to indicate that is an action.
 - `drs.get_param_bank` returns a dictionary instead of a nested list. Printing behavior stays the same.
 - `drs.read_vars_x` functions return a dictionary, as well as printing the values. Somewhere in the future, implicit looping (n=10000 loops 10000 times for example) will be removed.
 - All commands run through validation. In case validation fails, a descriptive exception will be raised, which can be used to trace the problem.
