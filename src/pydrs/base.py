@@ -562,7 +562,6 @@ class BaseDRS(object):
         list_param: list = list_parameters.keys(),
         timeout: float = 0.5,
         print_modules: bool = True,
-        hex_values: bool = False
         return_floathex: bool = False,
     ) -> list:
         timeout_old = self.timeout
@@ -573,9 +572,7 @@ class BaseDRS(object):
             for n in range(64):
                 p = None
                 if param_name == "PS_Name":
-                    param_row.append(self.get_ps_name())
-                    # if(print_modules):
-                    # print('PS_Name: ' + p)
+                    param_row = self.get_ps_name()
                     self.timeout = timeout
                     break
 
@@ -585,10 +582,8 @@ class BaseDRS(object):
                     if type(p) is not list:
                         if math.isnan(p):
                             break
-                    if(hex_values):
-                        param_row.append(p)
-                    else:
-                        param_row.append(p[0])
+                    param_row.append(p)
+
             if print_modules:
                 print(param_row)
 
@@ -3617,7 +3612,6 @@ class BaseDRS(object):
         list_dsp_classes=[1, 2, 3, 4, 5, 6],
         print_modules=True,
         return_floathex=False,
-        hex_values = False
     ):
         dsp_modules_bank = {}
         for dsp_class in list_dsp_classes:
@@ -3640,9 +3634,11 @@ class BaseDRS(object):
                     except SerialInvalidCmd:
                         dsp_coeffs.append("nan")
                         dsp_coeffs_hex += b'\x00\x00\x00\x00'
-
-                dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append([dsp_coeffs, dsp_coeffs_hex])
-
+                if(return_floathex):
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append([dsp_coeffs, dsp_coeffs_hex])
+                else:
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(dsp_coeffs)
+                    
                 if print_modules:
                     print(dsp_modules_bank[dsp_classes_names[dsp_class]])
 
