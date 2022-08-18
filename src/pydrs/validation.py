@@ -87,7 +87,7 @@ def validate(func):
 
 def print_deprecated(func):
     def wrapper(*args, **kwargs):
-        warn(f"From 2.0.0, most functions will not loop implicitly. Use a 'for' or 'while' loop instead")
+        warn("From 2.0.0, most functions will not loop implicitly. Use a 'for' or 'while' loop instead")
         return func(*args, **kwargs)
 
     return wrapper
