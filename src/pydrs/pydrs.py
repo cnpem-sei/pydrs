@@ -151,15 +151,7 @@ class EthDRS(BaseDRS):
         self.socket.settimeout(new_timeout)
 
     def is_open(self) -> bool:
-        try:
-            data = self.socket.recv(4, socket.MSG_DONTWAIT | socket.MSG_PEEK)
-            if len(data) == 0:
-                return False
-        except BlockingIOError:
-            return True
-        except ConnectionResetError:
-            return False
-        return True
+        raise NotImplementedError
 
     def connect(self, address: str = "127.0.0.1", port: int = 5000):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
