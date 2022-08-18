@@ -12,7 +12,7 @@ def get_logger(
 
     logger = _logging.getLogger(name)
 
-    if not len(logger.handlers) and not handlers:
+    if not logger.handlers and not handlers:
         formatter = _logging.Formatter(
             "[%(asctime)s %(levelname)s %(filename)s:%(lineno)s - %(funcName)s] %(message)s"
         )
@@ -38,7 +38,7 @@ def float_list_to_hex(value_list: list):
 def format_list_size(in_list: list, max_size: int):
     out_list = in_list[0:max_size]
     if max_size > len(in_list):
-        for i in range(max_size - len(in_list)):
+        for _ in range(max_size - len(in_list)):
             out_list.append(0)
     return out_list
 
@@ -78,7 +78,7 @@ def prettier_print(input: dict, prefix: str = ""):
             for i in range(0, len(key_words)):
                 key_words[i] = (
                     key_words[i].upper()
-                    if key_words[i] in ["igbt", "dc", "iib", "ps", "ip"]
+                    if key_words[i] in ["igbt", "dc", "iib", "ps", "ip", "idb"]
                     else key_words[i].capitalize()
                 )
             print(f"{prefix}{' '.join(key_words)}: {value}")
