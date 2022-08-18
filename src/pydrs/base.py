@@ -185,7 +185,8 @@ class BaseDRS(object):
         """Reads a variable with a given ID"""
         self._reset_input_buffer()
         return self._transfer(COM_READ_VAR + var_id, size)
-
+        
+        
     """
     ======================================================================
                 Métodos de Chamada de Entidades Funções BSMP
