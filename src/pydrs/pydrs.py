@@ -6,7 +6,7 @@ import typing
 import serial
 
 from .base import BaseDRS
-from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST
+from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST, ETH_RESET_CMD
 from .utils import checksum, get_logger
 from .validation import SerialErrPckgLen, validate
 
@@ -95,6 +95,10 @@ class EthDRS(BaseDRS):
     def _format_message(self, msg: bytes, msg_type: bytes) -> bytes:
         msg = msg_type + struct.Struct(">f").pack(self._serial_timeout) + msg
         return msg[0:1] + struct.pack(">I", (len(msg) - 1)) + msg[1:]
+
+    def _reset_input_buffer(self):
+        self.socket.sendall(ETH_RESET_CMD)
+        self.socket.recv(16)
 
     @staticmethod
     def _parse_reply_size(reply: bytes) -> int:

@@ -46,8 +46,8 @@ Finally, a **Function** is a very simple way to perform a Remote Procedure Call 
 * pyserial==3.5
 * numpy
 
-**Disclaimer:** Although pydrs is tested up to [**Python 3.10.0**](https://www.python.org/downloads/release/python-3100/) version you may check whether other apps you want to use with it may run Python 3.10 version.
-Also should be the case that any of these applications may require Microsoft C++ build tools  [**visualcppbuildtools**](https://visualstudio.microsoft.com/pt-br/visual-cpp-build-tools).
+**Disclaimer:** Although pydrs is tested up to [**Python 3.10.0**](https://www.python.org/downloads/release/python-3100/), you may want to check whether other apps dependant on it support Python 3.10.
+Also, these other apps might depend on [**visualcppbuildtools**](https://visualstudio.microsoft.com/pt-br/visual-cpp-build-tools).
 
 
 ## Dev Utility scripts
@@ -129,6 +129,33 @@ coverage report
 
 
 ## Usage
+
+### Upgrading
+
+Although old method names and operations are still supported and work as expected, a few changes were implemented to make life easier, with new preferrable ways to do things, such as:
+
+- `drs.set_slave_add` and `drs.get_slave_add` were replaced by a property. Set the slave address with `drs.slave_addr = 5` and get with `address = drs.slave_addr`
+- `drs.set_timeout` and `drs.get_timeout` are also proprerties. Set with `drs.timeout = 5` and get with `timeout = drs.timeout`
+- `drs.closed_loop` is now `drs.close_loop` (verb form) to indicate that is an action.
+- `drs.get_param_bank` returns a dictionary instead of a nested list. Printing behavior stays the same.
+- `drs.read_vars_x` functions return a dictionary, as well as printing the values. Somewhere in the future, implicit looping (n=10000 loops 10000 times for example) will be removed.
+- All commands run through validation. In case validation fails, a descriptive exception will be raised, which can be used to trace the problem.
+- Connecting to a given device is done during instantiation of the class. This means that instead of running `drs = pydrs.SerialDRS()` and then `drs.connect()`, you should run `drs = pydrs.SerialDRS("COM1", 3000000)` for example.
+
+### Basic utilization (post 1.2.0)
+
+```python
+>>> import pydrs # Import the module
+>>> drs = pydrs.GenericDRS("10.0.6.64", 5000) # Connect to a device. It will automatically detect whether this is a serial or TCP/IP connection
+
+ pyDRS - compatible UDC firmware version: 0.44 2022-06-30
+
+>>> drs.slave_addr = 5 # Set slave address (optional)
+>>> drs.read_ps_status() # Run your command
+{'state': 'Off', 'open_loop': 0, 'interface': 0, 'active': 1, 'model': 'FBP', 'unlocked': 0}
+```
+
+### Basic usage (pre 1.2.0)
 
 When all installation is done, python or ipython instance can be called.
 

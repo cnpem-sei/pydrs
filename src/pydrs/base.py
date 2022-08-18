@@ -3,7 +3,6 @@
 import csv
 import math
 import os
-from pprint import pprint
 import struct
 import time
 
@@ -101,6 +100,7 @@ from .utils import (
     format_list_size,
     get_logger,
     index_to_hex,
+    prettier_print,
     size_to_hex,
     uint32_to_hex,
 )
@@ -217,12 +217,18 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def closed_loop(self):
+    def close_loop(self):
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION + payload_size + index_to_hex(list_func.index("closed_loop"))
         )
         return self._transfer(send_packet, 6)
+
+    def closed_loop(self):
+        print(
+            "This function will be replaced by the more aptly named close_loop in 2.0.0"
+        )
+        self.close_loop(self)
 
     def reset_interlocks(self):
         """Resets interlocks on connected DRS device"""
@@ -260,7 +266,7 @@ class BaseDRS(object):
         """Gets power supply name"""
         ps_name = ""
         for n in range(64):
-            ps_name = ps_name + chr(int(self.get_param("PS_Name", n)))
+            ps_name += chr(int(self.get_param("PS_Name", n)))
             if ps_name[-3:] == "   ":
                 ps_name = ps_name[: n - 2]
                 break
@@ -591,7 +597,7 @@ class BaseDRS(object):
             param_bank[param_name] = param_row
 
         if print_modules:
-            pprint(param_bank, width=1024)
+            prettier_print(param_bank)
 
         self.timeout = timeout_old
 
@@ -1049,7 +1055,7 @@ class BaseDRS(object):
     ======================================================================
     """
 
-    def read_bsmp_variable(self, id_var: int, type_var: int):
+    def read_bsmp_variable(self, id_var: int, type_var: str):
         reply_msg = self.read_var(index_to_hex(id_var), type_size[type_var])
         val = struct.unpack(type_format[type_var], reply_msg)
         return val[3]
@@ -1406,7 +1412,7 @@ class BaseDRS(object):
             return resp
 
         resp_add = {
-            "status": self.read_ps_status(),
+            "status": ps_status,
             "counter_set_slowref": self.read_bsmp_variable(4, "uint32_t"),
             "counter_sync_pulse": self.read_bsmp_variable(5, "uint32_t"),
             "wfm_ref_0": self.get_wfmref_vars(0),
@@ -1427,10 +1433,14 @@ class BaseDRS(object):
         soft_itlks = self.read_bsmp_variable(31, "uint32_t")
         if soft_itlks != 0:
             vars["soft_interlocks"] = self.decode_interlocks(soft_itlks, soft)
+        else:
+            vars["soft_interlocks"] = []
 
         hard_itlks = self.read_bsmp_variable(32, "uint32_t")
         if hard_itlks != 0:
             vars["hard_interlocks"] = self.decode_interlocks(hard_itlks, hard)
+        else:
+            vars["hard_interlocks"] = []
 
         return vars
 
@@ -1451,8 +1461,6 @@ class BaseDRS(object):
     def read_vars_fbp(self, n: int = 1, dt: float = 0.5) -> dict:
         vars = {}
         for _ in range(n):
-            self.read_vars_common()
-
             vars = {
                 "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
                 "load_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
@@ -1485,7 +1493,7 @@ class BaseDRS(object):
                 vars, list_fbp_soft_interlocks, list_fbp_hard_interlocks
             )
 
-            pprint(vars)
+            prettier_print(vars)
 
             time.sleep(dt)
         return vars
@@ -1495,8 +1503,6 @@ class BaseDRS(object):
         vars = {}
         try:
             for _ in range(n):
-                self.read_vars_common()
-
                 vars = {
                     "modules_status": self.read_bsmp_variable(33, "uint32_t"),
                     "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
@@ -1512,7 +1518,7 @@ class BaseDRS(object):
                         hard_itlks, list_fbp_dclink_hard_interlocks
                     )
 
-                pprint(vars)
+                prettier_print(vars)
                 time.sleep(dt)
 
         except Exception:
@@ -1524,8 +1530,6 @@ class BaseDRS(object):
     def read_vars_fac_acdc(self, n=1, dt: float = 0.5, iib: bool = True) -> dict:
         vars = {}
         for _ in range(n):
-            self.read_vars_common()
-
             vars = {
                 "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
                 "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
@@ -1587,7 +1591,7 @@ class BaseDRS(object):
                         iib_cmd_alarms, list_fac_acdc_iib_cmd_alarms
                     )
 
-            pprint(vars)
+            prettier_print(vars)
             time.sleep(dt)
         return vars
 
@@ -1596,7 +1600,6 @@ class BaseDRS(object):
         vars = {}
         try:
             for _ in range(n):
-                self.read_vars_common()
                 # TODO: Is this rounding really necessary?
                 wref_index = (
                     round(self.read_bsmp_variable(20, "uint32_t"), 3)
@@ -1646,7 +1649,7 @@ class BaseDRS(object):
                             iib_alarms, list_fac_dcdc_iib_alarms
                         )
 
-                pprint(vars)
+                prettier_print(vars)
                 time.sleep(dt)
 
         except:
@@ -1657,8 +1660,6 @@ class BaseDRS(object):
         vars = {}
         try:
             for _ in range(n):
-                self.read_vars_common()
-
                 vars = {
                     "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
                     "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
@@ -1700,7 +1701,7 @@ class BaseDRS(object):
                             iib_alarms, list_fac_dcdc_ema_iib_alarms
                         )
 
-                pprint(vars)
+                prettier_print(vars)
                 time.sleep(dt)
 
         except:
@@ -2069,8 +2070,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_add = old_add
-        except:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -2239,8 +2239,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-        except:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -2527,8 +2526,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-        except:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -2591,11 +2589,10 @@ class BaseDRS(object):
                             iib_alarms, list_fap_iib_alarms
                         )
 
-                pprint(vars)
+                prettier_print(vars)
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-        except:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -2918,9 +2915,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-
-        except Exception as e:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -3253,261 +3248,96 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-
-        except Exception as e:
+        finally:
             self.slave_addr = old_add
 
     def read_vars_fap_225A(self, n=1, com_add=1, dt=0.5):
-
+        vars = {}
         old_add = self.slave_addr
 
         try:
-            for i in range(n):
-
+            for _ in range(n):
                 self.slave_addr = com_add
 
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-                self.read_vars_common()
+                vars = {
+                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+                    "igbt": {
+                        "current_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                        "current_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                        "duty_cycle_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)}%",
+                        "duty_cycle_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)}%",
+                        "differential_duty_cycle": f"{round(self.read_bsmp_variable(38, 'float'), 3)}%",
+                    }
+                }
 
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(soft_itlks, list_fap_225A_soft_interlocks)
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(hard_itlks, list_fap_225A_hard_interlocks)
-
-                print(
-                    "\nLoad Current: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "\nIGBT 1 Current: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 2 Current: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "\nIGBT 1 Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(36, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 2 Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(37, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "Differential Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(38, "float"), 3))
-                    + " %"
-                )
+                vars = self._include_interlocks(vars, list_fap_225A_soft_interlocks, list_fap_225A_hard_interlocks)
+                prettier_print(vars)
 
                 time.sleep(dt)
-
+            return vars
+        finally:
             self.slave_addr = old_add
-        except:
-            self.slave_addr = old_add
 
-    def read_vars_fac_2p_acdc_imas(self, n=1, add_mod_a=2, dt=0.5, iib=0):
-
+    def read_vars_fac_2p_acdc_imas(self, n=1, add_mod_a=2, dt=0.5):
+        vars = {}
         old_add = self.slave_addr
 
         try:
-            for i in range(n):
+            for _ in range(n):
 
                 self.slave_addr = add_mod_a
 
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-                self.read_vars_common()
+                vars["module_a"] = {
+                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
+                    "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                    "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)}%"
+                }
 
-                print("\n *** MODULE A ***")
-
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(
-                        soft_itlks, list_fac_2p_acdc_imas_soft_interlocks
-                    )
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(
-                        hard_itlks, list_fac_2p_acdc_imas_hard_interlocks
-                    )
-
-                print(
-                    "\nCapBank Voltage: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "Rectifier Current: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " %"
-                )
+                vars["module_a"] = self._include_interlocks(vars["module_a"],list_fac_2p_acdc_imas_soft_interlocks,list_fac_2p_acdc_imas_hard_interlocks)
 
                 self.slave_addr = add_mod_a + 1
 
-                print("\n *** MODULE B ***")
+                vars["module_b"] = {
+                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
+                    "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                    "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)}%"
+                }
 
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(
-                        soft_itlks, list_fac_2p_acdc_imas_soft_interlocks
-                    )
-                    print("")
+                vars["module_b"] = self._include_interlocks(vars["module_b"],list_fac_2p_acdc_imas_soft_interlocks,list_fac_2p_acdc_imas_hard_interlocks)
 
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(
-                        hard_itlks, list_fac_2p_acdc_imas_hard_interlocks
-                    )
-
-                print(
-                    "\nCapBank Voltage: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "Rectifier Current: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " %"
-                )
-
+                prettier_print(vars)
                 time.sleep(dt)
-
+            return vars
+        finally:
             self.slave_addr = old_add
-        except:
-            self.slave_addr = old_add
-            # TODO: Raise proper exception
+            raise # TODO: Raise proper exception
 
     def read_vars_fac_2p_dcdc_imas(self, n=1, com_add=1, dt=0.5, iib=0):
-
+        vars = {}
         old_add = self.slave_addr
 
         try:
-            for i in range(n):
-
+            for _ in range(n):
                 self.slave_addr = com_add
+                vars = {
+                    "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
+                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+                    "load_current_error": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                    "arm_1_current": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                    "arm_2_current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
+                    "arms_current_diff": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
+                    "cap_bank_voltage_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
+                    "cap_bank_voltage_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
+                    "duty_cycle_1": f"{round(self.read_bsmp_variable(40, 'float'), 3)}%",
+                    "duty_cycle_2": f"{round(self.read_bsmp_variable(41, 'float'), 3)}%",
+                    "differential_duty_cycle": f"{round(self.read_bsmp_variable(41, 'float'), 3)}%",
+                }
+                vars = self._include_interlocks(vars, list_fac_2p_dcdc_imas_soft_interlocks, list_fac_2p_dcdc_imas_hard_interlocks)
 
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-
-                self.read_vars_common()
-
-                print(
-                    "\nSync Pulse Counter: "
-                    + str(round(self.read_bsmp_variable(5, "uint32_t"), 3))
-                )
-
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(
-                        soft_itlks, list_fac_2p_dcdc_imas_soft_interlocks
-                    )
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(
-                        hard_itlks, list_fac_2p_dcdc_imas_hard_interlocks
-                    )
-
-                print(
-                    "\nLoad Current: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Load Current Error: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " A"
-                )
-
-                print(
-                    "\nArm 1 Current: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Arm 2 Current: "
-                    + str(round(self.read_bsmp_variable(36, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Arms Current Diff: "
-                    + str(round(self.read_bsmp_variable(37, "float"), 3))
-                    + " A"
-                )
-
-                print(
-                    "\nCapBank Voltage 1: "
-                    + str(round(self.read_bsmp_variable(38, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "CapBank Voltage 2: "
-                    + str(round(self.read_bsmp_variable(39, "float"), 3))
-                    + " V"
-                )
-
-                print(
-                    "\nDuty-Cycle 1: "
-                    + str(round(self.read_bsmp_variable(40, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "Duty-Cycle 2: "
-                    + str(round(self.read_bsmp_variable(41, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "Differential Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(42, "float"), 3))
-                    + " %"
-                )
-
+                prettier_print(vars)
                 time.sleep(dt)
-
-            self.slave_addr = old_add
-        except:
+            return vars
+        finally:
             self.slave_addr = old_add
             raise  # TODO: Raise proper exception
 
@@ -3621,8 +3451,6 @@ class BaseDRS(object):
                 "coeffs": [[], b""] if return_floathex else [],
             }
             for dsp_id in range(num_dsp_modules[dsp_class]):
-                dsp_coeffs = []
-                dsp_coeffs_hex = b''
                 for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
                     try:
                         coeff, coeff_hex = self.get_dsp_coeff(
@@ -3630,6 +3458,7 @@ class BaseDRS(object):
                         )
                         if dsp_class == 3 and dsp_coeff == 1:
                             coeff *= self.get_param("Freq_ISR_Controller", 0)
+
                         dsp_coeffs.append(coeff)
                         dsp_coeffs_hex += coeff_hex
                     except SerialInvalidCmd:
@@ -3640,8 +3469,8 @@ class BaseDRS(object):
                 else:
                     dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(dsp_coeffs)
                     
-                if print_modules:
-                    print(dsp_modules_bank[dsp_classes_names[dsp_class]])
+        if print_modules:
+            prettier_print(dsp_modules_bank)
 
         return dsp_modules_bank
 
@@ -3667,7 +3496,7 @@ class BaseDRS(object):
                             int(dsp_module[1]), int(dsp_module[2]), list_coeffs
                         )
                         dsp_coeffs[dsp_module[0]]["coeffs"].append(
-                            [list_coeffs, hexcoeffs.encode('latin-1')]
+                            [list_coeffs, hexcoeffs.encode("latin-1")]
                         )
 
         if save_eeprom:
@@ -3676,17 +3505,17 @@ class BaseDRS(object):
         return dsp_coeffs
 
     def read_csv_dsp_modules_bank(self, dsp_modules_file_csv):
-        '''
+        """
         Returns:
         dict[dsp_class_name] = {"class":int, "coeffs":[float]}
-        '''
+        """
         dsp_coeffs_from_csv = {}
         with open(dsp_modules_file_csv, newline="") as f:
             reader = csv.reader(f)
 
             for dsp_module in reader:
                 if dsp_module[0] not in dsp_coeffs_from_csv.keys():
-                    dsp_coeffs_from_csv[dsp_module[0]] = {"class":9, "coeffs":[]}
+                    dsp_coeffs_from_csv[dsp_module[0]] = {"class": 9, "coeffs": []}
                 if not dsp_module == []:
                     if not dsp_module[0][0] == "#":
                         list_coeffs = []
@@ -3696,8 +3525,8 @@ class BaseDRS(object):
                             3 : 3 + num_coeffs_dsp_modules[int(dsp_module[1])]
                         ]:
                             list_coeffs.append(float(coeff))
-                        
-                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)         
+
+                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)
 
         return dsp_coeffs_from_csv
 
