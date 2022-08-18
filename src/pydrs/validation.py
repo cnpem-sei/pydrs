@@ -1,3 +1,4 @@
+from warnings import warn
 from .consts import ETH_ANSWER_NOQUEUE
 
 from .utils import checksum
@@ -86,10 +87,7 @@ def validate(func):
 
 def print_deprecated(func):
     def wrapper(*args, **kwargs):
-        print(
-            f"From 2.0.0, {func.__name__} will not print or loop implicitly. Only a dict will be returned."
-        )
-
+        warn(f"From 2.0.0, most functions will not loop implicitly. Use a 'for' or 'while' loop instead")
         return func(*args, **kwargs)
 
     return wrapper

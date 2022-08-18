@@ -20,6 +20,11 @@ class TestPrettifier(unittest.TestCase):
         print.assert_called_with("PARENT Child: abc")
 
     @patch("builtins.print")
+    def test_first_degree_recursion_with_space(self, print):
+        prettier_print({"parent_space": {"child": "abc"}})
+        print.assert_called_with("PARENT SPACE Child: abc")
+
+    @patch("builtins.print")
     def test_second_degree_recursion(self, print):
         """Tests if parent, children and grandchildren are printed correctly"""
         prettier_print({"parent": {"child": {"grandchild": "abc"}}})
