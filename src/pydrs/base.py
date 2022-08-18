@@ -100,9 +100,9 @@ from .utils import (
     format_list_size,
     get_logger,
     index_to_hex,
-    prettier_print,
     size_to_hex,
     uint32_to_hex,
+    prettier_print,
 )
 from .validation import SerialErrPckgLen, SerialInvalidCmd, print_deprecated
 
@@ -3451,6 +3451,8 @@ class BaseDRS(object):
                 "coeffs": [[], b""] if return_floathex else [],
             }
             for dsp_id in range(num_dsp_modules[dsp_class]):
+                dsp_coeffs = []
+                dsp_coeffs_hex = b''
                 for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
                     try:
                         coeff, coeff_hex = self.get_dsp_coeff(
@@ -3458,7 +3460,6 @@ class BaseDRS(object):
                         )
                         if dsp_class == 3 and dsp_coeff == 1:
                             coeff *= self.get_param("Freq_ISR_Controller", 0)
-
                         dsp_coeffs.append(coeff)
                         dsp_coeffs_hex += coeff_hex
                     except SerialInvalidCmd:
@@ -3496,7 +3497,7 @@ class BaseDRS(object):
                             int(dsp_module[1]), int(dsp_module[2]), list_coeffs
                         )
                         dsp_coeffs[dsp_module[0]]["coeffs"].append(
-                            [list_coeffs, hexcoeffs.encode("latin-1")]
+                            [list_coeffs, hexcoeffs.encode('latin-1')]
                         )
 
         if save_eeprom:
@@ -3505,17 +3506,17 @@ class BaseDRS(object):
         return dsp_coeffs
 
     def read_csv_dsp_modules_bank(self, dsp_modules_file_csv):
-        """
+        '''
         Returns:
         dict[dsp_class_name] = {"class":int, "coeffs":[float]}
-        """
+        '''
         dsp_coeffs_from_csv = {}
         with open(dsp_modules_file_csv, newline="") as f:
             reader = csv.reader(f)
 
             for dsp_module in reader:
                 if dsp_module[0] not in dsp_coeffs_from_csv.keys():
-                    dsp_coeffs_from_csv[dsp_module[0]] = {"class": 9, "coeffs": []}
+                    dsp_coeffs_from_csv[dsp_module[0]] = {"class":9, "coeffs":[]}
                 if not dsp_module == []:
                     if not dsp_module[0][0] == "#":
                         list_coeffs = []
@@ -3525,8 +3526,8 @@ class BaseDRS(object):
                             3 : 3 + num_coeffs_dsp_modules[int(dsp_module[1])]
                         ]:
                             list_coeffs.append(float(coeff))
-
-                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)
+                        
+                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)         
 
         return dsp_coeffs_from_csv
 
