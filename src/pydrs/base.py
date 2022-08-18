@@ -100,9 +100,9 @@ from .utils import (
     format_list_size,
     get_logger,
     index_to_hex,
-    prettier_print,
     size_to_hex,
     uint32_to_hex,
+    prettier_print,
 )
 from .validation import SerialErrPckgLen, SerialInvalidCmd, print_deprecated
 
@@ -185,7 +185,8 @@ class BaseDRS(object):
         """Reads a variable with a given ID"""
         self._reset_input_buffer()
         return self._transfer(COM_READ_VAR + var_id, size)
-
+        
+        
     """
     ======================================================================
                 Métodos de Chamada de Entidades Funções BSMP
@@ -513,31 +514,32 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def set_param_bank(self, param_file: str):
-        fbp_param_list = {}
+    def set_param_bank(self, param_file: str, hex_values: bool = False):
+        ps_param_list = {}
         with open(param_file, newline="") as f:
             reader = csv.reader(f)
             for row in reader:
-                fbp_param_list[str(row[0])] = row[1:]
+                ps_param_list[str(row[0])] = row[1:]
 
-        for param in fbp_param_list.keys():
+        for param in ps_param_list.keys():
             if param == "PS_Name":
-                # print(str(param[0]) + "[0]: " + str(param[1]))
-                self.set_ps_name(str(fbp_param_list[param][0]))
+                ps_param_list[param] = str(ps_param_list[param][0])
+                self.set_ps_name(str(ps_param_list[param]))
+
             else:
+                param_values = []
                 for n in range(64):
                     try:
-                        # print(str(param[0]) + "[" + str(n) + "]: " + str(param[n + 1]))
-                        _, param_hex = self.set_param(
-                            param, n, float(fbp_param_list[param][n])
-                        )
-                        fbp_param_list[param][n] = [
-                            fbp_param_list[param][n],
-                            param_hex.encode("latin-1"),
-                        ]
+                        _, param_hex = self.set_param(param, n, float(ps_param_list[param][n]))
+                        if(hex_values):
+                            param_values.append([float(ps_param_list[param][n]), param_hex.encode('latin-1')])
+                        else:
+                            param_values.append(float(ps_param_list[param][n]))
                     except:
                         break
-        return fbp_param_list
+                ps_param_list[param] = param_values
+
+        return ps_param_list
         # self.save_param_bank()
 
     def read_csv_param_bank(self, param_csv_file: str):
@@ -550,15 +552,14 @@ class BaseDRS(object):
         for param in csv_param_list.keys():
             if param == "PS_Name":
                 csv_param_list[param] = str(csv_param_list[param][0])
-                print(csv_param_list[param])
             else:
-                plist = []
+                param_values = []
                 for n in range(64):
                     try:
-                        plist.append(float(csv_param_list[param][n]))
+                        param_values.append(float(csv_param_list[param][n]))
                     except:
                         break
-                csv_param_list[param] = plist
+                csv_param_list[param] = param_values
 
         return csv_param_list
 
@@ -578,9 +579,7 @@ class BaseDRS(object):
             for n in range(64):
                 p = None
                 if param_name == "PS_Name":
-                    param_row.append(self.get_ps_name())
-                    # if(print_modules):
-                    # print('PS_Name: ' + p)
+                    param_row = self.get_ps_name()
                     self.timeout = timeout
                     break
 
@@ -591,8 +590,9 @@ class BaseDRS(object):
                         if math.isnan(p):
                             break
                     param_row.append(p)
-                    # if(print_modules):
-                    # print(param_name + "[" + str(n) + "]: " + str(p))
+
+            if print_modules:
+                print(param_row)
 
             param_bank[param_name] = param_row
 
@@ -724,7 +724,7 @@ class BaseDRS(object):
     def reset_udc(self):
         """Resets UDC firmware"""
         reply = input(
-            "\nEste comando realiza o reset do firmware da placa UDC, e por isso, so e executado caso a fonte esteja desligada. \nCaso deseje apenas resetar interlocks, utilize o comando reset_interlocks(). \n\nTem certeza que deseja prosseguir? [Y/N]: "
+            "\nEste comando realiza o reset do firmware da placa UDC, e por isso, so e executado caso a fonte esteja desligada. \nCaso deseje apenas resetar interlocks, utilize o comando reset_interlocks(). \n\nTem certeza que deseja prosseguir? [y/N]: "
         )
         if reply == "Y" or reply == "y":
             payload_size = size_to_hex(1)  # Payload: ID
@@ -3342,7 +3342,7 @@ class BaseDRS(object):
             raise  # TODO: Raise proper exception
 
     def check_param_bank(self, param_file):
-        fbp_param_list = []
+        ps_param_list = []
 
         # max_sampling_freq = 600000
         # c28_sysclk = 150e6
@@ -3350,9 +3350,9 @@ class BaseDRS(object):
         with open(param_file, newline="") as f:
             reader = csv.reader(f)
             for row in reader:
-                fbp_param_list.append(row)
+                ps_param_list.append(row)
 
-        for param in fbp_param_list:
+        for param in ps_param_list:
             if str(param[0]) == "Num_PS_Modules" and param[1] > 4:
                 print(
                     "Invalid " + str(param[0]) + ": " + str(param[1]) + ". Maximum is 4"
@@ -3451,6 +3451,8 @@ class BaseDRS(object):
                 "coeffs": [[], b""] if return_floathex else [],
             }
             for dsp_id in range(num_dsp_modules[dsp_class]):
+                dsp_coeffs = []
+                dsp_coeffs_hex = b''
                 for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
                     try:
                         coeff, coeff_hex = self.get_dsp_coeff(
@@ -3458,30 +3460,16 @@ class BaseDRS(object):
                         )
                         if dsp_class == 3 and dsp_coeff == 1:
                             coeff *= self.get_param("Freq_ISR_Controller", 0)
-
-                        if return_floathex:
-                            dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
-                                0
-                            ].append(coeff)
-                            dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
-                                1
-                            ] += coeff_hex
-                        else:
-                            dsp_modules_bank[dsp_classes_names[dsp_class]][
-                                "coeffs"
-                            ].append(coeff)
+                        dsp_coeffs.append(coeff)
+                        dsp_coeffs_hex += coeff_hex
                     except SerialInvalidCmd:
-                        if return_floathex:
-                            dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
-                                0
-                            ].append("nan")
-                            dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
-                                1
-                            ] += b"\x00\x00\x00\x00"
-                        else:
-                            dsp_modules_bank[dsp_classes_names[dsp_class]][
-                                "coeffs"
-                            ].append("nan")
+                        dsp_coeffs.append("nan")
+                        dsp_coeffs_hex += b'\x00\x00\x00\x00'
+                if(return_floathex):
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append([dsp_coeffs, dsp_coeffs_hex])
+                else:
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(dsp_coeffs)
+                    
         if print_modules:
             prettier_print(dsp_modules_bank)
 
@@ -3509,7 +3497,7 @@ class BaseDRS(object):
                             int(dsp_module[1]), int(dsp_module[2]), list_coeffs
                         )
                         dsp_coeffs[dsp_module[0]]["coeffs"].append(
-                            [list_coeffs, hexcoeffs.encode("latin-1")]
+                            [list_coeffs, hexcoeffs.encode('latin-1')]
                         )
 
         if save_eeprom:
@@ -3518,17 +3506,17 @@ class BaseDRS(object):
         return dsp_coeffs
 
     def read_csv_dsp_modules_bank(self, dsp_modules_file_csv):
-        """
+        '''
         Returns:
         dict[dsp_class_name] = {"class":int, "coeffs":[float]}
-        """
+        '''
         dsp_coeffs_from_csv = {}
         with open(dsp_modules_file_csv, newline="") as f:
             reader = csv.reader(f)
 
             for dsp_module in reader:
                 if dsp_module[0] not in dsp_coeffs_from_csv.keys():
-                    dsp_coeffs_from_csv[dsp_module[0]] = {"class": 9, "coeffs": []}
+                    dsp_coeffs_from_csv[dsp_module[0]] = {"class":9, "coeffs":[]}
                 if not dsp_module == []:
                     if not dsp_module[0][0] == "#":
                         list_coeffs = []
@@ -3538,8 +3526,8 @@ class BaseDRS(object):
                             3 : 3 + num_coeffs_dsp_modules[int(dsp_module[1])]
                         ]:
                             list_coeffs.append(float(coeff))
-
-                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)
+                        
+                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)         
 
         return dsp_coeffs_from_csv
 
