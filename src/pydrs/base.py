@@ -3,7 +3,6 @@
 import csv
 import math
 import os
-from pprint import pprint
 import struct
 import time
 
@@ -101,6 +100,7 @@ from .utils import (
     format_list_size,
     get_logger,
     index_to_hex,
+    prettier_print,
     size_to_hex,
     uint32_to_hex,
 )
@@ -224,7 +224,9 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def closed_loop(self):
-        print("This function will be replaced by the more aptly named close_loop in 2.0.0")
+        print(
+            "This function will be replaced by the more aptly named close_loop in 2.0.0"
+        )
         self.close_loop(self)
 
     def reset_interlocks(self):
@@ -263,7 +265,7 @@ class BaseDRS(object):
         """Gets power supply name"""
         ps_name = ""
         for n in range(64):
-            ps_name = ps_name + chr(int(self.get_param("PS_Name", n)))
+            ps_name += chr(int(self.get_param("PS_Name", n)))
             if ps_name[-3:] == "   ":
                 ps_name = ps_name[: n - 2]
                 break
@@ -595,7 +597,7 @@ class BaseDRS(object):
             param_bank[param_name] = param_row
 
         if print_modules:
-            pprint(param_bank, width=1024)
+            prettier_print(param_bank)
 
         self.timeout = timeout_old
 
@@ -1431,10 +1433,14 @@ class BaseDRS(object):
         soft_itlks = self.read_bsmp_variable(31, "uint32_t")
         if soft_itlks != 0:
             vars["soft_interlocks"] = self.decode_interlocks(soft_itlks, soft)
+        else:
+            vars["soft_interlocks"] = []
 
         hard_itlks = self.read_bsmp_variable(32, "uint32_t")
         if hard_itlks != 0:
             vars["hard_interlocks"] = self.decode_interlocks(hard_itlks, hard)
+        else:
+            vars["hard_interlocks"] = []
 
         return vars
 
@@ -1487,7 +1493,7 @@ class BaseDRS(object):
                 vars, list_fbp_soft_interlocks, list_fbp_hard_interlocks
             )
 
-            pprint(vars)
+            prettier_print(vars)
 
             time.sleep(dt)
         return vars
@@ -1512,7 +1518,7 @@ class BaseDRS(object):
                         hard_itlks, list_fbp_dclink_hard_interlocks
                     )
 
-                pprint(vars)
+                prettier_print(vars)
                 time.sleep(dt)
 
         except Exception:
@@ -1585,7 +1591,7 @@ class BaseDRS(object):
                         iib_cmd_alarms, list_fac_acdc_iib_cmd_alarms
                     )
 
-            pprint(vars)
+            prettier_print(vars)
             time.sleep(dt)
         return vars
 
@@ -1643,7 +1649,7 @@ class BaseDRS(object):
                             iib_alarms, list_fac_dcdc_iib_alarms
                         )
 
-                pprint(vars)
+                prettier_print(vars)
                 time.sleep(dt)
 
         except:
@@ -1695,7 +1701,7 @@ class BaseDRS(object):
                             iib_alarms, list_fac_dcdc_ema_iib_alarms
                         )
 
-                pprint(vars)
+                prettier_print(vars)
                 time.sleep(dt)
 
         except:
@@ -2064,8 +2070,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_add = old_add
-        except:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -2234,8 +2239,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-        except:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -2522,8 +2526,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-        except:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -2586,11 +2589,10 @@ class BaseDRS(object):
                             iib_alarms, list_fap_iib_alarms
                         )
 
-                pprint(vars)
+                prettier_print(vars)
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-        except:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -2913,9 +2915,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-
-        except Exception as e:
+        finally:
             self.slave_addr = old_add
 
     @print_deprecated
@@ -3248,9 +3248,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-
-        except Exception as e:
+        finally:
             self.slave_addr = old_add
 
     def read_vars_fap_225A(self, n=1, com_add=1, dt=0.5):
@@ -3313,11 +3311,10 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-        except:
+        finally:
             self.slave_addr = old_add
 
-    def read_vars_fac_2p_acdc_imas(self, n=1, add_mod_a=2, dt=0.5, iib=0):
+    def read_vars_fac_2p_acdc_imas(self, n=1, add_mod_a=2, dt=0.5):
 
         old_add = self.slave_addr
 
@@ -3403,8 +3400,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-        except:
+        finally:
             self.slave_addr = old_add
             # TODO: Raise proper exception
 
@@ -3501,8 +3497,7 @@ class BaseDRS(object):
 
                 time.sleep(dt)
 
-            self.slave_addr = old_add
-        except:
+        finally:
             self.slave_addr = old_add
             raise  # TODO: Raise proper exception
 
@@ -3616,8 +3611,6 @@ class BaseDRS(object):
                 "coeffs": [[], b""] if return_floathex else [],
             }
             for dsp_id in range(num_dsp_modules[dsp_class]):
-                dsp_coeffs = []
-                dsp_coeffs_hex = b''
                 for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
                     try:
                         coeff, coeff_hex = self.get_dsp_coeff(
@@ -3626,7 +3619,6 @@ class BaseDRS(object):
                         if dsp_class == 3 and dsp_coeff == 1:
                             coeff *= self.get_param("Freq_ISR_Controller", 0)
 
-                        dsp_module.append(coeff)
                         if return_floathex:
                             dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
                                 0
@@ -3639,9 +3631,19 @@ class BaseDRS(object):
                                 "coeffs"
                             ].append(coeff)
                     except SerialInvalidCmd:
-                        dsp_module.append("nan")
+                        if return_floathex:
+                            dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
+                                0
+                            ].append("nan")
+                            dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"][
+                                1
+                            ] += b"\x00\x00\x00\x00"
+                        else:
+                            dsp_modules_bank[dsp_classes_names[dsp_class]][
+                                "coeffs"
+                            ].append("nan")
         if print_modules:
-            pprint(dsp_modules_bank, width=1024)
+            prettier_print(dsp_modules_bank)
 
         return dsp_modules_bank
 
@@ -3667,7 +3669,7 @@ class BaseDRS(object):
                             int(dsp_module[1]), int(dsp_module[2]), list_coeffs
                         )
                         dsp_coeffs[dsp_module[0]]["coeffs"].append(
-                            [list_coeffs, hexcoeffs.encode('latin-1')]
+                            [list_coeffs, hexcoeffs.encode("latin-1")]
                         )
 
         if save_eeprom:
@@ -3676,17 +3678,17 @@ class BaseDRS(object):
         return dsp_coeffs
 
     def read_csv_dsp_modules_bank(self, dsp_modules_file_csv):
-        '''
+        """
         Returns:
         dict[dsp_class_name] = {"class":int, "coeffs":[float]}
-        '''
+        """
         dsp_coeffs_from_csv = {}
         with open(dsp_modules_file_csv, newline="") as f:
             reader = csv.reader(f)
 
             for dsp_module in reader:
                 if dsp_module[0] not in dsp_coeffs_from_csv.keys():
-                    dsp_coeffs_from_csv[dsp_module[0]] = {"class":9, "coeffs":[]}
+                    dsp_coeffs_from_csv[dsp_module[0]] = {"class": 9, "coeffs": []}
                 if not dsp_module == []:
                     if not dsp_module[0][0] == "#":
                         list_coeffs = []
@@ -3696,8 +3698,8 @@ class BaseDRS(object):
                             3 : 3 + num_coeffs_dsp_modules[int(dsp_module[1])]
                         ]:
                             list_coeffs.append(float(coeff))
-                        
-                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)         
+
+                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)
 
         return dsp_coeffs_from_csv
 

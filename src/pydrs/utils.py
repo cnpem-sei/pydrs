@@ -66,3 +66,19 @@ def size_to_hex(value: int):
 def checksum(packet: bytes) -> bytes:
     csum = (256 - sum(packet)) % 256
     return packet + bytes([csum])
+
+
+def prettier_print(input: dict, prefix: str = ""):
+    for key, value in input.items():
+        if isinstance(value, dict):
+            prettier_print(value, "".join([prefix, key.upper(), " "]))
+        else:
+            key_words = key.split("_")
+
+            for i in range(0, len(key_words)):
+                key_words[i] = (
+                    key_words[i].upper()
+                    if key_words[i] in ["igbt", "dc", "iib", "ps", "ip"]
+                    else key_words[i].capitalize()
+                )
+            print(f"{prefix}{' '.join(key_words)}: {value}")
