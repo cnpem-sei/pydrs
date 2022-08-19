@@ -6,7 +6,7 @@
 """ """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" ""
 
 # FAP
-list_fap_soft_interlocks = [
+list_soft_interlocks = [
     "DCCT 1 Fault",
     "DCCT 2 Fault",
     "DCCT High Difference",
@@ -15,7 +15,7 @@ list_fap_soft_interlocks = [
     "IGBTs Current High Difference",
 ]
 
-list_fap_hard_interlocks = [
+list_hard_interlocks = [
     "Load Overcurrent",
     "Load Overvoltage",
     "DCLink Overvoltage",
@@ -27,7 +27,7 @@ list_fap_hard_interlocks = [
     "IIB Itlk",
 ]
 
-list_fap_iib_interlocks = [
+list_iib_interlocks = [
     "Input Overvoltage",
     "Output Overvoltage",
     "IGBT 1 Overcurrent",
@@ -50,7 +50,7 @@ list_fap_iib_interlocks = [
     "Module Overhumidity",
 ]
 
-list_fap_iib_alarms = [
+list_iib_alarms = [
     "Input Overvoltage",
     "Output Overvoltage",
     "IGBT 1 Overcurrent",
@@ -68,7 +68,7 @@ list_fap_iib_alarms = [
 ]
 
 # FAP-4P
-list_fap_4p_soft_interlocks = [
+list_4p_soft_interlocks = [
     "DCCT 1 Fault",
     "DCCT 2 Fault",
     "DCCT High Difference",
@@ -77,7 +77,7 @@ list_fap_4p_soft_interlocks = [
     "IGBTs Current High Difference",
 ]
 
-list_fap_4p_hard_interlocks = [
+list_list_4p_hard_interlocks = [
     "Load Overcurrent",
     "Load Overvoltage",
     "IGBT 1 Mod 1 Overcurrent",
@@ -110,11 +110,11 @@ list_fap_4p_hard_interlocks = [
     "IIB Mod 4 Itlk",
 ]
 
-list_fap_4p_iib_interlocks = list_fap_iib_interlocks
-list_fap_4p_iib_alarms = list_fap_iib_alarms
+list_4p_iib_interlocks = list_iib_interlocks
+list_4p_iib_alarms = list_iib_alarms
 
 # FAP-2P2S
-list_fap_2p2s_soft_interlocks = [
+list_2p2s_soft_interlocks = [
     "DCCT 1 Fault",
     "DCCT 2 Fault",
     "DCCT High Difference",
@@ -125,7 +125,7 @@ list_fap_2p2s_soft_interlocks = [
     "Complementary PS Interlock",
 ]
 
-list_fap_2p2s_hard_interlocks = [
+list_2p2s_hard_interlocks = [
     "Load Overcurrent",
     "IGBT 1 Mod 1 Overcurrent",
     "IGBT 2 Mod 1 Overcurrent",
@@ -159,13 +159,13 @@ list_fap_2p2s_hard_interlocks = [
     "Arm 2 Overcurrent",
 ]
 
-list_fap_2p2s_iib_interlocks = list_fap_iib_interlocks
-list_fap_2p2s_iib_alarms = list_fap_iib_alarms
+list_2p2s_iib_interlocks = list_iib_interlocks
+list_2p2s_iib_alarms = list_iib_alarms
 
 # FAP 225A
-list_fap_225A_soft_interlocks = ["IGBTs Current High Difference"]
+list_225A_soft_interlocks = ["IGBTs Current High Difference"]
 
-list_fap_225A_hard_interlocks = [
+list_225A_hard_interlocks = [
     "Load Overcurrent",
     "DCLink Contactor Fault",
     "IGBT 1 Overcurrent",

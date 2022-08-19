@@ -28,57 +28,7 @@ from .consts import (
     type_size,
 )
 
-from .consts import common, fbp
-
-from .consts.fac import (
-    list_fac_2p4s_dcdc_hard_interlocks,
-    list_fac_2p4s_dcdc_iib_alarms,
-    list_fac_2p4s_dcdc_iib_interlocks,
-    list_fac_2p4s_dcdc_soft_interlocks,
-    list_fac_2p_acdc_imas_hard_interlocks,
-    list_fac_2p_acdc_imas_soft_interlocks,
-    list_fac_2p_dcdc_imas_hard_interlocks,
-    list_fac_2p_dcdc_imas_soft_interlocks,
-    list_fac_2s_acdc_hard_interlocks,
-    list_fac_2s_acdc_iib_cmd_alarms,
-    list_fac_2s_acdc_iib_cmd_interlocks,
-    list_fac_2s_acdc_iib_is_alarms,
-    list_fac_2s_acdc_iib_is_interlocks,
-    list_fac_2s_acdc_soft_interlocks,
-    list_fac_2s_dcdc_hard_interlocks,
-    list_fac_2s_dcdc_iib_alarms,
-    list_fac_2s_dcdc_iib_interlocks,
-    list_fac_2s_dcdc_soft_interlocks,
-    list_fac_acdc_hard_interlocks,
-    list_fac_acdc_iib_cmd_alarms,
-    list_fac_acdc_iib_cmd_interlocks,
-    list_fac_acdc_iib_is_alarms,
-    list_fac_acdc_iib_is_interlocks,
-    list_fac_acdc_soft_interlocks,
-    list_fac_dcdc_ema_hard_interlocks,
-    list_fac_dcdc_ema_iib_alarms,
-    list_fac_dcdc_ema_iib_interlocks,
-    list_fac_dcdc_ema_soft_interlocks,
-    list_fac_dcdc_hard_interlocks,
-    list_fac_dcdc_iib_alarms,
-    list_fac_dcdc_iib_interlocks,
-    list_fac_dcdc_soft_interlocks,
-)
-
-from .consts.fap import (
-    list_fap_2p2s_hard_interlocks,
-    list_fap_2p2s_soft_interlocks,
-    list_fap_4p_hard_interlocks,
-    list_fap_4p_iib_alarms,
-    list_fap_4p_iib_interlocks,
-    list_fap_4p_soft_interlocks,
-    list_fap_225A_hard_interlocks,
-    list_fap_225A_soft_interlocks,
-    list_fap_hard_interlocks,
-    list_fap_iib_alarms,
-    list_fap_iib_interlocks,
-    list_fap_soft_interlocks,
-)
+from .consts import common, fbp, fap, fac
 
 from .utils import (
     double_to_hex,
@@ -1544,7 +1494,7 @@ class BaseDRS(object):
             }
 
             vars = self._include_interlocks(
-                vars, list_fac_acdc_soft_interlocks, list_fac_acdc_hard_interlocks
+                vars, fac.list_acdc_soft_interlocks, fac.list_acdc_hard_interlocks
             )
 
             if iib:
@@ -1576,21 +1526,21 @@ class BaseDRS(object):
 
                 vars["is"]["interlocks"] = self.decode_interlocks(
                     self.read_bsmp_variable(45, "uint32_t"),
-                    list_fac_acdc_iib_is_interlocks,
+                    fac.list_acdc_iib_is_interlocks,
                 )
 
                 vars["is"]["alarms"] = self.decode_interlocks(
-                    self.read_bsmp_variable(46, "uint32_t"), list_fac_acdc_iib_is_alarms
+                    self.read_bsmp_variable(46, "uint32_t"), fac.list_acdc_iib_is_alarms
                 )
 
                 vars["cmd"]["interlocks"] = self.decode_interlocks(
                     self.read_bsmp_variable(57, "uint32_t"),
-                    list_fac_acdc_iib_cmd_interlocks,
+                    fac.list_acdc_iib_cmd_interlocks,
                 )
 
                 vars["cmd"]["interlocks"] = self.decode_interlocks(
                     self.read_bsmp_variable(58, "uint32_t"),
-                    list_fac_acdc_iib_cmd_alarms,
+                    fac.list_acdc_iib_cmd_alarms,
                 )
 
             prettier_print(vars)
@@ -1619,7 +1569,7 @@ class BaseDRS(object):
                 }
 
                 vars = self._include_interlocks(
-                    vars, list_fac_dcdc_soft_interlocks, list_fac_dcdc_hard_interlocks
+                    vars, fac.list_dcdc_soft_interlocks, fac.list_dcdc_hard_interlocks
                 )
 
                 if iib:
@@ -1641,12 +1591,12 @@ class BaseDRS(object):
 
                     vars["iib"]["interlocks"] = self.decode_interlocks(
                         self.read_bsmp_variable(51, "uint32_t"),
-                        list_fac_dcdc_iib_interlocks,
+                        fac.list_dcdc_iib_interlocks,
                     )
 
                     vars["iib"]["alarms"] = self.decode_interlocks(
                         self.read_bsmp_variable(52, "uint32_t"),
-                        list_fac_dcdc_iib_alarms,
+                        fac.list_dcdc_iib_alarms,
                     )
 
                 prettier_print(vars)
@@ -1667,8 +1617,8 @@ class BaseDRS(object):
 
                 vars = self._include_interlocks(
                     vars,
-                    list_fac_dcdc_ema_soft_interlocks,
-                    list_fac_dcdc_ema_hard_interlocks,
+                    fac.list_dcdc_ema_soft_interlocks,
+                    fac.list_dcdc_ema_hard_interlocks,
                 )
 
                 if iib:
@@ -1690,12 +1640,12 @@ class BaseDRS(object):
 
                     vars["iib"]["alarms"] = self.decode_interlocks(
                         self.read_bsmp_variable(49, "uint32_t"),
-                        list_fac_dcdc_ema_iib_interlocks,
+                        fac.list_dcdc_ema_iib_interlocks,
                     )
 
                     vars["iib"]["interlocks"] = self.decode_interlocks(
                         self.read_bsmp_variable(50, "uint32_t"),
-                        list_fac_dcdc_ema_iib_alarms,
+                        fac.list_dcdc_ema_iib_alarms,
                     )
 
                 prettier_print(vars)
@@ -1711,7 +1661,7 @@ class BaseDRS(object):
         }
 
         vars = self._include_interlocks(
-            vars, list_fac_2s_acdc_soft_interlocks, list_fac_2s_acdc_hard_interlocks
+            vars, fac.list_2s_acdc_soft_interlocks, fac.list_2s_acdc_hard_interlocks
         )
 
         if iib:
@@ -1741,19 +1691,19 @@ class BaseDRS(object):
             }
 
         vars["iib"]["is"]["interlocks"] = self.decode_interlocks(
-            self.read_bsmp_variable(45, "uint32_t"), list_fac_2s_acdc_iib_is_interlocks
+            self.read_bsmp_variable(45, "uint32_t"), fac.list_2s_acdc_iib_is_interlocks
         )
 
         vars["iib"]["is"]["alarms"] = self.decode_interlocks(
-            self.read_bsmp_variable(46, "uint32_t"), list_fac_2s_acdc_iib_is_alarms
+            self.read_bsmp_variable(46, "uint32_t"), fac.list_2s_acdc_iib_is_alarms
         )
 
         vars["iib"]["cmd"]["interlocks"] = self.decode_interlocks(
-            self.read_bsmp_variable(57, "uint32_t"), list_fac_2s_acdc_iib_cmd_interlocks
+            self.read_bsmp_variable(57, "uint32_t"), fac.list_2s_acdc_iib_cmd_interlocks
         )
 
         vars["iib"]["cmd"]["alarms"] = self.decode_interlocks(
-            self.read_bsmp_variable(58, "uint32_t"), list_fac_2s_acdc_iib_cmd_alarms
+            self.read_bsmp_variable(58, "uint32_t"), fac.list_2s_acdc_iib_cmd_alarms
         )
 
         prettier_print(vars)
@@ -1800,8 +1750,8 @@ class BaseDRS(object):
 
                 vars = self._include_interlocks(
                     vars,
-                    list_fac_2s_dcdc_soft_interlocks,
-                    list_fac_2s_dcdc_hard_interlocks,
+                    fac.list_2s_dcdc_soft_interlocks,
+                    fac.list_2s_dcdc_hard_interlocks,
                 )
 
                 if iib:
@@ -1822,12 +1772,12 @@ class BaseDRS(object):
 
                     vars["iib"]["interlocks"] = self.decode_interlocks(
                         self.read_bsmp_variable(52 + iib_offset, "uint32_t"),
-                        list_fac_2s_dcdc_iib_interlocks,
+                        fac.list_2s_dcdc_iib_interlocks,
                     )
 
                     vars["iib"]["alarms"] = self.decode_interlocks(
                         self.read_bsmp_variable(53 + iib_offset, "uint32_t"),
-                        list_fac_2s_dcdc_iib_alarms,
+                        fac.list_2s_dcdc_iib_alarms,
                     )
 
                 prettier_print(vars)
@@ -1861,12 +1811,12 @@ class BaseDRS(object):
 
         vars["interlocks"] = self.decode_interlocks(
             self.read_bsmp_variable(offset + 66, "uint32_t"),
-            list_fac_2p4s_dcdc_iib_interlocks,
+            fac.list_2p4s_dcdc_iib_interlocks,
         )
 
         vars["alarms"] = self.decode_interlocks(
             self.read_bsmp_variable(offset + 67, "uint32_t"),
-            list_fac_2p4s_dcdc_iib_alarms,
+            fac.list_2p4s_dcdc_iib_alarms,
         )
 
         return vars
@@ -1908,8 +1858,8 @@ class BaseDRS(object):
 
                 vars = self._include_interlocks(
                     vars,
-                    list_fac_2p4s_dcdc_soft_interlocks,
-                    list_fac_2p4s_dcdc_hard_interlocks,
+                    fac.list_2p4s_dcdc_soft_interlocks,
+                    fac.list_2p4s_dcdc_hard_interlocks,
                 )
 
                 if iib:
@@ -1949,7 +1899,7 @@ class BaseDRS(object):
                 }
 
                 vars = vars = self._include_interlocks(
-                    vars, list_fap_soft_interlocks, list_fap_hard_interlocks
+                    vars, fap.list_soft_interlocks, fap.list_hard_interlocks
                 )
 
                 if iib:
@@ -1971,11 +1921,11 @@ class BaseDRS(object):
                     }
 
                     vars["iib"]["alarms"] = self.decode_interlocks(
-                        self.read_bsmp_variable(56, "uint32_t"), list_fap_iib_interlocks
+                        self.read_bsmp_variable(56, "uint32_t"), fap.list_iib_interlocks
                     )
 
                     vars["iib"]["interlocks"] = self.decode_interlocks(
-                        self.read_bsmp_variable(57, "uint32_t"), list_fap_iib_alarms
+                        self.read_bsmp_variable(57, "uint32_t"), fap.list_iib_alarms
                     )
 
                 prettier_print(vars)
@@ -2027,18 +1977,18 @@ class BaseDRS(object):
                 }
 
                 vars = self._include_interlocks(
-                    vars, list_fap_4p_soft_interlocks, list_fap_4p_hard_interlocks
+                    vars, fap.list_4p_soft_interlocks, fap.list_4p_hard_interlocks
                 )
 
                 for j in range(4):
                     vars[f"iib_{j+1}"] = {
                         "interlocks": self.decode_interlocks(
                             self.read_bsmp_variable(72 + j * 16, "uint32_t"),
-                            list_fap_4p_iib_interlocks,
+                            fap.list_4p_iib_interlocks,
                         ),
                         "alarms": self.decode_interlocks(
                             self.read_bsmp_variable(73 + j * 16, "uint32_t"),
-                            list_fap_4p_iib_alarms,
+                            fap.list_4p_iib_alarms,
                         ),
                     }
 
@@ -2117,18 +2067,18 @@ class BaseDRS(object):
                 }
 
                 vars = self._include_interlocks(
-                    vars, list_fap_2p2s_soft_interlocks, list_fap_2p2s_hard_interlocks
+                    vars, fap.list_2p2s_soft_interlocks, fap.list_2p2s_hard_interlocks
                 )
 
                 for j in range(4):
                     vars[f"iib_{j+1}"] = {
                         "interlocks": self.decode_interlocks(
                             self.read_bsmp_variable(78 + j * 16, "uint32_t"),
-                            list_fap_4p_iib_interlocks,
+                            fap.list_4p_iib_interlocks,
                         ),
                         "alarms": self.decode_interlocks(
                             self.read_bsmp_variable(79 + j * 16, "uint32_t"),
-                            list_fap_4p_iib_alarms,
+                            fap.list_4p_iib_alarms,
                         ),
                     }
 
@@ -2182,7 +2132,7 @@ class BaseDRS(object):
                 }
 
                 vars = self._include_interlocks(
-                    vars, list_fap_225A_soft_interlocks, list_fap_225A_hard_interlocks
+                    vars, fap.list_225A_soft_interlocks, fap.list_225A_hard_interlocks
                 )
 
                 prettier_print(vars)
@@ -2208,8 +2158,8 @@ class BaseDRS(object):
 
                 vars["module_a"] = self._include_interlocks(
                     vars["module_a"],
-                    list_fac_2p_acdc_imas_soft_interlocks,
-                    list_fac_2p_acdc_imas_hard_interlocks,
+                    fac.list_2p_acdc_imas_soft_interlocks,
+                    fac.list_2p_acdc_imas_hard_interlocks,
                 )
 
                 self.slave_addr = add_mod_a + 1
@@ -2222,8 +2172,8 @@ class BaseDRS(object):
 
                 vars["module_b"] = self._include_interlocks(
                     vars["module_b"],
-                    list_fac_2p_acdc_imas_soft_interlocks,
-                    list_fac_2p_acdc_imas_hard_interlocks,
+                    fac.list_2p_acdc_imas_soft_interlocks,
+                    fac.list_2p_acdc_imas_hard_interlocks,
                 )
 
                 prettier_print(vars)
@@ -2255,8 +2205,8 @@ class BaseDRS(object):
                 }
                 vars = self._include_interlocks(
                     vars,
-                    list_fac_2p_dcdc_imas_soft_interlocks,
-                    list_fac_2p_dcdc_imas_hard_interlocks,
+                    fac.list_2p_dcdc_imas_soft_interlocks,
+                    fac.list_2p_dcdc_imas_hard_interlocks,
                 )
 
                 prettier_print(vars)

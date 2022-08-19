@@ -6,9 +6,9 @@
 """ """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" ""
 
 # FAC ACDC
-list_fac_acdc_soft_interlocks = []
+list_acdc_soft_interlocks = []
 
-list_fac_acdc_hard_interlocks = [
+list_acdc_hard_interlocks = [
     "CapBank Overvoltage",
     "Rectifier Overvoltage",
     "Rectifier Undervoltage",
@@ -19,7 +19,7 @@ list_fac_acdc_hard_interlocks = [
     "IIB Command Interlock",
 ]
 
-list_fac_acdc_iib_is_interlocks = [
+list_acdc_iib_is_interlocks = [
     "Rectifier Overvoltage",
     "Input Overcurrent",
     "IGBT Overtemperature",
@@ -34,7 +34,7 @@ list_fac_acdc_iib_is_interlocks = [
     "Module Overhumidity",
 ]
 
-list_fac_acdc_iib_is_alarms = [
+list_acdc_iib_is_alarms = [
     "Rectifier Overvoltage",
     "Input Overcurrent",
     "IGBT Overtemperature",
@@ -46,7 +46,7 @@ list_fac_acdc_iib_is_alarms = [
     "Module Overhumidity",
 ]
 
-list_fac_acdc_iib_cmd_interlocks = [
+list_acdc_iib_cmd_interlocks = [
     "Capbank Overvoltage",
     "Output Overvoltage",
     "External Boards Overvoltage",
@@ -63,7 +63,7 @@ list_fac_acdc_iib_cmd_interlocks = [
     "Module Overhumidity",
 ]
 
-list_fac_acdc_iib_cmd_alarms = [
+list_acdc_iib_cmd_alarms = [
     "Capbank Overvoltage",
     "Output Overvoltage",
     "External Boards Overvoltage",
@@ -77,7 +77,7 @@ list_fac_acdc_iib_cmd_alarms = [
 ]
 
 # FAC DCDC
-list_fac_dcdc_soft_interlocks = [
+list_dcdc_soft_interlocks = [
     "DCCT 1 Fault",
     "DCCT 2 Fault",
     "DCCT High Difference",
@@ -85,7 +85,7 @@ list_fac_dcdc_soft_interlocks = [
     "Load Feedback 2 Fault",
 ]
 
-list_fac_dcdc_hard_interlocks = [
+list_dcdc_hard_interlocks = [
     "Load Overcurrent",
     "CapBank Overvoltage",
     "CapBank Undervoltage",
@@ -94,7 +94,7 @@ list_fac_dcdc_hard_interlocks = [
     "Rack Interlock",
 ]
 
-list_fac_dcdc_iib_interlocks = [
+list_dcdc_iib_interlocks = [
     "Input Overvoltage",
     "Input Overcurrent",
     "Output Overcurrent",
@@ -116,7 +116,7 @@ list_fac_dcdc_iib_interlocks = [
     "Module Overhumidity",
 ]
 
-list_fac_dcdc_iib_alarms = [
+list_dcdc_iib_alarms = [
     "Input Overvoltage",
     "Input Overcurrent",
     "Output Overcurrent",
@@ -133,8 +133,8 @@ list_fac_dcdc_iib_alarms = [
 ]
 
 # FAC-2S AC/DC
-list_fac_2s_acdc_soft_interlocks = []
-list_fac_2s_acdc_hard_interlocks = [
+list_2s_acdc_soft_interlocks = []
+list_2s_acdc_hard_interlocks = [
     "CapBank Overvoltage",
     "Rectifier Overvoltage",
     "Rectifier Undervoltage",
@@ -145,13 +145,13 @@ list_fac_2s_acdc_hard_interlocks = [
     "IIB Command Interlock",
 ]
 
-list_fac_2s_acdc_iib_is_interlocks = list_fac_acdc_iib_is_interlocks
-list_fac_2s_acdc_iib_cmd_interlocks = list_fac_acdc_iib_cmd_interlocks
-list_fac_2s_acdc_iib_is_alarms = list_fac_acdc_iib_is_alarms
-list_fac_2s_acdc_iib_cmd_alarms = list_fac_acdc_iib_cmd_alarms
+list_2s_acdc_iib_is_interlocks = list_acdc_iib_is_interlocks
+list_2s_acdc_iib_cmd_interlocks = list_acdc_iib_cmd_interlocks
+list_2s_acdc_iib_is_alarms = list_acdc_iib_is_alarms
+list_2s_acdc_iib_cmd_alarms = list_acdc_iib_cmd_alarms
 
 # FAC-2S DC/DC
-list_fac_2s_dcdc_soft_interlocks = [
+list_2s_dcdc_soft_interlocks = [
     "DCCT 1 Fault",
     "DCCT 2 Fault",
     "DCCT High Difference",
@@ -159,7 +159,7 @@ list_fac_2s_dcdc_soft_interlocks = [
     "Load Feedback 2 Fault",
 ]
 
-list_fac_2s_dcdc_hard_interlocks = [
+list_2s_dcdc_hard_interlocks = [
     "Load Overcurrent",
     "Module 1 CapBank Overvoltage",
     "Module 2 CapBank Overvoltage",
@@ -171,11 +171,11 @@ list_fac_2s_dcdc_hard_interlocks = [
     "Rack Interlock",
 ]
 
-list_fac_2s_dcdc_iib_interlocks = list_fac_dcdc_iib_interlocks
-list_fac_2s_dcdc_iib_alarms = list_fac_dcdc_iib_alarms
+list_2s_dcdc_iib_interlocks = list_dcdc_iib_interlocks
+list_2s_dcdc_iib_alarms = list_dcdc_iib_alarms
 
 # FAC-2P4S AC/DC
-list_fac_2p4s_acdc_hard_interlocks = [
+list_2p4s_acdc_hard_interlocks = [
     "CapBank Overvoltage",
     "Rectifier Overvoltage",
     "Rectifier Undervoltage",
@@ -186,13 +186,13 @@ list_fac_2p4s_acdc_hard_interlocks = [
     "IIB Command Interlock",
 ]
 
-list_fac_2p4s_acdc_iib_is_interlocks = list_fac_acdc_iib_is_interlocks
-list_fac_2p4s_acdc_iib_cmd_interlocks = list_fac_acdc_iib_cmd_interlocks
-list_fac_2p4s_acdc_iib_is_alarms = list_fac_acdc_iib_is_alarms
-list_fac_2p4s_acdc_iib_cmd_alarms = list_fac_acdc_iib_cmd_alarms
+list_2p4s_acdc_iib_is_interlocks = list_acdc_iib_is_interlocks
+list_2p4s_acdc_iib_cmd_interlocks = list_acdc_iib_cmd_interlocks
+list_2p4s_acdc_iib_is_alarms = list_acdc_iib_is_alarms
+list_2p4s_acdc_iib_cmd_alarms = list_acdc_iib_cmd_alarms
 
 # FAC-2P4S DC/DC
-list_fac_2p4s_dcdc_soft_interlocks = [
+list_2p4s_dcdc_soft_interlocks = [
     "DCCT 1 Fault",
     "DCCT 2 Fault",
     "DCCT High Difference",
@@ -204,7 +204,7 @@ list_fac_2p4s_dcdc_soft_interlocks = [
     "Complementary PS Interlock",
 ]
 
-list_fac_2p4s_dcdc_hard_interlocks = [
+list_2p4s_dcdc_hard_interlocks = [
     "Load Overcurrent",
     "Module 1 CapBank Overvoltage",
     "Module 2 CapBank Overvoltage",
@@ -232,13 +232,13 @@ list_fac_2p4s_dcdc_hard_interlocks = [
     "IIB 8 Itlk",
 ]
 
-list_fac_2p4s_dcdc_iib_interlocks = list_fac_dcdc_iib_interlocks
-list_fac_2p4s_dcdc_iib_alarms = list_fac_dcdc_iib_alarms
+list_2p4s_dcdc_iib_interlocks = list_dcdc_iib_interlocks
+list_2p4s_dcdc_iib_alarms = list_dcdc_iib_alarms
 
 # FAC DCDC EMA
-list_fac_dcdc_ema_soft_interlocks = ["DCCT Fault", "Load Feedback Fault"]
+list_dcdc_ema_soft_interlocks = ["DCCT Fault", "Load Feedback Fault"]
 
-list_fac_dcdc_ema_hard_interlocks = [
+list_dcdc_ema_hard_interlocks = [
     "Load Overcurrent",
     "DCLink Overvoltage",
     "DCLink Undervoltage",
@@ -248,7 +248,7 @@ list_fac_dcdc_ema_hard_interlocks = [
     "IIB Itlk",
 ]
 
-list_fac_dcdc_ema_iib_interlocks = [
+list_dcdc_ema_iib_interlocks = [
     "Input Overvoltage",
     "Input Overcurrent",
     "Output Overcurrent",
@@ -270,7 +270,7 @@ list_fac_dcdc_ema_iib_interlocks = [
     "Module Overhumidity",
 ]
 
-list_fac_dcdc_ema_iib_alarms = [
+list_dcdc_ema_iib_alarms = [
     "Input Overvoltage",
     "Input Overcurrent",
     "Output Overcurrent",
@@ -287,9 +287,9 @@ list_fac_dcdc_ema_iib_alarms = [
 ]
 
 # FAC-2P ACDC
-list_fac_2p_acdc_imas_soft_interlocks = []
+list_2p_acdc_imas_soft_interlocks = []
 
-list_fac_2p_acdc_imas_hard_interlocks = [
+list_2p_acdc_imas_hard_interlocks = [
     "CapBank Overvoltage",
     "Rectifier Overcurrent",
     "AC Mains Contactor Fault",
@@ -299,9 +299,9 @@ list_fac_2p_acdc_imas_hard_interlocks = [
 ]
 
 # FAC-2P DCDC
-list_fac_2p_dcdc_imas_soft_interlocks = []
+list_2p_dcdc_imas_soft_interlocks = []
 
-list_fac_2p_dcdc_imas_hard_interlocks = [
+list_2p_dcdc_imas_hard_interlocks = [
     "Load Overcurrent",
     "Module 1 CapBank_Overvoltage",
     "Module 2 CapBank_Overvoltage",
