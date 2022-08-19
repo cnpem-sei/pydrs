@@ -87,8 +87,9 @@ def validate(func):
 
 def print_deprecated(func):
     def wrapper(*args, **kwargs):
-        warn("From 2.0.0, most functions will not loop implicitly. Use a 'for' or 'while' loop instead")
-
+        warn(
+            "From 2.0.0, most functions will not loop implicitly. Use a 'for' or 'while' loop instead"
+        )
         return func(*args, **kwargs)
 
     return wrapper
@@ -103,5 +104,7 @@ def check_serial_error(reply: bytes):
             )
         if reply[-2] == 8:
             raise SerialInvalidCmd
+        else:
+            raise SerialError(SERIAL_ERROR[reply[-2]])
     elif reply[error_index] in ERROR_RESPONSE:
         raise SerialInvalidCmd(ERROR_RESPONSE[reply[error_index]])
