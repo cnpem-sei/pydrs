@@ -21,7 +21,7 @@ class TestValidation(unittest.TestCase):
             return x
 
         self.transfer = transfer
-        self._reset_input_buffer = lambda: ()
+        self.reset_input_buffer = lambda: ()
 
     def test_empty(self):
         with self.assertRaises(SerialErrPckgLen):
