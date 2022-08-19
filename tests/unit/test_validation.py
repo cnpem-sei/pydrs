@@ -1,10 +1,11 @@
 import unittest
+
 from pydrs.validation import (
     SerialErrCheckSum,
+    SerialError,
     SerialErrPckgLen,
     SerialForbidden,
     SerialInvalidCmd,
-    SerialError,
     validate,
 )
 

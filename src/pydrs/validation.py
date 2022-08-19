@@ -1,6 +1,7 @@
+"""Handles received message validation"""
 from warnings import warn
-from .consts import ETH_ANSWER_NOQUEUE
 
+from .consts import ETH_ANSWER_NOQUEUE
 from .utils import checksum
 
 
@@ -52,7 +53,7 @@ def validate(func):
     def wrapper(*args, **kwargs):
         reply = func(*args, **kwargs)
         if len(reply) == 0 or (len(reply) == 1 and reply[0] == ETH_ANSWER_NOQUEUE):
-            args[0]._reset_input_buffer()
+            args[0].reset_input_buffer()
             raise SerialErrPckgLen(
                 "Received empty response, check if the controller is on and connected. If you receive garbled output, try disconnecting and reconnecting."
             )
@@ -65,19 +66,15 @@ def validate(func):
             if len(reply) > 5:
                 check_serial_error(reply[offset:])
 
-            args[0]._reset_input_buffer()
+            args[0].reset_input_buffer()
             raise SerialErrPckgLen(
-                "Expected {} bytes, received {} bytes".format(
-                    args[2], len(reply) - offset
-                )
+                f"Expected {args[2]} bytes, received {len(reply) - offset} bytes"
             )
 
         if reply != checksum(reply[:-1]):
-            args[0]._reset_input_buffer()
+            args[0].reset_input_buffer()
             raise SerialErrCheckSum(
-                "Expected {} as checksum, received {}".format(
-                    checksum(reply[:-1])[-1], reply[-1]
-                )
+                f"Expected {checksum(reply[:-1])[-1]} as checksum, received {reply[-1]}"
             )
 
         return reply
@@ -104,7 +101,7 @@ def check_serial_error(reply: bytes):
             )
         if reply[-2] == 8:
             raise SerialInvalidCmd
-        else:
-            raise SerialError(SERIAL_ERROR[reply[-2]])
-    elif reply[error_index] in ERROR_RESPONSE:
+        raise SerialError(SERIAL_ERROR[reply[-2]])
+
+    if reply[error_index] in ERROR_RESPONSE:
         raise SerialInvalidCmd(ERROR_RESPONSE[reply[error_index]])

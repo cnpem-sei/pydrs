@@ -1,3 +1,4 @@
+"""Communication overload types"""
 import re
 import socket
 import struct
@@ -36,7 +37,7 @@ class SerialDRS(BaseDRS):
         self._transfer_write(msg)
         return self.ser.read(size)
 
-    def _reset_input_buffer(self):
+    def reset_input_buffer(self):
         self.ser.reset_input_buffer()
 
     @property
@@ -96,7 +97,7 @@ class EthDRS(BaseDRS):
         msg = msg_type + struct.Struct(">f").pack(self._serial_timeout) + msg
         return msg[0:1] + struct.pack(">I", (len(msg) - 1)) + msg[1:]
 
-    def _reset_input_buffer(self):
+    def reset_input_buffer(self):
         self.socket.sendall(ETH_RESET_CMD)
         self.socket.recv(16)
 
@@ -104,7 +105,7 @@ class EthDRS(BaseDRS):
     def _parse_reply_size(reply: bytes) -> int:
         return struct.unpack(">I", reply[1:])[0]
 
-    def _get_reply(self, size: int = None) -> bytes:
+    def _get_reply(self, _: int = None) -> bytes:
         data_size = self._parse_reply_size(self.socket.recv(5))
         payload = b""
 
@@ -117,7 +118,7 @@ class EthDRS(BaseDRS):
             if payload[0] == ETH_ANSWER_ERR:
                 raise TimeoutError("Server timed out waiting for serial response")
         except IndexError:
-            self._reset_input_buffer()
+            self.reset_input_buffer()
             raise SerialErrPckgLen(
                 "Received empty response, check if the controller is on and connected. If you receive garbled output, try disconnecting and reconnecting."
             )
@@ -168,5 +169,5 @@ def GenericDRS(com_or_address: str, port_or_baud: int):
     """Factory for DRS communication classes"""
     if re.match(r"(([0-9]{1,3}\.){3}[0-9]{1,3})", com_or_address):
         return EthDRS(com_or_address, port_or_baud)
-    else:
-        return SerialDRS(com_or_address, port_or_baud)
+
+    return SerialDRS(com_or_address, port_or_baud)

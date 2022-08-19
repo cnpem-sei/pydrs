@@ -77,7 +77,7 @@ list_4p_soft_interlocks = [
     "IGBTs Current High Difference",
 ]
 
-list_list_4p_hard_interlocks = [
+list_4p_hard_interlocks = [
     "Load Overcurrent",
     "Load Overvoltage",
     "IGBT 1 Mod 1 Overcurrent",

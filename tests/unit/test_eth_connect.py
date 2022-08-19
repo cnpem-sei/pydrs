@@ -1,6 +1,7 @@
 import unittest
-from unittest.mock import Mock, call, patch
-from pydrs import GenericDRS, EthDRS
+from unittest.mock import patch
+
+from pydrs import EthDRS, GenericDRS
 from pydrs.validation import SerialErrPckgLen
 
 

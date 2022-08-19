@@ -1,3 +1,4 @@
+"""Utility functions"""
 import logging as _logging
 import struct
 import typing as _typing
@@ -68,8 +69,8 @@ def checksum(packet: bytes) -> bytes:
     return packet + bytes([csum])
 
 
-def prettier_print(input: dict, prefix: str = ""):
-    for key, value in input.items():
+def prettier_print(var_input: dict, prefix: str = ""):
+    for key, value in var_input.items():
         if isinstance(value, dict):
             prettier_print(value, "".join([prefix, key.replace("_", " ").upper(), " "]))
         else:
