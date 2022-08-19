@@ -468,7 +468,7 @@ class BaseDRS(object):
             1 + 2 + 2 + 2
         )  # Payload: ID + param id + [n] + memory type
         if type(param_id) == str:
-            hex_id = double_to_hex(list_parameters.index(param_id))
+            hex_id = double_to_hex(list_parameters[param_id]["id"])
         if type(param_id) == int:
             hex_id = double_to_hex(param_id)
         hex_n = double_to_hex(n)
