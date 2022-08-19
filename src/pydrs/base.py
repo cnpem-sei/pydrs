@@ -28,7 +28,7 @@ from .consts import (
     type_size,
 )
 
-from .consts import common
+from .consts import common, fbp
 
 from .consts.fac import (
     list_fac_2p4s_dcdc_hard_interlocks,
@@ -78,12 +78,6 @@ from .consts.fap import (
     list_fap_iib_alarms,
     list_fap_iib_interlocks,
     list_fap_soft_interlocks,
-)
-
-from .consts.fbp import (
-    list_fbp_dclink_hard_interlocks,
-    list_fbp_hard_interlocks,
-    list_fbp_soft_interlocks,
 )
 
 from .utils import (
@@ -1504,7 +1498,7 @@ class BaseDRS(object):
             }
 
             vars = self._include_interlocks(
-                vars, list_fbp_soft_interlocks, list_fbp_hard_interlocks
+                vars, fbp.soft_interlocks, fbp.hard_interlocks
             )
 
             prettier_print(vars)
@@ -1528,7 +1522,7 @@ class BaseDRS(object):
 
                 vars["hard_interlocks"] = self.decode_interlocks(
                     self.read_bsmp_variable(32, "uint32_t"),
-                    list_fbp_dclink_hard_interlocks,
+                    fbp.dclink_hard_interlocks,
                 )
 
                 prettier_print(vars)

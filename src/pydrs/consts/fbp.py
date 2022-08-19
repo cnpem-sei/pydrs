@@ -6,9 +6,9 @@
 """ """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" ""
 
 # FBP
-list_fbp_soft_interlocks = ["Heat-Sink Overtemperature"]
+soft_interlocks = ["Heat-Sink Overtemperature"]
 
-list_fbp_hard_interlocks = [
+hard_interlocks = [
     "Load Overcurrent",
     "Load Overvoltage",
     "DCLink Overvoltage",
@@ -20,7 +20,7 @@ list_fbp_hard_interlocks = [
 ]
 
 # FBP DC-Link
-list_fbp_dclink_hard_interlocks = [
+dclink_hard_interlocks = [
     "Power_Module_1_Fault",
     "Power_Module_2_Fault",
     "Power_Module_3_Fault",
