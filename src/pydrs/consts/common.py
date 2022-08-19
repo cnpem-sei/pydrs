@@ -5,7 +5,7 @@
 ======================================================================
 """ """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" ""
 
-list_ps_models = [
+ps_models = [
     "Empty",
     "FBP",
     "FBP_DCLink",
@@ -40,7 +40,7 @@ list_ps_models = [
     "Uninitialized",
 ]
 
-list_common_vars = [
+vars = [
     "ps_status",
     "ps_setpoint",
     "ps_reference",
@@ -64,10 +64,10 @@ list_common_vars = [
     "p_wfmref_idx",
 ]
 
-# list_curv = ['wfmref','buf_samples_ctom','buf_samples_mtoc']
-list_curv = ["wfmref_data_0", "wfmref_data_1", "buf_samples_ctom"]
+# curv = ['wfmref','buf_samples_ctom','buf_samples_mtoc']
+curves = ["wfmref_data_0", "wfmref_data_1", "buf_samples_ctom"]
 
-list_func = [
+functions = [
     "turn_on",
     "turn_off",
     "open_loop",
@@ -114,7 +114,7 @@ list_func = [
     "reset_udc",
 ]
 
-list_op_mode = [
+op_modes = [
     "Off",
     "Interlock",
     "Initializing",
@@ -126,7 +126,7 @@ list_op_mode = [
     "FastRef",
 ]
 
-list_sig_gen_types = [
+sig_gen_types = [
     "Sine",
     "DampedSine",
     "Trapezoidal",
@@ -134,7 +134,7 @@ list_sig_gen_types = [
     "Square",
 ]
 
-list_parameters = {
+params = {
     "PS_Name": {"id": 0, "n": 64},
     "PS_Model": {"id": 1, "n": 1},
     "Num_PS_Modules": {"id": 2, "n": 1},
