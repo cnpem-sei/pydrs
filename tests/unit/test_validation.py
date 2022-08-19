@@ -4,6 +4,7 @@ from pydrs.validation import (
     SerialErrPckgLen,
     SerialForbidden,
     SerialInvalidCmd,
+    SerialError,
     validate,
 )
 
@@ -60,6 +61,10 @@ class TestValidation(unittest.TestCase):
     def test_forbidden_new_eth(self):
         with self.assertRaises(SerialForbidden):
             self.transfer(self, b"!\x05\x53\x00\x01\x04\xa3", 6)
+
+    def test_serial_error(self):
+        with self.assertRaises(SerialError):
+            self.transfer(self, b"!\x05\x53\x00\x01\x06\xa1", 6)
 
     def test_valid(self):
         self.assertEqual(
