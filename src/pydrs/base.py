@@ -721,15 +721,19 @@ class BaseDRS(object):
         )
         return self._transfer(send_packet, 6)
 
-    def reset_udc(self):
+    def reset_udc(self, confirm=True):
         """Resets UDC firmware"""
-        reply = input(
-            "\nEste comando realiza o reset do firmware da placa UDC, e por isso, so e executado caso a fonte esteja desligada. \nCaso deseje apenas resetar interlocks, utilize o comando reset_interlocks(). \n\nTem certeza que deseja prosseguir? [y/N]: "
-        )
-        if reply == "Y" or reply == "y":
+        reply = "y"
+        if confirm:
+            reply = input(
+                "\nEste comando realiza o reset do firmware da placa UDC, e por isso, so e executado caso a fonte esteja desligada. \nCaso deseje apenas resetar interlocks, utilize o comando reset_interlocks(). \n\nTem certeza que deseja prosseguir? [Y/N]: "
+            )
+        if reply.lower() == "y":
             payload_size = size_to_hex(1)  # Payload: ID
             send_packet = (
-                COM_FUNCTION + payload_size + index_to_hex(list_func.index("reset_udc"))
+                COM_FUNCTION
+                + payload_size
+                + index_to_hex(common.functions.index("reset_udc"))
             )
             self._transfer_write(send_packet)
 
