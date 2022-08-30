@@ -733,7 +733,7 @@ class BaseDRS(object):
             send_packet = (
                 COM_FUNCTION
                 + payload_size
-                + index_to_hex(common.functions.index("reset_udc"))
+                + index_to_hex(list_func.index("reset_udc"))
             )
             self._transfer_write(send_packet)
 
