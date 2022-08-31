@@ -1,9 +1,10 @@
-name: sphinx
+name: Sphinx docs
 
 on:
   push:
     branches:
       - master
+      - dict-update
 
 jobs:
   deploy:
