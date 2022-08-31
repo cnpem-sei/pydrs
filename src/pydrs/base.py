@@ -5,6 +5,7 @@ import math
 import os
 import struct
 import time
+from typing import Union
 from warnings import warn
 
 from .consts import (
@@ -141,6 +142,7 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def open_loop(self):
+        """Opens the control loop"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -150,6 +152,7 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def close_loop(self):
+        """Closes the control loop"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -159,6 +162,7 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def closed_loop(self):
+        """Alias for close_loop"""
         warn(
             "This function will be replaced by the more aptly named close_loop in 2.0.0"
         )
@@ -175,7 +179,12 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def read_ps_status(self) -> dict:
-        """Gets power supply status"""
+        """Gets power supply status
+        
+        Returns
+        -------
+        dict
+            Containing `state`, `open_loop` (whether control loop is open), `interface`, `active`, power supply `model`, `unlocked` (represents UDC lock status)"""
         reply_msg = self.read_var(index_to_hex(common.vars.index("ps_status")), 7)
         val = struct.unpack("BBHHB", reply_msg)
         return {
@@ -188,16 +197,24 @@ class BaseDRS:
         }
 
     def set_ps_name(self, ps_name: str):
-        # TODO: Turn into property?
-        """Sets power supply name"""
+        """Sets power supply name
+        
+        Parameters
+        -------
+        ps_name
+            New power supply name"""
         for n in range(len(ps_name)):
             self.set_param("PS_Name", n, float(ord(ps_name[n])))
         for i in range(n + 1, 64):
             self.set_param("PS_Name", i, float(ord(" ")))
 
     def get_ps_name(self) -> str:
-        # TODO: Turn into property?
-        """Gets power supply name"""
+        """Gets power supply name
+        
+        Returns
+        -------
+        str
+            Power supply name"""
         ps_name = ""
         for n in range(64):
             ps_name += chr(int(self.get_param("PS_Name", n)))
@@ -207,7 +224,12 @@ class BaseDRS:
         return ps_name
 
     def set_slowref(self, setpoint: float) -> bytes:
-        """Sets new slowref reference value"""
+        """Sets new slowref setpoint value
+
+        Parameters
+        -------
+        setpoint
+            Slowref setpoint value"""
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
@@ -221,7 +243,7 @@ class BaseDRS:
     def set_slowref_fbp(
         self, iRef1: int = 0, iRef2: int = 0, iRef3: int = 0, iRef4: int = 0
     ) -> bytes:
-        """Sets slowref reference value for FBP power supplies"""
+        """Sets slowref setpoint value for FBP power supplies"""
         # TODO: Take int list instead?
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
         hex_iRef1 = float_to_hex(iRef1)
@@ -255,7 +277,7 @@ class BaseDRS:
 
     def set_slowref_fbp_readback_mon(
         self, iRef1: int = 0, iRef2: int = 0, iRef3: int = 0, iRef4: int = 0
-    ):
+    ) -> list:
         """Sets slowref reference value for FBP power supplies and returns current readback"""
         # TODO: Take int list instead?
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
@@ -295,7 +317,7 @@ class BaseDRS:
 
     def set_slowref_fbp_readback_ref(
         self, iRef1: int = 0, iRef2: int = 0, iRef3: int = 0, iRef4: int = 0
-    ):
+    ) -> Union[bytes, list]:
         """Sets slowref reference value for FBP power supplies and returns reference current"""
         # TODO: Take int list instead?
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
@@ -319,8 +341,22 @@ class BaseDRS:
         except (SerialErrPckgLen, SerialInvalidCmd):
             return reply_msg
 
-    def set_param(self, param_id: int, n: int, value: float) -> bytes:
-        """Set parameter"""
+    def set_param(self, param_id: Union[str, int], n: int, value: float) -> tuple:
+        """Set parameter
+
+        Parameters
+        -------
+        param_id
+            Parameter ID either as its human readable name or BSMP ID
+        n
+            Index for arrays of variables
+        value
+            Value to set
+
+        Returns
+        -------
+        tuple
+            Value alongside parameter hex value"""
         # TODO: Turn into property?
         payload_size = size_to_hex(
             1 + 2 + 2 + 4
@@ -343,8 +379,25 @@ class BaseDRS:
         reply_msg = self._transfer(send_packet, 6)
         return reply_msg, hex_value
 
-    def get_param(self, param_id, n=0, return_floathex=False):
-        """Get parameter"""
+    def get_param(self, param_id: Union[int, str], n=0, return_floathex=False):
+        """Get parameter
+
+        Parameters
+        -------
+        param_id
+            Parameter ID either as its human readable name or BSMP ID
+        n
+            Index for arrays of variables
+        return_floathex
+            Return hexadecimal representation of float alongside float value
+        
+        Returns
+        -------
+        list
+            Value alongside reply message (if `return_floathex` is true)
+        float
+            Parameter value (if `return_floathex` is false)
+        """
         # Payload: ID + param id + [n]
         payload_size = size_to_hex(1 + 2 + 2)
         if isinstance(param_id, str):
@@ -371,7 +424,7 @@ class BaseDRS:
             return float("nan")
 
     def save_param_eeprom(
-        self, param_id: int, n: int = 0, type_memory: int = 2
+        self, param_id: Union[int,str], n: int = 0, type_memory: int = 2
     ) -> bytes:
         """Save parameter to EEPROM"""
         # TODO: Raise exception instead of printing?
@@ -419,7 +472,12 @@ class BaseDRS:
         return reply_msg
 
     def save_param_bank(self, type_memory: int = 2) -> bytes:
-        """Configures all paremeters according to values loaded into param_data"""
+        """Saves all paremeter values loaded into memory to BID/EEPROM
+        
+        Parameters
+        -------
+        type_memory
+            Memory to save to. 1 for BID, 2 for EEPROM"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
@@ -437,7 +495,12 @@ class BaseDRS:
         return ret
 
     def load_param_bank(self, type_memory: int = 2) -> bytes:
-        """Loads all parameter values into param_data"""
+        """Loads all parameter values from EEPROM/BID to memory
+        
+        Parameters
+        -------
+        type_memory
+            Memory to save to. 1 for BID, 2 for EEPROM"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
@@ -448,8 +511,19 @@ class BaseDRS:
         )
         return self._transfer(send_packet, 6)
 
-    def set_param_bank(self, param_file: str, hex_values: bool = False):
-        ps_param_list = {}
+    def set_param_bank(self, param_file: str) -> list:
+        """Writes content of file to parameter bank
+        
+        Parameters
+        -------
+        param_file
+            Path to parameter bank file
+            
+        Returns
+        -------
+        list
+            Written parameter bank values"""
+        fbp_param_list = {}
         with open(param_file, newline="") as f:
             reader = csv.reader(f)
             for row in reader:
@@ -477,6 +551,7 @@ class BaseDRS:
         # self.save_param_bank()
 
     def read_csv_param_bank(self, param_csv_file: str):
+        """Reads parameter bank from CSV file"""
         csv_param_list = {}
         with open(param_csv_file, newline="") as f:
             reader = csv.reader(f)
@@ -505,6 +580,20 @@ class BaseDRS:
         print_modules: bool = True,
         return_floathex: bool = False,
     ) -> list:
+        """Gets parameter bank values loaded into memory
+        
+        Parameters
+        -------
+        list_param
+            List of parameters to read (all, by default)
+        timeout
+            Timeout for this operation. Since this operation might take longer than usual,
+            setting a different timeout is recommended
+        print_modules
+            Print parameter bank values
+        return_floathex
+            Include hexadecimal representation of floats in returned value
+        """
         timeout_old = self.timeout
         param_bank = {}
 
@@ -576,7 +665,8 @@ class BaseDRS:
 
     def get_dsp_coeff(
         self, dsp_class: int, dsp_id: int, coeff: int, return_floathex=False
-    ):
+    ) -> Union[tuple, float]:
+        """Get DSP coefficient values"""
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -601,6 +691,7 @@ class BaseDRS:
     def save_dsp_coeffs_eeprom(
         self, dsp_class: int, dsp_id: int, type_memory: int = 2
     ) -> bytes:
+        """Save DSP coefficients to EEPROM"""
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -618,6 +709,7 @@ class BaseDRS:
     def load_dsp_coeffs_eeprom(
         self, dsp_class: int, dsp_id: int, type_memory: int = 2
     ) -> bytes:
+        """Load DSP coefficient values from EEPROM into memory"""
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -633,6 +725,7 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def save_dsp_modules_eeprom(self, type_memory: int = 2) -> bytes:
+        """Save DSP module configuration to EEPROM"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
@@ -644,6 +737,7 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def load_dsp_modules_eeprom(self, type_memory: int = 2) -> bytes:
+        """Loads DSP modules from EEPROM to memory"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
@@ -655,7 +749,7 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def reset_udc(self, confirm=True):
-        """Resets UDC firmware"""
+        """Resets UDC"""
         reply = "y"
         if confirm:
             reply = input(
@@ -668,7 +762,10 @@ class BaseDRS:
                 + payload_size
                 + index_to_hex(common.functions.index("reset_udc"))
             )
-            self._transfer_write(send_packet)
+            try:
+                self._transfer_write(send_packet)
+            except SerialErrPckgLen:
+                pass
 
     def run_bsmp_func(self, id_func: int) -> bytes:
         payload_size = size_to_hex(1)  # Payload: ID
@@ -766,6 +863,7 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def select_op_mode(self, op_mode: int) -> bytes:
+        """Select operation mode"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_op_mode = double_to_hex(common.op_modes.index(op_mode))
         send_packet = (
@@ -777,6 +875,7 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def set_serial_termination(self, term_enable: int) -> bytes:
+        """Set serial termination state"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_enable = double_to_hex(term_enable)
         send_packet = (
@@ -823,6 +922,7 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def reset_counters(self) -> bytes:
+        """Resets counters"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -843,6 +943,7 @@ class BaseDRS:
         aux2: float,
         aux3: float,
     ) -> bytes:
+        """"""
         # TODO: take aux as list?
         payload_size = size_to_hex(1 + 2 + 2 + 4 + 4 + 4 + 4 * 4)
         hex_sig_type = double_to_hex(common.sig_gen_types.index(sig_type))
@@ -917,6 +1018,7 @@ class BaseDRS:
         gain: float = 1.0,
         offset: int = 0,
     ) -> bytes:
+        """"""
         payload_size = size_to_hex(
             1 + 2 + 2 + 4 + 4 + 4
         )  # Payload: ID + idx + sync_mode + frequency + gain + offset
@@ -984,6 +1086,7 @@ class BaseDRS:
         }
 
     def read_csv_file(self, filename: str, type: str = "float") -> list:
+        """Utility function to translate CSV file to list"""
         csv_list = []
         with open(filename, newline="") as f:
             reader = csv.reader(f)
