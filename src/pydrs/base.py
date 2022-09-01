@@ -523,7 +523,7 @@ class BaseDRS:
         -------
         list
             Written parameter bank values"""
-        fbp_param_list = {}
+        ps_param_list = {}
         with open(param_file, newline="") as f:
             reader = csv.reader(f)
             for row in reader:
@@ -531,22 +531,22 @@ class BaseDRS:
 
         for param in ps_param_list.keys():
             if param == "PS_Name":
-                ps_param_list[param] = str(ps_param_list[param][0])
-                self.set_ps_name(str(ps_param_list[param]))
-
+                # print(str(param[0]) + "[0]: " + str(param[1]))
+                self.set_ps_name(str(ps_param_list[param][0]))
             else:
                 param_values = []
                 for n in range(64):
                     try:
-                        _, param_hex = self.set_param(param, n, float(ps_param_list[param][n]))
-                        if(hex_values):
-                            param_values.append([float(ps_param_list[param][n]), param_hex.encode('latin-1')])
-                        else:
-                            param_values.append(float(ps_param_list[param][n]))
+                        # print(str(param[0]) + "[" + str(n) + "]: " + str(param[n + 1]))
+                        _, param_hex = self.set_param(
+                            param, n, float(ps_param_list[param][n])
+                        )
+                        ps_param_list[param][n] = [
+                            ps_param_list[param][n],
+                            param_hex.encode("latin-1"),
+                        ]
                     except:
                         break
-                ps_param_list[param] = param_values
-
         return ps_param_list
         # self.save_param_bank()
 
@@ -2236,6 +2236,23 @@ class BaseDRS:
             self.slave_addr = old_add
 
     def read_vars_fac_2p_acdc_imas(self, n=1, add_mod_a=2, dt=0.5) -> dict:
+        """
+        Read FAC 2P ACDC IMAS specific power supply variabled
+
+        Parameters:
+        -------
+        n
+            Number of times variables should be read (avoid using)
+        add_mod_a
+            Communication address for module
+        dt
+            Delay between readings
+
+        Returns:
+        -------
+        dict
+            Dict containing FAC 2P ACDC IMAS variables
+        """
         vars_dict = {}
         old_add = self.slave_addr
 
@@ -2278,6 +2295,23 @@ class BaseDRS:
             raise  # TODO: Raise proper exception
 
     def read_vars_fac_2p_dcdc_imas(self, n=1, com_add=1, dt=0.5) -> dict:
+        """
+        Read FAC 2P DCDC IMAS specific power supply variabled
+
+        Parameters:
+        -------
+        n
+            Number of times variables should be read (avoid using)
+        com_add
+            Communication address for power supply
+        dt
+            Delay between readings
+
+        Returns:
+        -------
+        dict
+            Dict containing FAC 2P DCDC IMAS variables
+        """
         vars_dict = {}
         old_add = self.slave_addr
 
@@ -2310,7 +2344,7 @@ class BaseDRS:
             self.slave_addr = old_add
             raise  # TODO: Raise proper exception
 
-    def check_param_bank(self, param_file):
+    def check_param_bank(self, param_file: str):
         ps_param_list = []
 
         # max_sampling_freq = 600000
@@ -2321,7 +2355,7 @@ class BaseDRS:
             for row in reader:
                 ps_param_list.append(row)
 
-        for param in fbp_param_list:
+        for param in ps_param_list:
             if (str(param[0]) == "Num_PS_Modules" and param[1] > 4) or (
                 str(param[0]) == "Freq_ISR_Controller" and param[1] > 6000000
             ):
@@ -2334,6 +2368,8 @@ class BaseDRS:
                 except:
                     break
 
+    # TODO: Fix
+    """
     @staticmethod
     def get_default_ramp_waveform(
         interval=500, nrpts=4000, ti=None, fi=None, forms=None
@@ -2341,6 +2377,7 @@ class BaseDRS:
         from siriuspy.magnet.util import get_default_ramp_waveform
 
         return get_default_ramp_waveform(interval, nrpts, ti, fi, forms)
+    """
 
     @staticmethod
     def save_ramp_waveform(ramp):
@@ -2407,7 +2444,24 @@ class BaseDRS:
         list_dsp_classes=[1, 2, 3, 4, 5, 6],
         print_modules=True,
         return_floathex=False,
-    ):
+    ) -> dict:
+        """
+        Gets DSP modules parameter bank
+
+        Parameters:
+        -------
+        list_dsp_classes
+            List of DSP classes to get
+        print_modules
+            Print prettified dict to terminal
+        return_floathex
+            Return hexadecimal representation of float alongside float
+
+        Returns:
+        -------
+        dict
+            Dict containing DSP modules parameter bank
+        """
         dsp_modules_bank = {}
         for dsp_class in list_dsp_classes:
             dsp_modules_bank[dsp_classes_names[dsp_class]] = {
@@ -2439,7 +2493,17 @@ class BaseDRS:
 
         return dsp_modules_bank
 
-    def set_dsp_modules_bank(self, dsp_modules_file, save_eeprom=0):
+    def set_dsp_modules_bank(self, dsp_modules_file:str, save_eeprom:bool=False) -> dict:
+        """
+        Writes DSP modules parameter bank from CSV file to memory
+
+        Parameters:
+        -------
+        dsp_modules_file
+            CSV file
+        save_eeprom
+            Whether or not parameters should be saved to EEPROM as well
+        """
         dsp_coeffs = {}
         with open(dsp_modules_file, newline="") as f:
             reader = csv.reader(f)
@@ -2470,9 +2534,17 @@ class BaseDRS:
         return dsp_coeffs
 
     @staticmethod
-    def read_csv_dsp_modules_bank(dsp_modules_file_csv):
+    def read_csv_dsp_modules_bank(dsp_modules_file_csv: str):
         """
+        Reads CSV file containing DSP modules parameter banks
+
+        Parameters:
+        -------
+        dsp_modules_file_csv
+            CSV file
+
         Returns:
+        -------
         dict[dsp_class_name] = {"class":int, "coeffs":[float]}
         '''
         dsp_coeffs_from_csv = {}
