@@ -2848,8 +2848,8 @@ class BaseDRS:
             # CLEAR DSP PARAMETERS
             for dsp_class in [1, 2, 3, 4, 5, 6]:
                 for dsp_id in range(num_dsp_modules[dsp_class]):
-                    for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
-                        coeff, coeff_hex = self.set_dsp_coeffs(dsp_class, dsp_id, [0])
+                    for _ in range(num_coeffs_dsp_modules[dsp_class]):
+                        self.set_dsp_coeffs(dsp_class, dsp_id, [0])
 
         # Store values into BID
         time.sleep(0.5)

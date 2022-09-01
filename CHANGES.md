@@ -12,7 +12,7 @@
 ## [1.2.4] - 2022-08-12
 ### Changed:
 - Fix identation bug on `get_dsp_modules_bank()`
-- List into dict (get/set params) and also returns digital value for FP 
+- List into dict (get/set params) and also returns digital value for FP
 - Returns dict for certain FAC/FBP/FAP read_vars() functions
 
 ## [1.2.3] - 2022-08-08
