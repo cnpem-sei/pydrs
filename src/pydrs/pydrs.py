@@ -139,7 +139,7 @@ class EthDRS(BaseDRS):
         try:
             self._get_reply()
             return
-        except Exception:
+        except SerialErrPckgLen:
             pass
 
     @property

@@ -1272,6 +1272,8 @@ class BaseDRS:
         return val
 
     def recv_samples_buffer(self) -> list:
+        raise NotImplementedError
+        """
         # TODO: Will always fail, samplesBuffer is not in list
         block_hex = size_to_hex(0)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
@@ -1289,6 +1291,7 @@ class BaseDRS:
                 val.extend(struct.unpack("f", recv_msg[k : k + 4]))
         except Exception:
             pass
+        """
 
     def send_full_wfmref_curve(self, block_idx: int, data) -> bytes:
         # TODO: Will always fail, fullwfmRef_Curve is not in list
