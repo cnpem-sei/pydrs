@@ -180,7 +180,7 @@ class BaseDRS:
 
     def read_ps_status(self) -> dict:
         """Gets power supply status
-        
+
         Returns
         -------
         dict
@@ -198,7 +198,7 @@ class BaseDRS:
 
     def set_ps_name(self, ps_name: str):
         """Sets power supply name
-        
+
         Parameters
         -------
         ps_name
@@ -210,7 +210,7 @@ class BaseDRS:
 
     def get_ps_name(self) -> str:
         """Gets power supply name
-        
+
         Returns
         -------
         str
@@ -390,7 +390,7 @@ class BaseDRS:
             Index for arrays of variables
         return_floathex
             Return hexadecimal representation of float alongside float value
-        
+
         Returns
         -------
         list
@@ -424,7 +424,7 @@ class BaseDRS:
             return float("nan")
 
     def save_param_eeprom(
-        self, param_id: Union[int,str], n: int = 0, type_memory: int = 2
+        self, param_id: Union[int, str], n: int = 0, type_memory: int = 2
     ) -> bytes:
         """Save parameter to EEPROM"""
         # TODO: Raise exception instead of printing?
@@ -473,7 +473,7 @@ class BaseDRS:
 
     def save_param_bank(self, type_memory: int = 2) -> bytes:
         """Saves all paremeter values loaded into memory to BID/EEPROM
-        
+
         Parameters
         -------
         type_memory
@@ -496,7 +496,7 @@ class BaseDRS:
 
     def load_param_bank(self, type_memory: int = 2) -> bytes:
         """Loads all parameter values from EEPROM/BID to memory
-        
+
         Parameters
         -------
         type_memory
@@ -513,12 +513,12 @@ class BaseDRS:
 
     def set_param_bank(self, param_file: str) -> list:
         """Writes content of file to parameter bank
-        
+
         Parameters
         -------
         param_file
             Path to parameter bank file
-            
+
         Returns
         -------
         list
@@ -534,7 +534,6 @@ class BaseDRS:
                 # print(str(param[0]) + "[0]: " + str(param[1]))
                 self.set_ps_name(str(ps_param_list[param][0]))
             else:
-                param_values = []
                 for n in range(64):
                     try:
                         # print(str(param[0]) + "[" + str(n) + "]: " + str(param[n + 1]))
@@ -581,7 +580,7 @@ class BaseDRS:
         return_floathex: bool = False,
     ) -> list:
         """Gets parameter bank values loaded into memory
-        
+
         Parameters
         -------
         list_param
@@ -2470,7 +2469,7 @@ class BaseDRS:
             }
             for dsp_id in range(num_dsp_modules[dsp_class]):
                 dsp_coeffs = []
-                dsp_coeffs_hex = b''
+                dsp_coeffs_hex = b""
                 for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
                     try:
                         coeff, coeff_hex = self.get_dsp_coeff(
@@ -2482,18 +2481,24 @@ class BaseDRS:
                         dsp_coeffs_hex += coeff_hex
                     except SerialInvalidCmd:
                         dsp_coeffs.append("nan")
-                        dsp_coeffs_hex += b'\x00\x00\x00\x00'
-                if(return_floathex):
-                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append([dsp_coeffs, dsp_coeffs_hex])
+                        dsp_coeffs_hex += b"\x00\x00\x00\x00"
+                if return_floathex:
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(
+                        [dsp_coeffs, dsp_coeffs_hex]
+                    )
                 else:
-                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(dsp_coeffs)
-                    
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(
+                        dsp_coeffs
+                    )
+
         if print_modules:
             prettier_print(dsp_modules_bank)
 
         return dsp_modules_bank
 
-    def set_dsp_modules_bank(self, dsp_modules_file:str, save_eeprom:bool=False) -> dict:
+    def set_dsp_modules_bank(
+        self, dsp_modules_file: str, save_eeprom: bool = False
+    ) -> dict:
         """
         Writes DSP modules parameter bank from CSV file to memory
 
@@ -2525,7 +2530,7 @@ class BaseDRS:
                             int(dsp_module[1]), int(dsp_module[2]), list_coeffs
                         )
                         dsp_coeffs[dsp_module[0]]["coeffs"].append(
-                            [list_coeffs, hexcoeffs.encode('latin-1')]
+                            [list_coeffs, hexcoeffs.encode("latin-1")]
                         )
 
         if save_eeprom:
@@ -2546,14 +2551,14 @@ class BaseDRS:
         Returns:
         -------
         dict[dsp_class_name] = {"class":int, "coeffs":[float]}
-        '''
+        """
         dsp_coeffs_from_csv = {}
         with open(dsp_modules_file_csv, newline="") as f:
             reader = csv.reader(f)
 
             for dsp_module in reader:
                 if dsp_module[0] not in dsp_coeffs_from_csv.keys():
-                    dsp_coeffs_from_csv[dsp_module[0]] = {"class":9, "coeffs":[]}
+                    dsp_coeffs_from_csv[dsp_module[0]] = {"class": 9, "coeffs": []}
                 if not dsp_module == []:
                     if not dsp_module[0][0] == "#":
                         list_coeffs = []
@@ -2563,8 +2568,8 @@ class BaseDRS:
                             3 : 3 + num_coeffs_dsp_modules[int(dsp_module[1])]
                         ]:
                             list_coeffs.append(float(coeff))
-                        
-                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)         
+
+                        dsp_coeffs_from_csv[dsp_module[0]]["coeffs"].append(list_coeffs)
 
         return dsp_coeffs_from_csv
 
