@@ -544,7 +544,7 @@ class BaseDRS:
                             ps_param_list[param][n],
                             param_hex.encode("latin-1"),
                         ]
-                    except:
+                    except Exception:
                         break
         return ps_param_list
         # self.save_param_bank()
@@ -565,7 +565,7 @@ class BaseDRS:
                 for n in range(64):
                     try:
                         param_values.append(float(csv_param_list[param][n]))
-                    except:
+                    except Exception:
                         break
                 csv_param_list[param] = param_values
 
@@ -574,7 +574,7 @@ class BaseDRS:
     @print_deprecated
     def get_param_bank(
         self,
-        list_param: list = common.params.keys(),
+        list_param: list = None,
         timeout: float = 0.5,
         print_modules: bool = True,
         return_floathex: bool = False,
@@ -593,6 +593,9 @@ class BaseDRS:
         return_floathex
             Include hexadecimal representation of floats in returned value
         """
+        if list_param is None:
+            list_param = common.params.keys()
+
         timeout_old = self.timeout
         param_bank = {}
 
@@ -645,8 +648,11 @@ class BaseDRS:
         self,
         dsp_class: int,
         dsp_id: int,
-        coeffs_list: list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        coeffs_list: list = None,
     ) -> bytes:
+        if coeffs_list is None:
+            coeffs_list = [0] * 12
+
         coeffs_list_full = format_list_size(coeffs_list, NUM_MAX_COEFFS_DSP)
         payload_size = size_to_hex(1 + 2 + 2 + 4 * NUM_MAX_COEFFS_DSP)
         hex_dsp_class = double_to_hex(dsp_class)
@@ -1281,7 +1287,7 @@ class BaseDRS:
         try:
             for k in range(7, len(recv_msg) - 1, 4):
                 val.extend(struct.unpack("f", recv_msg[k : k + 4]))
-        except:
+        except Exception:
             pass
         return val
 
@@ -1688,7 +1694,7 @@ class BaseDRS:
 
                 prettier_print(vars_dict)
                 time.sleep(dt)
-        except:
+        except Exception:
             pass
 
     @print_deprecated
@@ -1738,7 +1744,7 @@ class BaseDRS:
                 prettier_print(vars_dict)
                 time.sleep(dt)
             return vars_dict
-        except:
+        except Exception:
             pass
 
     def _read_fac_2s_acdc_module(self, iib: bool) -> dict:
@@ -2364,7 +2370,7 @@ class BaseDRS:
                 try:
                     print(str(param[0]) + "[" + str(n) + "]: " + str(param[n + 1]))
                     print(self.set_param(str(param[0]), n, float(param[n + 1])))
-                except:
+                except Exception:
                     break
 
     # TODO: Fix siriuspy dependency
@@ -2440,7 +2446,7 @@ class BaseDRS:
     @print_deprecated
     def get_dsp_modules_bank(
         self,
-        list_dsp_classes=[1, 2, 3, 4, 5, 6],
+        list_dsp_classes=None,
         print_modules=True,
         return_floathex=False,
     ) -> dict:
@@ -2461,6 +2467,9 @@ class BaseDRS:
         dict
             Dict containing DSP modules parameter bank
         """
+        if list_dsp_classes is None:
+            list_dsp_classes = [1, 2, 3, 4, 5, 6]
+
         dsp_modules_bank = {}
         for dsp_class in list_dsp_classes:
             dsp_modules_bank[dsp_classes_names[dsp_class]] = {
@@ -2995,7 +3004,7 @@ class BaseDRS:
             else:
                 print("\n Placa BID reprovada!\n")
 
-        except:
+        except Exception:
             print(" Placa BID reprovada!\n")
 
     def upload_parameters_bid(self, password):

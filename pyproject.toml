@@ -41,13 +41,13 @@ where = ["src"]
 
 [project.optional-dependencies]
 dev = [
-    "bandit==1.7.0",
+    "bandit==1.7.4",
     "black==22.8.0",
-    "flake8==4.0.1",
-    "flake8-bandit==2.1.2",
-    "flake8-bugbear==21.9.2",
-    "flake8-implicit-str-concat==0.2.0",
-    "mypy==0.812",
+    "flake8==5.0.4",
+    "flake8-bandit==4.1.1",
+    "flake8-bugbear==22.8.23",
+    "flake8-implicit-str-concat==0.3.0",
+    "mypy==0.971",
     "mypy-extensions==0.4.3",
     "pyflakes==2.4.0",
     "types-setuptools",
