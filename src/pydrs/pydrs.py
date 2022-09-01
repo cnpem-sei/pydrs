@@ -139,8 +139,8 @@ class EthDRS(BaseDRS):
         try:
             self._get_reply()
             return
-        except:
-            return
+        except Exception:
+            pass
 
     @property
     def timeout(self) -> float:

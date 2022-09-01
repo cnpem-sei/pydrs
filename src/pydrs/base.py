@@ -1287,8 +1287,8 @@ class BaseDRS:
         try:
             for k in range(7, len(recv_msg) - 1, 4):
                 val.extend(struct.unpack("f", recv_msg[k : k + 4]))
-        finally:
-            return val
+        except Exception:
+            pass
 
     def send_full_wfmref_curve(self, block_idx: int, data) -> bytes:
         # TODO: Will always fail, fullwfmRef_Curve is not in list
