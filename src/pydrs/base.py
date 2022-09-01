@@ -39,9 +39,9 @@ from .utils import (
     format_list_size,
     get_logger,
     index_to_hex,
+    prettier_print,
     size_to_hex,
     uint32_to_hex,
-    prettier_print,
 )
 from .validation import SerialErrPckgLen, SerialInvalidCmd, print_deprecated
 
@@ -601,7 +601,7 @@ class BaseDRS:
             for n in range(64):
                 p = None
                 if param_name == "PS_Name":
-                    param_row = self.get_ps_name()
+                    param_row.append(self.get_ps_name())
                     self.timeout = timeout
                     break
 
@@ -2367,7 +2367,7 @@ class BaseDRS:
                 except:
                     break
 
-    # TODO: Fix
+    # TODO: Fix siriuspy dependency
     """
     @staticmethod
     def get_default_ramp_waveform(
@@ -2480,16 +2480,13 @@ class BaseDRS:
                         dsp_coeffs.append(coeff)
                         dsp_coeffs_hex += coeff_hex
                     except SerialInvalidCmd:
-                        dsp_coeffs.append("nan")
-                        dsp_coeffs_hex += b"\x00\x00\x00\x00"
-                if return_floathex:
-                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(
-                        [dsp_coeffs, dsp_coeffs_hex]
-                    )
-                else:
-                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(
-                        dsp_coeffs
-                    )
+                        if return_floathex:
+                            dsp_coeffs.append("nan")
+                            dsp_coeffs_hex += b"\x00\x00\x00\x00"
+                        else:
+                            dsp_modules_bank[dsp_classes_names[dsp_class]][
+                                "coeffs"
+                            ].append(dsp_coeffs)
 
         if print_modules:
             prettier_print(dsp_modules_bank)
