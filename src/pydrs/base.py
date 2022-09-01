@@ -228,7 +228,7 @@ class BaseDRS(object):
         print(
             "This function will be replaced by the more aptly named close_loop in 2.0.0"
         )
-        self.close_loop(self)
+        self.close_loop()
 
     def reset_interlocks(self):
         """Resets interlocks on connected DRS device"""
