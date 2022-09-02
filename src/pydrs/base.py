@@ -50,7 +50,6 @@ from .validation import (
     SerialError,
     SerialErrPckgLen,
     SerialInvalidCmd,
-    print_deprecated,
 )
 
 logger = get_logger(name=__file__)
@@ -2134,7 +2133,7 @@ class BaseDRS:
                     ),
                 }
 
-            if iib >= 0:
+            if iib > 0:
                 vars_dict[f"iib_{iib}"] = {
                     **vars_dict[f"iib_{iib}"],
                     **{
