@@ -1,13 +1,7 @@
 import unittest
 
-from pydrs.validation import (
-    SerialErrCheckSum,
-    SerialError,
-    SerialErrPckgLen,
-    SerialForbidden,
-    SerialInvalidCmd,
-    validate,
-)
+from pydrs.validation import (SerialErrCheckSum, SerialError, SerialErrPckgLen,
+                              SerialForbidden, SerialInvalidCmd, validate)
 
 
 def mock_socket(self, _1, _2):
