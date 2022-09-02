@@ -28,3 +28,11 @@ dclink_hard_interlocks = [
     "Smoke_Detector",
     "External_Interlock",
 ]
+
+bsmp_vars = {
+    "load_current": {"addr": 33, "egu": "A"},
+    "load_voltage": {"addr": 34, "egu": "V"},
+    "dc_link_voltage": {"addr": 35, "egu": "V"},
+    "heatsink_temp": {"addr": 36, "egu": "°C"},
+    "duty_cycle": {"addr": 37, "egu": "%"},
+}
