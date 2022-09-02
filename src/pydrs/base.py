@@ -7,21 +7,51 @@ import struct
 import time
 from typing import Union
 
-from .consts import (COM_CREATE_BSMP_GROUP, COM_FUNCTION,
-                     COM_GET_BSMP_GROUP_LIST, COM_GET_BSMP_GROUP_VARS,
-                     COM_READ_BSMP_GROUP_VALUES, COM_READ_VAR,
-                     COM_REQUEST_CURVE, COM_SEND_WFM_REF, COM_WRITE_VAR,
-                     DP_MODULE_MAX_COEFF, NUM_MAX_COEFFS_DSP,
-                     UDC_FIRMWARE_VERSION, WRITE_DOUBLE_SIZE_PAYLOAD,
-                     WRITE_FLOAT_SIZE_PAYLOAD, common, dsp_classes_names, fac,
-                     fap, fbp, num_blocks_curves_fax, num_blocks_curves_fbp,
-                     num_coeffs_dsp_modules, num_dsp_modules, size_curve_block,
-                     type_format, type_size)
-from .utils import (double_to_hex, float_list_to_hex, float_to_hex,
-                    format_list_size, get_logger, index_to_hex, prettier_print,
-                    size_to_hex, uint32_to_hex)
-from .validation import (SerialError, SerialErrPckgLen, SerialInvalidCmd,
-                         print_deprecated)
+from .consts import (
+    COM_CREATE_BSMP_GROUP,
+    COM_FUNCTION,
+    COM_GET_BSMP_GROUP_LIST,
+    COM_GET_BSMP_GROUP_VARS,
+    COM_READ_BSMP_GROUP_VALUES,
+    COM_READ_VAR,
+    COM_REQUEST_CURVE,
+    COM_SEND_WFM_REF,
+    COM_WRITE_VAR,
+    DP_MODULE_MAX_COEFF,
+    NUM_MAX_COEFFS_DSP,
+    UDC_FIRMWARE_VERSION,
+    WRITE_DOUBLE_SIZE_PAYLOAD,
+    WRITE_FLOAT_SIZE_PAYLOAD,
+    common,
+    dsp_classes_names,
+    fac,
+    fap,
+    fbp,
+    num_blocks_curves_fax,
+    num_blocks_curves_fbp,
+    num_coeffs_dsp_modules,
+    num_dsp_modules,
+    size_curve_block,
+    type_format,
+    type_size,
+)
+from .utils import (
+    double_to_hex,
+    float_list_to_hex,
+    float_to_hex,
+    format_list_size,
+    get_logger,
+    index_to_hex,
+    prettier_print,
+    size_to_hex,
+    uint32_to_hex,
+)
+from .validation import (
+    SerialError,
+    SerialErrPckgLen,
+    SerialInvalidCmd,
+    print_deprecated,
+)
 
 logger = get_logger(name=__file__)
 
