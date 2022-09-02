@@ -113,20 +113,20 @@ class BaseDRS:
     def slave_addr(self, address: int):
         self._slave_addr = struct.pack("B", address).decode("ISO-8859-1")
 
-    def set_slave_add(self, address: int):
-        print(
-            f"From 2.0.0 onwards, the slave address will be a property. Use 'slave_addr = {address}' instead"
-        )
-        self.slave_addr = address
-
-    def get_slave_add(self) -> int:
-        print(
-            "From 2.0.0 onwards, the slave address will be a property. Use 'slave_addr' instead"
-        )
-        return self.slave_addr
-
-    def read_var(self, var_id: str, size: int):
-        """Reads a variable with a given ID"""
+    def read_var(self, var_id: str, size: int) -> bytes:
+        """Reads a variable with a given ID
+        
+        Parameters:
+        -------
+        var_id
+            Variable ID
+        size
+            Variable size
+            
+        Returns
+        -------
+        bytes
+            Raw variable response"""
         self.reset_input_buffer()
         return self._transfer(COM_READ_VAR + var_id, size)
 
@@ -213,7 +213,7 @@ class BaseDRS:
         )
         return [i for i in bsmp_vars[4:-1]]
 
-    def turn_on(self):
+    def turn_on(self) -> bytes:
         """Turns on power supply"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
@@ -223,7 +223,7 @@ class BaseDRS:
         )
         return self._transfer(send_packet, 6)
 
-    def turn_off(self):
+    def turn_off(self) -> bytes:
         """Turns off power supply"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
@@ -233,7 +233,7 @@ class BaseDRS:
         )
         return self._transfer(send_packet, 6)
 
-    def open_loop(self):
+    def open_loop(self) -> bytes:
         """Opens the control loop"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
@@ -243,7 +243,7 @@ class BaseDRS:
         )
         return self._transfer(send_packet, 6)
 
-    def close_loop(self):
+    def close_loop(self) -> bytes:
         """Closes the control loop"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
@@ -253,14 +253,7 @@ class BaseDRS:
         )
         return self._transfer(send_packet, 6)
 
-    def closed_loop(self):
-        """Alias for close_loop"""
-        warn(
-            "This function will be replaced by the more aptly named close_loop in 2.0.0"
-        )
-        self.close_loop(self)
-
-    def reset_interlocks(self):
+    def reset_interlocks(self) -> bytes:
         """Resets interlocks on connected DRS device"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
@@ -859,6 +852,8 @@ class BaseDRS:
                 + payload_size
                 + index_to_hex(common.functions.index("reset_udc"))
             )
+            if self.var_group_index is not None:
+                self.enable_high_performance()
             try:
                 self._transfer_write(send_packet)
             except SerialErrPckgLen:
@@ -2183,7 +2178,7 @@ class BaseDRS:
             self.slave_addr = old_add
 
     @print_deprecated
-    def read_vars_fap_2p2s(self, n=1, com_add=1, dt=0.5, iib=0):
+    def read_vars_fap_2p2s(self, com_add=1, iib=0) -> dict:
         old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
 
@@ -2304,12 +2299,8 @@ class BaseDRS:
 
         Parameters:
         -------
-        n
-            Number of times variables should be read (avoid using)
         add_mod_a
             Communication address for module
-        dt
-            Delay between readings
 
         Returns:
         -------
@@ -2359,12 +2350,8 @@ class BaseDRS:
 
         Parameters:
         -------
-        n
-            Number of times variables should be read (avoid using)
         com_add
             Communication address for power supply
-        dt
-            Delay between readings
 
         Returns:
         -------
