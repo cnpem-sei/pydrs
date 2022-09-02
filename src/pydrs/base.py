@@ -3,13 +3,18 @@
 import csv
 import math
 import os
+from re import I
 import struct
 import time
 from typing import Union
 from warnings import warn
 
 from .consts import (
+    COM_CREATE_BSMP_GROUP,
     COM_FUNCTION,
+    COM_GET_BSMP_GROUP_LIST,
+    COM_GET_BSMP_GROUP_VARS,
+    COM_READ_BSMP_GROUP_VALUES,
     COM_READ_VAR,
     COM_REQUEST_CURVE,
     COM_SEND_WFM_REF,
@@ -43,7 +48,12 @@ from .utils import (
     size_to_hex,
     uint32_to_hex,
 )
-from .validation import SerialErrPckgLen, SerialInvalidCmd, print_deprecated
+from .validation import (
+    SerialErrPckgLen,
+    SerialError,
+    SerialInvalidCmd,
+    print_deprecated,
+)
 
 logger = get_logger(name=__file__)
 
@@ -53,6 +63,7 @@ class BaseDRS:
 
     def __init__(self):
         self.slave_addr = 1
+        self.var_group_index: int = None
 
         print(
             "\n pyDRS - compatible UDC firmware version: " + UDC_FIRMWARE_VERSION + "\n"
@@ -74,7 +85,7 @@ class BaseDRS:
         pass
 
     def _transfer(self, msg: str, size: int) -> bytes:
-        """Sends then receives data from target DRS device"""
+        """Sends then receives data from target DRS device."""
         return b""
 
     def _transfer_write(self, msg: str):
@@ -119,7 +130,88 @@ class BaseDRS:
         self.reset_input_buffer()
         return self._transfer(COM_READ_VAR + var_id, size)
 
+    def enable_high_performance(self):
+        """Creates variable groups to perform single readings, disables all extraneous implicit looping.
+        *7000+, go like hell*"""
+
+        ps = self.read_ps_status()
+        ps_model = {"fbp": fbp, "fac": fac, "fap": fap}[
+            ps["model"].split(" ")[0].lower()
+        ]
+        ps_submodel = "_".join(ps["model"].split(" ")[1:])
+        ps_model_vars = list(
+            [
+                g_var["addr"]
+                for g_var in (
+                    getattr(ps_model, f"{ps_submodel}_bsmp_vars").values()
+                    if ps_submodel
+                    else ps_model.bsmp_vars.values()
+                )
+            ]
+        )
+
+        var_groups = self._get_bsmp_groups()
+        for i in range(0, len(var_groups)):
+            if ps_model_vars == var_groups[i]:
+                self.var_group_index = i
+
+        if self.var_group_index is None:
+            self._create_bsmp_group(list(ps_model_vars.values()))
+            self.var_group_index = len(var_groups)
+
     # BSMP entity calls
+
+    def _create_bsmp_group(self, group: list) -> bytes:
+        """Creates BSMP group from the variables described in `group`
+
+        Parameters:
+        -------
+        group
+            List of variables to include in new group
+
+        Returns:
+        -------
+        bytes
+            UDC response"""
+        str_group = "".join(f"{index_to_hex(i)}" for i in group)
+        return self._transfer(
+            f"{COM_CREATE_BSMP_GROUP}{size_to_hex(len(group))}{str_group}", 5
+        )
+
+    def _get_bsmp_groups(self) -> list:
+        """Gets list of BSMP variable groups with variables contained in them.
+
+        Returns:
+        -------
+        list
+            List of variable groups, each containing all variables in the group"""
+        var_group_amount = self._transfer(f"{COM_GET_BSMP_GROUP_LIST}\x00\x00", 0)[4]
+        var_groups = []
+
+        for i in range(0, var_group_amount):
+            try:
+                var_groups.append(self._get_bsmp_group_vars(i))
+            except SerialError:
+                pass
+
+        return var_groups
+
+    def _get_bsmp_group_vars(self, group: int) -> list:
+        """Gets list of BSMP variables contained in a group
+
+        Parameters:
+        -------
+        group
+            Variable group index
+
+        Returns:
+        -------
+        list
+            List of variables contained in group"""
+        bsmp_vars = self._transfer(
+            f"{COM_GET_BSMP_GROUP_VARS}\x00\x01{index_to_hex(group)}", 0
+        )
+        return [i for i in bsmp_vars[4:-1]]
 
     def turn_on(self):
         """Turns on power supply"""
@@ -1511,7 +1603,27 @@ class BaseDRS:
     @print_deprecated
     def read_vars_fbp(self, n: int = 1, dt: float = 0.5) -> dict:
         vars_dict = {}
-        for _ in range(n):
+        if self.var_group_index is not None:
+            vals = self._transfer(
+                f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(self.var_group_index)}",
+                25,
+            )[4:-1]
+
+            for i, key in enumerate(fbp.bsmp_vars):
+                vars_dict[key] = struct.unpack("f", vals[i : i + 4])[0]
+
+            vars_dict = {
+                **vars_dict,
+                "load_resistance": f"{round(vars_dict['load_voltage']/vars_dict['load_voltage'], 3)} Ohm",
+                "load_power": f"{round(vars_dict['load_voltage']*vars_dict['load_voltage'], 3)} W",
+            }
+
+            for key in vars_dict:
+                if key in fbp.bsmp_vars:
+                    vars_dict[
+                        key
+                    ] = f"{round(vars_dict[key],3)} {fbp.bsmp_vars[key]['egu']}"
+        else:
             vars_dict = {
                 "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
                 "load_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
@@ -1540,13 +1652,9 @@ class BaseDRS:
                 "duty_cycle": f"{round(self.read_bsmp_variable(37, 'float'), 3)} %",
             }
 
-            vars_dict = self._include_interlocks(
-                vars_dict, fbp.soft_interlocks, fbp.hard_interlocks
-            )
-
-            prettier_print(vars_dict)
-
-            time.sleep(dt)
+        vars_dict = self._include_interlocks(
+            vars_dict, fbp.soft_interlocks, fbp.hard_interlocks
+        )
         return vars_dict
 
     @print_deprecated

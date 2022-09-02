@@ -50,6 +50,8 @@ ERROR_RESPONSE = {
 
 
 def validate(func):
+    """Validates message and raises errors if invalid. In case given size is 0, any size is accepted."""
+
     def wrapper(*args, **kwargs):
         reply = func(*args, **kwargs)
         if len(reply) == 0 or (len(reply) == 1 and reply[0] == ETH_ANSWER_NOQUEUE):
@@ -58,10 +60,12 @@ def validate(func):
                 "Received empty response, check if the controller is on and connected. If you receive garbled output, try disconnecting and reconnecting."
             )
 
-        reply = reply[1:] if len(reply) - 1 == args[2] else reply
+        reply = reply[1:] if len(reply) - 1 == args[2] or not args[2] else reply
         check_serial_error(reply)
 
-        if len(reply) != args[2] or (len(reply) - 1 != args[2] and reply[0] == 0x21):
+        if args[2] and (
+            len(reply) != args[2] or (len(reply) - 1 != args[2] and reply[0] == 0x21)
+        ):
             offset = 1 if reply[0] == 0x21 else 0
             if len(reply) > 5:
                 check_serial_error(reply[offset:])
@@ -71,10 +75,10 @@ def validate(func):
                 f"Expected {args[2]} bytes, received {len(reply) - offset} bytes"
             )
 
-        if reply != checksum(reply[:-1]):
+        if sum(reply) % 256 != 0:
             args[0].reset_input_buffer()
             raise SerialErrCheckSum(
-                f"Expected {checksum(reply[:-1])[-1]} as checksum, received {reply[-1]}"
+                f"Expected {256 - sum(reply[2:-1])%256} as checksum, received {reply[-1]}"
             )
 
         return reply
@@ -84,9 +88,9 @@ def validate(func):
 
 def print_deprecated(func):
     def wrapper(*args, **kwargs):
-        warn(
+        """warn(
             "From 2.0.0, most functions will not loop implicitly. Use a 'for' or 'while' loop instead"
-        )
+        )"""
         return func(*args, **kwargs)
 
     return wrapper
