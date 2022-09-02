@@ -2515,6 +2515,13 @@ class BaseDRS:
                                 "coeffs"
                             ].append(dsp_coeffs)
 
+                if return_floathex:
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"] = (
+                        [dsp_coeffs, dsp_coeffs_hex]
+                    )
+                else:
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"] = dsp_coeffs
+
         if print_modules:
             prettier_print(dsp_modules_bank)
 
