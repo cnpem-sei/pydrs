@@ -1601,7 +1601,7 @@ class BaseDRS:
         return active_interlocks
 
     @print_deprecated
-    def read_vars_fbp(self, n: int = 1, dt: float = 0.5) -> dict:
+    def read_vars_fbp(self) -> dict:
         vars_dict = {}
         if self.var_group_index is not None:
             vals = self._transfer(
@@ -1658,194 +1658,177 @@ class BaseDRS:
         return vars_dict
 
     @print_deprecated
-    def read_vars_fbp_dclink(self, n: int = 1, dt: float = 0.5) -> dict:
-        vars_dict = {}
-        for _ in range(n):
-            vars_dict = {
-                "modules_status": self.read_bsmp_variable(33, "uint32_t"),
-                "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
-                "ps1_voltage": f"{round(self.read_bsmp_variable(35, 'float'), 3)} V",
-                "ps2_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                "ps3_voltage": f"{round(self.read_bsmp_variable(37, 'float'), 3)} V",
-                "dig_pot_tap": self.read_bsmp_variable(38, "uint8_t"),
-            }
+    def read_vars_fbp_dclink(self) -> dict:
+        vars_dict = {
+            "modules_status": self.read_bsmp_variable(33, "uint32_t"),
+            "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
+            "ps1_voltage": f"{round(self.read_bsmp_variable(35, 'float'), 3)} V",
+            "ps2_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
+            "ps3_voltage": f"{round(self.read_bsmp_variable(37, 'float'), 3)} V",
+            "dig_pot_tap": self.read_bsmp_variable(38, "uint8_t"),
+        }
 
-            vars_dict["hard_interlocks"] = self.decode_interlocks(
-                self.read_bsmp_variable(32, "uint32_t"),
-                fbp.dclink_hard_interlocks,
-            )
-
-            prettier_print(vars_dict)
-            time.sleep(dt)
+        vars_dict["hard_interlocks"] = self.decode_interlocks(
+            self.read_bsmp_variable(32, "uint32_t"),
+            fbp.dclink_hard_interlocks,
+        )
 
         return vars_dict
 
     @print_deprecated
-    def read_vars_fac_acdc(self, n=1, dt: float = 0.5, iib: bool = True) -> dict:
-        vars_dict = {}
-        for _ in range(n):
-            vars_dict = {
-                "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
-                "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
+    def read_vars_fac_acdc(self, iib: bool = True) -> dict:
+        vars_dict = {
+            "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
+            "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+            "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
+        }
+
+        vars_dict = self._include_interlocks(
+            vars_dict, fac.list_acdc_soft_interlocks, fac.list_acdc_hard_interlocks
+        )
+
+        if iib:
+            vars_dict["iib"] = {
+                "input_current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
+                "input_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
+                "igbt_temp": f"{round(self.read_bsmp_variable(38, 'float'), 3)} °C",
+                "driver_voltage": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
+                "driver_current": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
+                "inductor_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)}  °C",
+                "heatsink_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)}  °C",
+                "is": {
+                    "board_temp": f"{round(self.read_bsmp_variable(43, 'float'), 3)}  °C",
+                    "board_rh": f"{round(self.read_bsmp_variable(44, 'float'), 3)} %",
+                },
+                "cmd": {
+                    "load_voltage": f"{round(self.read_bsmp_variable(47, 'float'), 3)} V",
+                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
+                    "rectifier_inductor_temp": f"{round(self.read_bsmp_variable(49, 'float'), 3)} °C",
+                    "rectifier_heatsink_temp": f"{round(self.read_bsmp_variable(50, 'float'), 3)} °C",
+                    "external_boards_voltage": f"{round(self.read_bsmp_variable(51, 'float'), 3)} V",
+                    "auxiliary_board_current": f"{round(self.read_bsmp_variable(52, 'float'), 3)} A",
+                    "idb_board_current": f"{round(self.read_bsmp_variable(53, 'float'), 3)} A",
+                    "ground_leakage_current": f"{round(self.read_bsmp_variable(54, 'float'), 3)} A",
+                    "board_temp": f"{round(self.read_bsmp_variable(55, 'float'), 3)} °C",
+                    "board_rh": f"{round(self.read_bsmp_variable(56, 'float'), 3)} %",
+                },
             }
 
-            vars_dict = self._include_interlocks(
-                vars_dict, fac.list_acdc_soft_interlocks, fac.list_acdc_hard_interlocks
+            vars_dict["is"]["interlocks"] = self.decode_interlocks(
+                self.read_bsmp_variable(45, "uint32_t"),
+                fac.list_acdc_iib_is_interlocks,
             )
 
-            if iib:
-                vars_dict["iib"] = {
-                    "input_current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
-                    "input_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                    "igbt_temp": f"{round(self.read_bsmp_variable(38, 'float'), 3)} °C",
-                    "driver_voltage": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
-                    "driver_current": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
-                    "inductor_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)}  °C",
-                    "heatsink_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)}  °C",
-                    "is": {
-                        "board_temp": f"{round(self.read_bsmp_variable(43, 'float'), 3)}  °C",
-                        "board_rh": f"{round(self.read_bsmp_variable(44, 'float'), 3)} %",
-                    },
-                    "cmd": {
-                        "load_voltage": f"{round(self.read_bsmp_variable(47, 'float'), 3)} V",
-                        "cap_bank_voltage": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
-                        "rectifier_inductor_temp": f"{round(self.read_bsmp_variable(49, 'float'), 3)} °C",
-                        "rectifier_heatsink_temp": f"{round(self.read_bsmp_variable(50, 'float'), 3)} °C",
-                        "external_boards_voltage": f"{round(self.read_bsmp_variable(51, 'float'), 3)} V",
-                        "auxiliary_board_current": f"{round(self.read_bsmp_variable(52, 'float'), 3)} A",
-                        "idb_board_current": f"{round(self.read_bsmp_variable(53, 'float'), 3)} A",
-                        "ground_leakage_current": f"{round(self.read_bsmp_variable(54, 'float'), 3)} A",
-                        "board_temp": f"{round(self.read_bsmp_variable(55, 'float'), 3)} °C",
-                        "board_rh": f"{round(self.read_bsmp_variable(56, 'float'), 3)} %",
-                    },
-                }
+            vars_dict["is"]["alarms"] = self.decode_interlocks(
+                self.read_bsmp_variable(46, "uint32_t"), fac.list_acdc_iib_is_alarms
+            )
 
-                vars_dict["is"]["interlocks"] = self.decode_interlocks(
-                    self.read_bsmp_variable(45, "uint32_t"),
-                    fac.list_acdc_iib_is_interlocks,
-                )
+            vars_dict["cmd"]["interlocks"] = self.decode_interlocks(
+                self.read_bsmp_variable(57, "uint32_t"),
+                fac.list_acdc_iib_cmd_interlocks,
+            )
 
-                vars_dict["is"]["alarms"] = self.decode_interlocks(
-                    self.read_bsmp_variable(46, "uint32_t"), fac.list_acdc_iib_is_alarms
-                )
+            vars_dict["cmd"]["interlocks"] = self.decode_interlocks(
+                self.read_bsmp_variable(58, "uint32_t"),
+                fac.list_acdc_iib_cmd_alarms,
+            )
 
-                vars_dict["cmd"]["interlocks"] = self.decode_interlocks(
-                    self.read_bsmp_variable(57, "uint32_t"),
-                    fac.list_acdc_iib_cmd_interlocks,
-                )
-
-                vars_dict["cmd"]["interlocks"] = self.decode_interlocks(
-                    self.read_bsmp_variable(58, "uint32_t"),
-                    fac.list_acdc_iib_cmd_alarms,
-                )
-
-            prettier_print(vars_dict)
-            time.sleep(dt)
         return vars_dict
 
     @print_deprecated
-    def read_vars_fac_dcdc(self, n=1, dt=0.5, iib=1):
-        vars_dict = {}
-        for _ in range(n):
-            # TODO: Is this rounding really necessary?
-            wref_index = (
-                round(self.read_bsmp_variable(20, "uint32_t"), 3)
-                - round(self.read_bsmp_variable(18, "uint32_t"), 3)
-            ) / 2 + 1
+    def read_vars_fac_dcdc(self, iib=True) -> dict:
+        # TODO: Is this rounding really necessary?
+        wref_index = (
+            round(self.read_bsmp_variable(20, "uint32_t"), 3)
+            - round(self.read_bsmp_variable(18, "uint32_t"), 3)
+        ) / 2 + 1
 
-            vars_dict = {
-                "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
-                "wfmref_index": wref_index,
-                "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                "load_current_ddct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                "cap_bank_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                "duty_cycle": f"{round(self.read_bsmp_variable(37, 'float'), 3)} %",
+        vars_dict = {
+            "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
+            "wfmref_index": wref_index,
+            "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+            "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+            "load_current_ddct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+            "cap_bank_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
+            "duty_cycle": f"{round(self.read_bsmp_variable(37, 'float'), 3)} %",
+        }
+
+        vars_dict = self._include_interlocks(
+            vars_dict,
+            fac.list_dcdc_soft_interlocks,
+            fac.list_dcdc_hard_interlocks,
+        )
+
+        if iib:
+            vars_dict["iib"] = {
+                "cap_bank_voltage": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
+                "input_current": f"{round(self.read_bsmp_variable(39, 'float'), 3)} A",
+                "output_current": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
+                "igbt_leg_1_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)} °C",
+                "igbt_leg_2_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)} °C",
+                "inductor_temp": f"{round(self.read_bsmp_variable(43, 'float'), 3)} °C",
+                "heatsink_temp": f"{round(self.read_bsmp_variable(44, 'float'), 3)} °C",
+                "driver_voltage": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
+                "driver_current_1": f"{round(self.read_bsmp_variable(46, 'float'), 3)} A",
+                "driver_current_2": f"{round(self.read_bsmp_variable(47, 'float'), 3)} A",
+                "ground_leakage_current": f"{round(self.read_bsmp_variable(48, 'float'), 3)} A",
+                "board_temp": f"{round(self.read_bsmp_variable(49, 'float'), 3)} °C",
+                "board_rh": f"{round(self.read_bsmp_variable(50, 'float'), 3)} °C",
             }
 
-            vars_dict = self._include_interlocks(
-                vars_dict,
-                fac.list_dcdc_soft_interlocks,
-                fac.list_dcdc_hard_interlocks,
+            vars_dict["iib"]["interlocks"] = self.decode_interlocks(
+                self.read_bsmp_variable(51, "uint32_t"),
+                fac.list_dcdc_iib_interlocks,
             )
 
-            if iib:
-                vars_dict["iib"] = {
-                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
-                    "input_current": f"{round(self.read_bsmp_variable(39, 'float'), 3)} A",
-                    "output_current": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
-                    "igbt_leg_1_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)} °C",
-                    "igbt_leg_2_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)} °C",
-                    "inductor_temp": f"{round(self.read_bsmp_variable(43, 'float'), 3)} °C",
-                    "heatsink_temp": f"{round(self.read_bsmp_variable(44, 'float'), 3)} °C",
-                    "driver_voltage": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
-                    "driver_current_1": f"{round(self.read_bsmp_variable(46, 'float'), 3)} A",
-                    "driver_current_2": f"{round(self.read_bsmp_variable(47, 'float'), 3)} A",
-                    "ground_leakage_current": f"{round(self.read_bsmp_variable(48, 'float'), 3)} A",
-                    "board_temp": f"{round(self.read_bsmp_variable(49, 'float'), 3)} °C",
-                    "board_rh": f"{round(self.read_bsmp_variable(50, 'float'), 3)} °C",
-                }
+            vars_dict["iib"]["alarms"] = self.decode_interlocks(
+                self.read_bsmp_variable(52, "uint32_t"),
+                fac.list_dcdc_iib_alarms,
+            )
 
-                vars_dict["iib"]["interlocks"] = self.decode_interlocks(
-                    self.read_bsmp_variable(51, "uint32_t"),
-                    fac.list_dcdc_iib_interlocks,
-                )
-
-                vars_dict["iib"]["alarms"] = self.decode_interlocks(
-                    self.read_bsmp_variable(52, "uint32_t"),
-                    fac.list_dcdc_iib_alarms,
-                )
-
-            prettier_print(vars_dict)
-            time.sleep(dt)
         return vars_dict
 
     @print_deprecated
-    def read_vars_fac_dcdc_ema(self, n=1, dt=0.5, iib=0):
-        vars_dict = {}
-        for _ in range(n):
-            vars_dict = {
-                "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
-                "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
+    def read_vars_fac_dcdc_ema(self, iib=False) -> dict:
+        vars_dict = {
+            "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+            "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
+            "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
+        }
+
+        vars_dict = self._include_interlocks(
+            vars_dict,
+            fac.list_dcdc_ema_soft_interlocks,
+            fac.list_dcdc_ema_hard_interlocks,
+        )
+
+        if iib:
+            vars_dict["iib"] = {
+                "input_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
+                "input_current": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
+                "output_current": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
+                "igbt_1_temp": f"{round(self.read_bsmp_variable(39, 'float'), 3)} °C",
+                "igbt_2_temp": f"{round(self.read_bsmp_variable(40, 'float'), 3)} °C",
+                "inductor_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)} °C",
+                "heatsink_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)} °C",
+                "driver_voltage": f"{round(self.read_bsmp_variable(43, 'float'), 3)} V",
+                "driver_current_1": f"{round(self.read_bsmp_variable(44, 'float'), 3)} A",
+                "driver_current_2": f"{round(self.read_bsmp_variable(45, 'float'), 3)} A",
+                "ground_leakage_current": f"{round(self.read_bsmp_variable(46, 'float'), 3)} A",
+                "board_temp": f"{round(self.read_bsmp_variable(47, 'float'), 3)} °C",
+                "board_rh": f"{round(self.read_bsmp_variable(48, 'float'), 3)} °C",
             }
 
-            vars_dict = self._include_interlocks(
-                vars_dict,
-                fac.list_dcdc_ema_soft_interlocks,
-                fac.list_dcdc_ema_hard_interlocks,
+            vars_dict["iib"]["alarms"] = self.decode_interlocks(
+                self.read_bsmp_variable(49, "uint32_t"),
+                fac.list_dcdc_ema_iib_interlocks,
             )
 
-            if iib:
-                vars_dict["iib"] = {
-                    "input_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                    "input_current": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                    "output_current": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
-                    "igbt_1_temp": f"{round(self.read_bsmp_variable(39, 'float'), 3)} °C",
-                    "igbt_2_temp": f"{round(self.read_bsmp_variable(40, 'float'), 3)} °C",
-                    "inductor_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)} °C",
-                    "heatsink_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)} °C",
-                    "driver_voltage": f"{round(self.read_bsmp_variable(43, 'float'), 3)} V",
-                    "driver_current_1": f"{round(self.read_bsmp_variable(44, 'float'), 3)} A",
-                    "driver_current_2": f"{round(self.read_bsmp_variable(45, 'float'), 3)} A",
-                    "ground_leakage_current": f"{round(self.read_bsmp_variable(46, 'float'), 3)} A",
-                    "board_temp": f"{round(self.read_bsmp_variable(47, 'float'), 3)} °C",
-                    "board_rh": f"{round(self.read_bsmp_variable(48, 'float'), 3)} °C",
-                }
+            vars_dict["iib"]["interlocks"] = self.decode_interlocks(
+                self.read_bsmp_variable(50, "uint32_t"),
+                fac.list_dcdc_ema_iib_alarms,
+            )
 
-                vars_dict["iib"]["alarms"] = self.decode_interlocks(
-                    self.read_bsmp_variable(49, "uint32_t"),
-                    fac.list_dcdc_ema_iib_interlocks,
-                )
-
-                vars_dict["iib"]["interlocks"] = self.decode_interlocks(
-                    self.read_bsmp_variable(50, "uint32_t"),
-                    fac.list_dcdc_ema_iib_alarms,
-                )
-
-            prettier_print(vars_dict)
-            time.sleep(dt)
         return vars_dict
 
     def _read_fac_2s_acdc_module(self, iib: bool) -> dict:
@@ -1903,89 +1886,82 @@ class BaseDRS:
             self.read_bsmp_variable(58, "uint32_t"), fac.list_2s_acdc_iib_cmd_alarms
         )
 
-        prettier_print(vars_dict)
         return vars_dict
 
     @print_deprecated
-    def read_vars_fac_2s_acdc(self, n=1, add_mod_a=2, dt=0.5, iib=False) -> dict:
+    def read_vars_fac_2s_acdc(self, add_mod_a=2, iib=False) -> dict:
         vars_dict = {}
         old_add = self.slave_addr
 
         try:
-            for _ in range(n):
-                self.slave_addr = add_mod_a
-                vars_dict["module_a"] = self._read_fac_2s_acdc_module(iib)
+            self.slave_addr = add_mod_a
+            vars_dict["module_a"] = self._read_fac_2s_acdc_module(iib)
 
-                self.slave_addr = add_mod_a + 1
-                vars_dict["module_b"] = self._read_fac_2s_acdc_module(iib)
+            self.slave_addr = add_mod_a + 1
+            vars_dict["module_b"] = self._read_fac_2s_acdc_module(iib)
 
-                time.sleep(dt)
             return vars_dict
         finally:
             self.slave_addr = old_add
 
     @print_deprecated
-    def read_vars_fac_2s_dcdc(self, n=1, com_add=1, dt=0.5, iib=0):
-        vars_dict = {}
+    def read_vars_fac_2s_dcdc(self, com_add=1, iib=False) -> dict:
         old_add = self.slave_addr
         iib_offset = 14 * (iib - 1)
 
         try:
-            for _ in range(n):
-                self.slave_addr = com_add
+            self.slave_addr = com_add
 
-                vars_dict = {
-                    "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
-                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "load_current_dcct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                    "cap_bank_voltage_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                    "cap_bank_voltage_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)} V",
-                    "duty_cycle_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} %",
-                    "duty_cycle_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} %",
+            vars_dict = {
+                "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
+                "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+                "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                "load_current_dcct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                "cap_bank_voltage_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
+                "cap_bank_voltage_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)} V",
+                "duty_cycle_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} %",
+                "duty_cycle_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} %",
+            }
+
+            vars_dict = self._include_interlocks(
+                vars_dict,
+                fac.list_2s_dcdc_soft_interlocks,
+                fac.list_2s_dcdc_hard_interlocks,
+            )
+
+            if iib:
+                vars_dict["iib"] = {
+                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(40 + iib_offset, 'float'), 3)} V",
+                    "input_current": f"{round(self.read_bsmp_variable(41 + iib_offset, 'float'), 3)} A",
+                    "output_current": f"{round(self.read_bsmp_variable(42 + iib_offset, 'float'), 3)} A",
+                    "igbt_leg_temp_1": f"{round(self.read_bsmp_variable(43 + iib_offset, 'float'), 3)} °C",
+                    "igbt_leg_temp_2": f"{round(self.read_bsmp_variable(44 + iib_offset, 'float'), 3)} °C",
+                    "inductor_temp": f"{round(self.read_bsmp_variable(45 + iib_offset, 'float'), 3)} °C",
+                    "heatsink_temp": f"{round(self.read_bsmp_variable(46 + iib_offset, 'float'), 3)} °C",
+                    "driver_voltage": f"{round(self.read_bsmp_variable(47 + iib_offset, 'float'), 3)} V",
+                    "driver_current_1": f"{round(self.read_bsmp_variable(48 + iib_offset, 'float'), 3)} A",
+                    "driver_current_2": f"{round(self.read_bsmp_variable(49 + iib_offset, 'float'), 3)} A",
+                    "board_temp": f"{round(self.read_bsmp_variable(50 + iib_offset, 'float'), 3)} °C",
+                    "board_rh": f"{round(self.read_bsmp_variable(51 + iib_offset, 'float'), 3)} °C",
                 }
 
-                vars_dict = self._include_interlocks(
-                    vars_dict,
-                    fac.list_2s_dcdc_soft_interlocks,
-                    fac.list_2s_dcdc_hard_interlocks,
+                vars_dict["iib"]["interlocks"] = self.decode_interlocks(
+                    self.read_bsmp_variable(52 + iib_offset, "uint32_t"),
+                    fac.list_2s_dcdc_iib_interlocks,
                 )
 
-                if iib:
-                    vars_dict["iib"] = {
-                        "cap_bank_voltage": f"{round(self.read_bsmp_variable(40 + iib_offset, 'float'), 3)} V",
-                        "input_current": f"{round(self.read_bsmp_variable(41 + iib_offset, 'float'), 3)} A",
-                        "output_current": f"{round(self.read_bsmp_variable(42 + iib_offset, 'float'), 3)} A",
-                        "igbt_leg_temp_1": f"{round(self.read_bsmp_variable(43 + iib_offset, 'float'), 3)} °C",
-                        "igbt_leg_temp_2": f"{round(self.read_bsmp_variable(44 + iib_offset, 'float'), 3)} °C",
-                        "inductor_temp": f"{round(self.read_bsmp_variable(45 + iib_offset, 'float'), 3)} °C",
-                        "heatsink_temp": f"{round(self.read_bsmp_variable(46 + iib_offset, 'float'), 3)} °C",
-                        "driver_voltage": f"{round(self.read_bsmp_variable(47 + iib_offset, 'float'), 3)} V",
-                        "driver_current_1": f"{round(self.read_bsmp_variable(48 + iib_offset, 'float'), 3)} A",
-                        "driver_current_2": f"{round(self.read_bsmp_variable(49 + iib_offset, 'float'), 3)} A",
-                        "board_temp": f"{round(self.read_bsmp_variable(50 + iib_offset, 'float'), 3)} °C",
-                        "board_rh": f"{round(self.read_bsmp_variable(51 + iib_offset, 'float'), 3)} °C",
-                    }
+                vars_dict["iib"]["alarms"] = self.decode_interlocks(
+                    self.read_bsmp_variable(53 + iib_offset, "uint32_t"),
+                    fac.list_2s_dcdc_iib_alarms,
+                )
 
-                    vars_dict["iib"]["interlocks"] = self.decode_interlocks(
-                        self.read_bsmp_variable(52 + iib_offset, "uint32_t"),
-                        fac.list_2s_dcdc_iib_interlocks,
-                    )
-
-                    vars_dict["iib"]["alarms"] = self.decode_interlocks(
-                        self.read_bsmp_variable(53 + iib_offset, "uint32_t"),
-                        fac.list_2s_dcdc_iib_alarms,
-                    )
-
-                prettier_print(vars_dict)
-                time.sleep(dt)
             return vars_dict
         finally:
             self.slave_addr = old_add
 
     @print_deprecated
-    def read_vars_fac_2p4s_acdc(self, n=1, add_mod_a=1, dt=0.5, iib=0):
-        self.read_vars_fac_2s_acdc(n, add_mod_a, dt, iib)
+    def read_vars_fac_2p4s_acdc(self, add_mod_a=1, iib=0):
+        self.read_vars_fac_2s_acdc(add_mod_a, iib)
 
     def _read_fac2p4s_dcdc_iib_module(self, module: int) -> dict:
         offset = module * 14
@@ -2018,330 +1994,311 @@ class BaseDRS:
         return vars_dict
 
     @print_deprecated
-    def read_vars_fac_2p4s_dcdc(self, n=1, com_add=1, dt=0.5, iib=0):
-        vars_dict = {}
+    def read_vars_fac_2p4s_dcdc(self, com_add=1, iib=False) -> dict:
         old_add = self.slave_addr
 
         try:
-            for _ in range(n):
-                self.slave_addr = com_add
+            self.slave_addr = com_add
 
-                # TODO: Use array of cap. bank voltages/duty cycle?
-                vars_dict = {
-                    "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
-                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "load_current_dcct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                    "arm_current_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
-                    "arm_current_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                    "cap_bank_voltage_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
-                    "cap_bank_voltage_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
-                    "cap_bank_voltage_3": f"{round(self.read_bsmp_variable(40, 'float'), 3)} V",
-                    "cap_bank_voltage_4": f"{round(self.read_bsmp_variable(41, 'float'), 3)} V",
-                    "cap_bank_voltage_5": f"{round(self.read_bsmp_variable(42, 'float'), 3)} V",
-                    "cap_bank_voltage_6": f"{round(self.read_bsmp_variable(43, 'float'), 3)} V",
-                    "cap_bank_voltage_7": f"{round(self.read_bsmp_variable(44, 'float'), 3)} V",
-                    "cap_bank_voltage_8": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
-                    "duty_cycle_1": f"{round(self.read_bsmp_variable(46, 'float'), 3)} %",
-                    "duty_cycle_2": f"{round(self.read_bsmp_variable(47, 'float'), 3)} %",
-                    "duty_cycle_3": f"{round(self.read_bsmp_variable(48, 'float'), 3)} %",
-                    "duty_cycle_4": f"{round(self.read_bsmp_variable(49, 'float'), 3)} %",
-                    "duty_cycle_5": f"{round(self.read_bsmp_variable(50, 'float'), 3)} %",
-                    "duty_cycle_6": f"{round(self.read_bsmp_variable(51, 'float'), 3)} %",
-                    "duty_cycle_7": f"{round(self.read_bsmp_variable(52, 'float'), 3)} %",
-                    "duty_cycle_8": f"{round(self.read_bsmp_variable(53, 'float'), 3)} %",
-                }
+            # TODO: Use array of cap. bank voltages/duty cycle?
+            vars_dict = {
+                "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
+                "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+                "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                "load_current_dcct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                "arm_current_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
+                "arm_current_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
+                "cap_bank_voltage_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
+                "cap_bank_voltage_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
+                "cap_bank_voltage_3": f"{round(self.read_bsmp_variable(40, 'float'), 3)} V",
+                "cap_bank_voltage_4": f"{round(self.read_bsmp_variable(41, 'float'), 3)} V",
+                "cap_bank_voltage_5": f"{round(self.read_bsmp_variable(42, 'float'), 3)} V",
+                "cap_bank_voltage_6": f"{round(self.read_bsmp_variable(43, 'float'), 3)} V",
+                "cap_bank_voltage_7": f"{round(self.read_bsmp_variable(44, 'float'), 3)} V",
+                "cap_bank_voltage_8": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
+                "duty_cycle_1": f"{round(self.read_bsmp_variable(46, 'float'), 3)} %",
+                "duty_cycle_2": f"{round(self.read_bsmp_variable(47, 'float'), 3)} %",
+                "duty_cycle_3": f"{round(self.read_bsmp_variable(48, 'float'), 3)} %",
+                "duty_cycle_4": f"{round(self.read_bsmp_variable(49, 'float'), 3)} %",
+                "duty_cycle_5": f"{round(self.read_bsmp_variable(50, 'float'), 3)} %",
+                "duty_cycle_6": f"{round(self.read_bsmp_variable(51, 'float'), 3)} %",
+                "duty_cycle_7": f"{round(self.read_bsmp_variable(52, 'float'), 3)} %",
+                "duty_cycle_8": f"{round(self.read_bsmp_variable(53, 'float'), 3)} %",
+            }
 
-                vars_dict = self._include_interlocks(
-                    vars_dict,
-                    fac.list_2p4s_dcdc_soft_interlocks,
-                    fac.list_2p4s_dcdc_hard_interlocks,
-                )
+            vars_dict = self._include_interlocks(
+                vars_dict,
+                fac.list_2p4s_dcdc_soft_interlocks,
+                fac.list_2p4s_dcdc_hard_interlocks,
+            )
 
-                if iib:
-                    vars_dict["iib"]["module_a"] = self._read_fac2p4s_dcdc_iib_module(0)
-                    vars_dict["iib"]["module_b"] = self._read_fac2p4s_dcdc_iib_module(1)
+            if iib:
+                vars_dict["iib"]["module_a"] = self._read_fac2p4s_dcdc_iib_module(0)
+                vars_dict["iib"]["module_b"] = self._read_fac2p4s_dcdc_iib_module(1)
 
-                prettier_print(vars_dict)
-                time.sleep(dt)
             return vars_dict
         finally:
             self.slave_addr = old_add
 
     @print_deprecated
-    def read_vars_fap(self, n=1, com_add=1, dt=0.5, iib=True) -> dict:
-        vars_dict = {}
+    def read_vars_fap(self, com_add=1, iib=True) -> dict:
         old_add = self.slave_addr
 
         try:
-            for _ in range(n):
+            self.slave_addr = com_add
+            self.read_vars_common()
+            iload = self.read_bsmp_variable(33, "float")
 
-                self.slave_addr = com_add
-                self.read_vars_common()
-                iload = self.read_bsmp_variable(33, "float")
+            vars_dict = {
+                "load_current": f"{round(iload,3)} A",
+                "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                "load_current_dcct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                "load_resistance": f"{abs(round(self.read_bsmp_variable(43, 'float') / iload, 3)) if iload != 0 else 0} Ohm",
+                "load_power": f"{abs(round(self.read_bsmp_variable(43, 'float')* self.read_bsmp_variable(33, 'float'),3))} W",
+                "dclink_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
+                "igbt_1_current": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
+                "igbt_2_current": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
+                "igbt_1_duty_cycle": f"{round(self.read_bsmp_variable(39, 'float'), 3)} %",
+                "igbt_2_duty_cycle": f"{round(self.read_bsmp_variable(40, 'float'), 3)} %",
+                "differential_duty_cycle": f"{round(self.read_bsmp_variable(41, 'float'), 3)} %",
+            }
 
-                vars_dict = {
-                    "load_current": f"{round(iload,3)} A",
-                    "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "load_current_dcct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                    "load_resistance": f"{abs(round(self.read_bsmp_variable(43, 'float') / iload, 3)) if iload != 0 else 0} Ohm",
-                    "load_power": f"{abs(round(self.read_bsmp_variable(43, 'float')* self.read_bsmp_variable(33, 'float'),3))} W",
-                    "dclink_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                    "igbt_1_current": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                    "igbt_2_current": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
-                    "igbt_1_duty_cycle": f"{round(self.read_bsmp_variable(39, 'float'), 3)} %",
-                    "igbt_2_duty_cycle": f"{round(self.read_bsmp_variable(40, 'float'), 3)} %",
-                    "differential_duty_cycle": f"{round(self.read_bsmp_variable(41, 'float'), 3)} %",
+            vars_dict = vars_dict = self._include_interlocks(
+                vars_dict, fap.list_soft_interlocks, fap.list_hard_interlocks
+            )
+
+            if iib:
+                vars_dict["iib"] = {
+                    "input_voltage": f"{round(self.read_bsmp_variable(42, 'float'), 3)} V",
+                    "output_voltage": f"{round(self.read_bsmp_variable(43, 'float'), 3)} V",
+                    "igbt_1_current": f"{round(self.read_bsmp_variable(44, 'float'), 3)} V",
+                    "igbt_2_current": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
+                    "igbt_1_temp": f"{round(self.read_bsmp_variable(46, 'float'), 3)} °C",
+                    "igbt_2_temp": f"{round(self.read_bsmp_variable(47, 'float'), 3)} °C",
+                    "driver_voltage": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
+                    "driver_current_1": f"{round(self.read_bsmp_variable(49, 'float'), 3)} A",
+                    "driver_current_2": f"{round(self.read_bsmp_variable(50, 'float'), 3)} A",
+                    "inductor_temp": f"{round(self.read_bsmp_variable(51, 'float'), 3)} °C",
+                    "heatsink_temp": f"{round(self.read_bsmp_variable(52, 'float'), 3)} °C",
+                    "ground_leakage_current": f"{round(self.read_bsmp_variable(53, 'float'), 3)} A",
+                    "board_temp": f"{round(self.read_bsmp_variable(54, 'float'), 3)} °C",
+                    "board_rh": f"{round(self.read_bsmp_variable(55, 'float'), 3)} %",
                 }
 
-                vars_dict = vars_dict = self._include_interlocks(
-                    vars_dict, fap.list_soft_interlocks, fap.list_hard_interlocks
+                vars_dict["iib"]["alarms"] = self.decode_interlocks(
+                    self.read_bsmp_variable(56, "uint32_t"), fap.list_iib_interlocks
                 )
 
-                if iib:
-                    vars_dict["iib"] = {
-                        "input_voltage": f"{round(self.read_bsmp_variable(42, 'float'), 3)} V",
-                        "output_voltage": f"{round(self.read_bsmp_variable(43, 'float'), 3)} V",
-                        "igbt_1_current": f"{round(self.read_bsmp_variable(44, 'float'), 3)} V",
-                        "igbt_2_current": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
-                        "igbt_1_temp": f"{round(self.read_bsmp_variable(46, 'float'), 3)} °C",
-                        "igbt_2_temp": f"{round(self.read_bsmp_variable(47, 'float'), 3)} °C",
-                        "driver_voltage": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
-                        "driver_current_1": f"{round(self.read_bsmp_variable(49, 'float'), 3)} A",
-                        "driver_current_2": f"{round(self.read_bsmp_variable(50, 'float'), 3)} A",
-                        "inductor_temp": f"{round(self.read_bsmp_variable(51, 'float'), 3)} °C",
-                        "heatsink_temp": f"{round(self.read_bsmp_variable(52, 'float'), 3)} °C",
-                        "ground_leakage_current": f"{round(self.read_bsmp_variable(53, 'float'), 3)} A",
-                        "board_temp": f"{round(self.read_bsmp_variable(54, 'float'), 3)} °C",
-                        "board_rh": f"{round(self.read_bsmp_variable(55, 'float'), 3)} %",
-                    }
+                vars_dict["iib"]["interlocks"] = self.decode_interlocks(
+                    self.read_bsmp_variable(57, "uint32_t"), fap.list_iib_alarms
+                )
 
-                    vars_dict["iib"]["alarms"] = self.decode_interlocks(
-                        self.read_bsmp_variable(56, "uint32_t"), fap.list_iib_interlocks
-                    )
-
-                    vars_dict["iib"]["interlocks"] = self.decode_interlocks(
-                        self.read_bsmp_variable(57, "uint32_t"), fap.list_iib_alarms
-                    )
-
-                prettier_print(vars_dict)
-                time.sleep(dt)
             return vars_dict
         finally:
             self.slave_addr = old_add
 
     @print_deprecated
-    def read_vars_fap_4p(self, n=1, com_add=1, dt=0.5, iib=0):
-        vars_dict = {}
+    def read_vars_fap_4p(self, com_add=1, iib=0) -> dict:
         old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
 
         try:
-            for _ in range(n):
-                self.slave_addr = com_add
+            self.slave_addr = com_add
 
-                vars_dict = {
-                    "mean_load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "load_current_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "load_current_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                    "load_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                    "dc_link_voltage_mod_1": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
-                    "dc_link_voltage_mod_2": f"{round(self.read_bsmp_variable(46, 'float'), 3)} V",
-                    "dc_link_voltage_mod_3": f"{round(self.read_bsmp_variable(47, 'float'), 3)} V",
-                    "dc_link_voltage_mod_4": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
-                    "mean_duty_cycle": f"{round(self.read_bsmp_variable(50, 'float'), 3)} %",
-                    "igbt_1": {
-                        "current_mod_1": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                        "current_mod_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} A",
-                        "current_mod_3": f"{round(self.read_bsmp_variable(41, 'float'), 3)} A",
-                        "current_mod_4": f"{round(self.read_bsmp_variable(43, 'float'), 3)} A",
-                        "duty_cycle_mod_1": f"{round(self.read_bsmp_variable(50, 'float'), 3)} %",
-                        "duty_cycle_mod_2": f"{round(self.read_bsmp_variable(52, 'float'), 3)} %",
-                        "duty_cycle_mod_3": f"{round(self.read_bsmp_variable(54, 'float'), 3)} %",
-                        "duty_cycle_mod_4": f"{round(self.read_bsmp_variable(56, 'float'), 3)} %",
-                    },
-                    "igbt_2": {
-                        "current_mod_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
-                        "current_mod_2": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
-                        "current_mod_3": f"{round(self.read_bsmp_variable(42, 'float'), 3)} A",
-                        "current_mod_4": f"{round(self.read_bsmp_variable(44, 'float'), 3)} A",
-                        "duty_cycle_mod_1": f"{round(self.read_bsmp_variable(51, 'float'), 3)} %",
-                        "duty_cycle_mod_2": f"{round(self.read_bsmp_variable(53, 'float'), 3)} %",
-                        "duty_cycle_mod_3": f"{round(self.read_bsmp_variable(55, 'float'), 3)} %",
-                        "duty_cycle_mod_4": f"{round(self.read_bsmp_variable(57, 'float'), 3)} %",
+            vars_dict = {
+                "mean_load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+                "load_current_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                "load_current_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                "load_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
+                "dc_link_voltage_mod_1": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
+                "dc_link_voltage_mod_2": f"{round(self.read_bsmp_variable(46, 'float'), 3)} V",
+                "dc_link_voltage_mod_3": f"{round(self.read_bsmp_variable(47, 'float'), 3)} V",
+                "dc_link_voltage_mod_4": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
+                "mean_duty_cycle": f"{round(self.read_bsmp_variable(50, 'float'), 3)} %",
+                "igbt_1": {
+                    "current_mod_1": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
+                    "current_mod_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} A",
+                    "current_mod_3": f"{round(self.read_bsmp_variable(41, 'float'), 3)} A",
+                    "current_mod_4": f"{round(self.read_bsmp_variable(43, 'float'), 3)} A",
+                    "duty_cycle_mod_1": f"{round(self.read_bsmp_variable(50, 'float'), 3)} %",
+                    "duty_cycle_mod_2": f"{round(self.read_bsmp_variable(52, 'float'), 3)} %",
+                    "duty_cycle_mod_3": f"{round(self.read_bsmp_variable(54, 'float'), 3)} %",
+                    "duty_cycle_mod_4": f"{round(self.read_bsmp_variable(56, 'float'), 3)} %",
+                },
+                "igbt_2": {
+                    "current_mod_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
+                    "current_mod_2": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
+                    "current_mod_3": f"{round(self.read_bsmp_variable(42, 'float'), 3)} A",
+                    "current_mod_4": f"{round(self.read_bsmp_variable(44, 'float'), 3)} A",
+                    "duty_cycle_mod_1": f"{round(self.read_bsmp_variable(51, 'float'), 3)} %",
+                    "duty_cycle_mod_2": f"{round(self.read_bsmp_variable(53, 'float'), 3)} %",
+                    "duty_cycle_mod_3": f"{round(self.read_bsmp_variable(55, 'float'), 3)} %",
+                    "duty_cycle_mod_4": f"{round(self.read_bsmp_variable(57, 'float'), 3)} %",
+                },
+            }
+
+            vars_dict = self._include_interlocks(
+                vars_dict, fap.list_4p_soft_interlocks, fap.list_4p_hard_interlocks
+            )
+
+            for j in range(4):
+                vars_dict[f"iib_{j+1}"] = {
+                    "interlocks": self.decode_interlocks(
+                        self.read_bsmp_variable(72 + j * 16, "uint32_t"),
+                        fap.list_4p_iib_interlocks,
+                    ),
+                    "alarms": self.decode_interlocks(
+                        self.read_bsmp_variable(73 + j * 16, "uint32_t"),
+                        fap.list_4p_iib_alarms,
+                    ),
+                }
+
+            if iib >= 0:
+                vars_dict[f"iib_{iib}"] = {
+                    **vars_dict[f"iib_{iib}"],
+                    **{
+                        "input_voltage": f"{round(self.read_bsmp_variable(58 + iib_offset, 'float'), 3)} V",
+                        "output_voltage": f"{round(self.read_bsmp_variable(59 + iib_offset, 'float'), 3)} V",
+                        "driver_voltage": f"{round(self.read_bsmp_variable(64 + iib_offset, 'float'), 3)} V",
+                        "driver_current_1": f"{round(self.read_bsmp_variable(65 + iib_offset, 'float'), 3)} A",
+                        "driver_current_2": f"{round(self.read_bsmp_variable(66 + iib_offset, 'float'), 3)} A",
+                        "inductor_temp": f"{round(self.read_bsmp_variable(67 + iib_offset, 'float'), 3)} °C",
+                        "heatsink_temp": f"{round(self.read_bsmp_variable(68 + iib_offset, 'float'), 3)} °C",
+                        "ground_leakage_current": f"{round(self.read_bsmp_variable(69 + iib_offset, 'float'), 3)} A",
+                        "board_temp": f"{round(self.read_bsmp_variable(70 + iib_offset, 'float'), 3)} °C",
+                        "board_rh": f"{round(self.read_bsmp_variable(71 + iib_offset, 'float'), 3)} %",
+                        "igbt_1": {
+                            "current": f"{round(self.read_bsmp_variable(60 + iib_offset, 'float'), 3)} A",
+                            "temp": f"{round(self.read_bsmp_variable(62 + iib_offset, 'float'), 3)} °C",
+                        },
+                        "igbt_2": {
+                            "current": f"{round(self.read_bsmp_variable(61 + iib_offset, 'float'), 3)} A",
+                            "temp": f"{round(self.read_bsmp_variable(63 + iib_offset, 'float'), 3)} °C",
+                        },
                     },
                 }
 
-                vars_dict = self._include_interlocks(
-                    vars_dict, fap.list_4p_soft_interlocks, fap.list_4p_hard_interlocks
-                )
-
-                for j in range(4):
-                    vars_dict[f"iib_{j+1}"] = {
-                        "interlocks": self.decode_interlocks(
-                            self.read_bsmp_variable(72 + j * 16, "uint32_t"),
-                            fap.list_4p_iib_interlocks,
-                        ),
-                        "alarms": self.decode_interlocks(
-                            self.read_bsmp_variable(73 + j * 16, "uint32_t"),
-                            fap.list_4p_iib_alarms,
-                        ),
-                    }
-
-                if iib >= 0:
-                    vars_dict[f"iib_{iib}"] = {
-                        **vars_dict[f"iib_{iib}"],
-                        **{
-                            "input_voltage": f"{round(self.read_bsmp_variable(58 + iib_offset, 'float'), 3)} V",
-                            "output_voltage": f"{round(self.read_bsmp_variable(59 + iib_offset, 'float'), 3)} V",
-                            "driver_voltage": f"{round(self.read_bsmp_variable(64 + iib_offset, 'float'), 3)} V",
-                            "driver_current_1": f"{round(self.read_bsmp_variable(65 + iib_offset, 'float'), 3)} A",
-                            "driver_current_2": f"{round(self.read_bsmp_variable(66 + iib_offset, 'float'), 3)} A",
-                            "inductor_temp": f"{round(self.read_bsmp_variable(67 + iib_offset, 'float'), 3)} °C",
-                            "heatsink_temp": f"{round(self.read_bsmp_variable(68 + iib_offset, 'float'), 3)} °C",
-                            "ground_leakage_current": f"{round(self.read_bsmp_variable(69 + iib_offset, 'float'), 3)} A",
-                            "board_temp": f"{round(self.read_bsmp_variable(70 + iib_offset, 'float'), 3)} °C",
-                            "board_rh": f"{round(self.read_bsmp_variable(71 + iib_offset, 'float'), 3)} %",
-                            "igbt_1": {
-                                "current": f"{round(self.read_bsmp_variable(60 + iib_offset, 'float'), 3)} A",
-                                "temp": f"{round(self.read_bsmp_variable(62 + iib_offset, 'float'), 3)} °C",
-                            },
-                            "igbt_2": {
-                                "current": f"{round(self.read_bsmp_variable(61 + iib_offset, 'float'), 3)} A",
-                                "temp": f"{round(self.read_bsmp_variable(63 + iib_offset, 'float'), 3)} °C",
-                            },
-                        },
-                    }
-                prettier_print(vars_dict)
-                time.sleep(dt)
             return vars_dict
         finally:
             self.slave_addr = old_add
 
     @print_deprecated
     def read_vars_fap_2p2s(self, n=1, com_add=1, dt=0.5, iib=0):
-        vars_dict = {}
         old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
 
         try:
-            for _ in range(n):
-                self.slave_addr = com_add
+            self.slave_addr = com_add
 
-                vars_dict = {
-                    "mean_load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "load_current_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "load_current_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                    "arm_current_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
-                    "arm_current_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                    "dc_link_voltage_mod_1": f"{round(self.read_bsmp_variable(50, 'float'), 3)} V",
-                    "dc_link_voltage_mod_2": f"{round(self.read_bsmp_variable(51, 'float'), 3)} V",
-                    "dc_link_voltage_mod_3": f"{round(self.read_bsmp_variable(52, 'float'), 3)} V",
-                    "dc_link_voltage_mod_4": f"{round(self.read_bsmp_variable(53, 'float'), 3)} V",
-                    "mean_duty_cycle": f"{round(self.read_bsmp_variable(54, 'float'), 3)} %",
-                    "differential_duty_cycle": f"{round(self.read_bsmp_variable(55, 'float'), 3)} %",
-                    "igbt_1": {
-                        "current_mod_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
-                        "current_mod_2": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
-                        "current_mod_3": f"{round(self.read_bsmp_variable(42, 'float'), 3)} A",
-                        "current_mod_4": f"{round(self.read_bsmp_variable(44, 'float'), 3)} A",
-                        "duty_cycle_mod_1": f"{round(self.read_bsmp_variable(56, 'float'), 3)} %",
-                        "duty_cycle_mod_2": f"{round(self.read_bsmp_variable(58, 'float'), 3)} %",
-                        "duty_cycle_mod_3": f"{round(self.read_bsmp_variable(60, 'float'), 3)} %",
-                        "duty_cycle_mod_4": f"{round(self.read_bsmp_variable(62, 'float'), 3)} %",
-                    },
-                    "igbt_2": {
-                        "current_mod_1": f"{round(self.read_bsmp_variable(39, 'float'), 3)} A",
-                        "current_mod_2": f"{round(self.read_bsmp_variable(41, 'float'), 3)} A",
-                        "current_mod_3": f"{round(self.read_bsmp_variable(43, 'float'), 3)} A",
-                        "current_mod_4": f"{round(self.read_bsmp_variable(45, 'float'), 3)} A",
-                        "duty_cycle_mod_1": f"{round(self.read_bsmp_variable(57, 'float'), 3)} %",
-                        "duty_cycle_mod_2": f"{round(self.read_bsmp_variable(59, 'float'), 3)} %",
-                        "duty_cycle_mod_3": f"{round(self.read_bsmp_variable(61, 'float'), 3)} %",
-                        "duty_cycle_mod_4": f"{round(self.read_bsmp_variable(63, 'float'), 3)} %",
+            vars_dict = {
+                "mean_load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+                "load_current_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                "load_current_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                "arm_current_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
+                "arm_current_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
+                "dc_link_voltage_mod_1": f"{round(self.read_bsmp_variable(50, 'float'), 3)} V",
+                "dc_link_voltage_mod_2": f"{round(self.read_bsmp_variable(51, 'float'), 3)} V",
+                "dc_link_voltage_mod_3": f"{round(self.read_bsmp_variable(52, 'float'), 3)} V",
+                "dc_link_voltage_mod_4": f"{round(self.read_bsmp_variable(53, 'float'), 3)} V",
+                "mean_duty_cycle": f"{round(self.read_bsmp_variable(54, 'float'), 3)} %",
+                "differential_duty_cycle": f"{round(self.read_bsmp_variable(55, 'float'), 3)} %",
+                "igbt_1": {
+                    "current_mod_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
+                    "current_mod_2": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
+                    "current_mod_3": f"{round(self.read_bsmp_variable(42, 'float'), 3)} A",
+                    "current_mod_4": f"{round(self.read_bsmp_variable(44, 'float'), 3)} A",
+                    "duty_cycle_mod_1": f"{round(self.read_bsmp_variable(56, 'float'), 3)} %",
+                    "duty_cycle_mod_2": f"{round(self.read_bsmp_variable(58, 'float'), 3)} %",
+                    "duty_cycle_mod_3": f"{round(self.read_bsmp_variable(60, 'float'), 3)} %",
+                    "duty_cycle_mod_4": f"{round(self.read_bsmp_variable(62, 'float'), 3)} %",
+                },
+                "igbt_2": {
+                    "current_mod_1": f"{round(self.read_bsmp_variable(39, 'float'), 3)} A",
+                    "current_mod_2": f"{round(self.read_bsmp_variable(41, 'float'), 3)} A",
+                    "current_mod_3": f"{round(self.read_bsmp_variable(43, 'float'), 3)} A",
+                    "current_mod_4": f"{round(self.read_bsmp_variable(45, 'float'), 3)} A",
+                    "duty_cycle_mod_1": f"{round(self.read_bsmp_variable(57, 'float'), 3)} %",
+                    "duty_cycle_mod_2": f"{round(self.read_bsmp_variable(59, 'float'), 3)} %",
+                    "duty_cycle_mod_3": f"{round(self.read_bsmp_variable(61, 'float'), 3)} %",
+                    "duty_cycle_mod_4": f"{round(self.read_bsmp_variable(63, 'float'), 3)} %",
+                },
+            }
+
+            vars_dict = self._include_interlocks(
+                vars_dict,
+                fap.list_2p2s_soft_interlocks,
+                fap.list_2p2s_hard_interlocks,
+            )
+
+            for j in range(4):
+                vars_dict[f"iib_{j+1}"] = {
+                    "interlocks": self.decode_interlocks(
+                        self.read_bsmp_variable(78 + j * 16, "uint32_t"),
+                        fap.list_4p_iib_interlocks,
+                    ),
+                    "alarms": self.decode_interlocks(
+                        self.read_bsmp_variable(79 + j * 16, "uint32_t"),
+                        fap.list_4p_iib_alarms,
+                    ),
+                }
+
+            if iib >= 0:
+                vars_dict[f"iib_{iib}"] = {
+                    **vars_dict[f"iib_{iib}"],
+                    **{
+                        "input_voltage": f"{round(self.read_bsmp_variable(64 + iib_offset, 'float'), 3)} V",
+                        "output_voltage": f"{round(self.read_bsmp_variable(65 + iib_offset, 'float'), 3)} V",
+                        "driver_voltage": f"{round(self.read_bsmp_variable(70 + iib_offset, 'float'), 3)} V",
+                        "driver_current_1": f"{round(self.read_bsmp_variable(71 + iib_offset, 'float'), 3)} A",
+                        "driver_current_2": f"{round(self.read_bsmp_variable(72 + iib_offset, 'float'), 3)} A",
+                        "inductor_temp": f"{round(self.read_bsmp_variable(73 + iib_offset, 'float'), 3)} °C",
+                        "heatsink_temp": f"{round(self.read_bsmp_variable(74 + iib_offset, 'float'), 3)} °C",
+                        "ground_leakage_current": f"{round(self.read_bsmp_variable(75 + iib_offset, 'float'), 3)} A",
+                        "board_temp": f"{round(self.read_bsmp_variable(76 + iib_offset, 'float'), 3)} °C",
+                        "board_rh": f"{round(self.read_bsmp_variable(77 + iib_offset, 'float'), 3)} %",
+                        "igbt_1": {
+                            "current": f"{round(self.read_bsmp_variable(66 + iib_offset, 'float'), 3)} A",
+                            "temp": f"{round(self.read_bsmp_variable(68 + iib_offset, 'float'), 3)} °C",
+                        },
+                        "igbt_2": {
+                            "current": f"{round(self.read_bsmp_variable(67 + iib_offset, 'float'), 3)} A",
+                            "temp": f"{round(self.read_bsmp_variable(69 + iib_offset, 'float'), 3)} °C",
+                        },
                     },
                 }
 
-                vars_dict = self._include_interlocks(
-                    vars_dict,
-                    fap.list_2p2s_soft_interlocks,
-                    fap.list_2p2s_hard_interlocks,
-                )
-
-                for j in range(4):
-                    vars_dict[f"iib_{j+1}"] = {
-                        "interlocks": self.decode_interlocks(
-                            self.read_bsmp_variable(78 + j * 16, "uint32_t"),
-                            fap.list_4p_iib_interlocks,
-                        ),
-                        "alarms": self.decode_interlocks(
-                            self.read_bsmp_variable(79 + j * 16, "uint32_t"),
-                            fap.list_4p_iib_alarms,
-                        ),
-                    }
-
-                if iib >= 0:
-                    vars_dict[f"iib_{iib}"] = {
-                        **vars_dict[f"iib_{iib}"],
-                        **{
-                            "input_voltage": f"{round(self.read_bsmp_variable(64 + iib_offset, 'float'), 3)} V",
-                            "output_voltage": f"{round(self.read_bsmp_variable(65 + iib_offset, 'float'), 3)} V",
-                            "driver_voltage": f"{round(self.read_bsmp_variable(70 + iib_offset, 'float'), 3)} V",
-                            "driver_current_1": f"{round(self.read_bsmp_variable(71 + iib_offset, 'float'), 3)} A",
-                            "driver_current_2": f"{round(self.read_bsmp_variable(72 + iib_offset, 'float'), 3)} A",
-                            "inductor_temp": f"{round(self.read_bsmp_variable(73 + iib_offset, 'float'), 3)} °C",
-                            "heatsink_temp": f"{round(self.read_bsmp_variable(74 + iib_offset, 'float'), 3)} °C",
-                            "ground_leakage_current": f"{round(self.read_bsmp_variable(75 + iib_offset, 'float'), 3)} A",
-                            "board_temp": f"{round(self.read_bsmp_variable(76 + iib_offset, 'float'), 3)} °C",
-                            "board_rh": f"{round(self.read_bsmp_variable(77 + iib_offset, 'float'), 3)} %",
-                            "igbt_1": {
-                                "current": f"{round(self.read_bsmp_variable(66 + iib_offset, 'float'), 3)} A",
-                                "temp": f"{round(self.read_bsmp_variable(68 + iib_offset, 'float'), 3)} °C",
-                            },
-                            "igbt_2": {
-                                "current": f"{round(self.read_bsmp_variable(67 + iib_offset, 'float'), 3)} A",
-                                "temp": f"{round(self.read_bsmp_variable(69 + iib_offset, 'float'), 3)} °C",
-                            },
-                        },
-                    }
-                prettier_print(vars_dict)
-                time.sleep(dt)
             return vars_dict
         finally:
             self.slave_addr = old_add
 
-    def read_vars_fap_225A(self, n=1, com_add=1, dt=0.5) -> dict:
-        vars_dict = {}
+    def read_vars_fap_225A(self, com_add=1) -> dict:
         old_add = self.slave_addr
 
         try:
-            for _ in range(n):
-                self.slave_addr = com_add
+            self.slave_addr = com_add
 
-                vars_dict = {
-                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "igbt": {
-                        "current_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                        "current_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                        "duty_cycle_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)} %",
-                        "duty_cycle_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)} %",
-                        "differential_duty_cycle": f"{round(self.read_bsmp_variable(38, 'float'), 3)} %",
-                    },
-                }
+            vars_dict = {
+                "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+                "igbt": {
+                    "current_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                    "current_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                    "duty_cycle_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)} %",
+                    "duty_cycle_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)} %",
+                    "differential_duty_cycle": f"{round(self.read_bsmp_variable(38, 'float'), 3)} %",
+                },
+            }
 
-                vars_dict = self._include_interlocks(
-                    vars_dict,
-                    fap.list_225A_soft_interlocks,
-                    fap.list_225A_hard_interlocks,
-                )
+            vars_dict = self._include_interlocks(
+                vars_dict,
+                fap.list_225A_soft_interlocks,
+                fap.list_225A_hard_interlocks,
+            )
 
-                prettier_print(vars_dict)
-                time.sleep(dt)
             return vars_dict
         finally:
             self.slave_addr = old_add
 
-    def read_vars_fac_2p_acdc_imas(self, n=1, add_mod_a=2, dt=0.5) -> dict:
+    def read_vars_fac_2p_acdc_imas(self, add_mod_a=2) -> dict:
         """
         Read FAC 2P ACDC IMAS specific power supply variabled
 
@@ -2363,44 +2320,40 @@ class BaseDRS:
         old_add = self.slave_addr
 
         try:
-            for _ in range(n):
+            self.slave_addr = add_mod_a
 
-                self.slave_addr = add_mod_a
+            vars_dict["module_a"] = {
+                "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
+                "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
+            }
 
-                vars_dict["module_a"] = {
-                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
-                    "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
-                }
+            vars_dict["module_a"] = self._include_interlocks(
+                vars_dict["module_a"],
+                fac.list_2p_acdc_imas_soft_interlocks,
+                fac.list_2p_acdc_imas_hard_interlocks,
+            )
 
-                vars_dict["module_a"] = self._include_interlocks(
-                    vars_dict["module_a"],
-                    fac.list_2p_acdc_imas_soft_interlocks,
-                    fac.list_2p_acdc_imas_hard_interlocks,
-                )
+            self.slave_addr = add_mod_a + 1
 
-                self.slave_addr = add_mod_a + 1
+            vars_dict["module_b"] = {
+                "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
+                "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
+            }
 
-                vars_dict["module_b"] = {
-                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
-                    "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
-                }
+            vars_dict["module_b"] = self._include_interlocks(
+                vars_dict["module_b"],
+                fac.list_2p_acdc_imas_soft_interlocks,
+                fac.list_2p_acdc_imas_hard_interlocks,
+            )
 
-                vars_dict["module_b"] = self._include_interlocks(
-                    vars_dict["module_b"],
-                    fac.list_2p_acdc_imas_soft_interlocks,
-                    fac.list_2p_acdc_imas_hard_interlocks,
-                )
-
-                prettier_print(vars_dict)
-                time.sleep(dt)
             return vars_dict
         finally:
             self.slave_addr = old_add
             raise  # TODO: Raise proper exception
 
-    def read_vars_fac_2p_dcdc_imas(self, n=1, com_add=1, dt=0.5) -> dict:
+    def read_vars_fac_2p_dcdc_imas(self, com_add=1) -> dict:
         """
         Read FAC 2P DCDC IMAS specific power supply variabled
 
@@ -2418,33 +2371,29 @@ class BaseDRS:
         dict
             Dict containing FAC 2P DCDC IMAS variables
         """
-        vars_dict = {}
         old_add = self.slave_addr
 
         try:
-            for _ in range(n):
-                self.slave_addr = com_add
-                vars_dict = {
-                    "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
-                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "load_current_error": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "arm_1_current": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                    "arm_2_current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
-                    "arms_current_diff": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                    "cap_bank_voltage_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
-                    "cap_bank_voltage_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
-                    "duty_cycle_1": f"{round(self.read_bsmp_variable(40, 'float'), 3)} %",
-                    "duty_cycle_2": f"{round(self.read_bsmp_variable(41, 'float'), 3)} %",
-                    "differential_duty_cycle": f"{round(self.read_bsmp_variable(41, 'float'), 3)} %",
-                }
-                vars_dict = self._include_interlocks(
-                    vars_dict,
-                    fac.list_2p_dcdc_imas_soft_interlocks,
-                    fac.list_2p_dcdc_imas_hard_interlocks,
-                )
+            self.slave_addr = com_add
+            vars_dict = {
+                "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
+                "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+                "load_current_error": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                "arm_1_current": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                "arm_2_current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
+                "arms_current_diff": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
+                "cap_bank_voltage_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
+                "cap_bank_voltage_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
+                "duty_cycle_1": f"{round(self.read_bsmp_variable(40, 'float'), 3)} %",
+                "duty_cycle_2": f"{round(self.read_bsmp_variable(41, 'float'), 3)} %",
+                "differential_duty_cycle": f"{round(self.read_bsmp_variable(41, 'float'), 3)} %",
+            }
+            vars_dict = self._include_interlocks(
+                vars_dict,
+                fac.list_2p_dcdc_imas_soft_interlocks,
+                fac.list_2p_dcdc_imas_hard_interlocks,
+            )
 
-                prettier_print(vars_dict)
-                time.sleep(dt)
             return vars_dict
         finally:
             self.slave_addr = old_add
@@ -2505,14 +2454,13 @@ class BaseDRS:
         vars_dict = {}
         old_add = self.slave_addr
         try:
-            for _ in range(n):
-                print("\n-----------------------\n")
-                self.slave_addr = 1
-                vars_dict["dcdc"] = self.read_vars_fac_dcdc()
-                print("\n-----------------------\n")
-                self.slave_addr = 2
-                vars_dict["acdc"] = self.read_vars_fac_acdc()
-                time.sleep(dt)
+            print("\n-----------------------\n")
+            self.slave_addr = 1
+            vars_dict["dcdc"] = self.read_vars_fac_dcdc()
+            print("\n-----------------------\n")
+            self.slave_addr = 2
+            vars_dict["acdc"] = self.read_vars_fac_acdc()
+
             return vars_dict
         finally:
             self.slave_addr = old_add
