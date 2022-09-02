@@ -654,7 +654,6 @@ class BaseDRS:
 
         return csv_param_list
 
-    @print_deprecated
     def get_param_bank(
         self,
         list_param: list = None,
@@ -1593,7 +1592,6 @@ class BaseDRS:
 
         return active_interlocks
 
-    @print_deprecated
     def read_vars_fbp(self) -> dict:
         vars_dict = {}
         if self.var_group_index is not None:
@@ -1650,7 +1648,6 @@ class BaseDRS:
         )
         return vars_dict
 
-    @print_deprecated
     def read_vars_fbp_dclink(self) -> dict:
         vars_dict = {
             "modules_status": self.read_bsmp_variable(33, "uint32_t"),
@@ -1668,7 +1665,6 @@ class BaseDRS:
 
         return vars_dict
 
-    @print_deprecated
     def read_vars_fac_acdc(self, iib: bool = True) -> dict:
         vars_dict = {
             "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
@@ -1728,7 +1724,6 @@ class BaseDRS:
 
         return vars_dict
 
-    @print_deprecated
     def read_vars_fac_dcdc(self, iib=True) -> dict:
         # TODO: Is this rounding really necessary?
         wref_index = (
@@ -1781,7 +1776,6 @@ class BaseDRS:
 
         return vars_dict
 
-    @print_deprecated
     def read_vars_fac_dcdc_ema(self, iib=False) -> dict:
         vars_dict = {
             "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
@@ -1881,7 +1875,6 @@ class BaseDRS:
 
         return vars_dict
 
-    @print_deprecated
     def read_vars_fac_2s_acdc(self, add_mod_a=2, iib=False) -> dict:
         vars_dict = {}
         old_add = self.slave_addr
@@ -1897,7 +1890,6 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fac_2s_dcdc(self, com_add=1, iib=False) -> dict:
         old_add = self.slave_addr
         iib_offset = 14 * (iib - 1)
@@ -1952,7 +1944,6 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fac_2p4s_acdc(self, add_mod_a=1, iib=0):
         self.read_vars_fac_2s_acdc(add_mod_a, iib)
 
@@ -1986,7 +1977,6 @@ class BaseDRS:
 
         return vars_dict
 
-    @print_deprecated
     def read_vars_fac_2p4s_dcdc(self, com_add=1, iib=False) -> dict:
         old_add = self.slave_addr
 
@@ -2033,7 +2023,6 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fap(self, com_add=1, iib=True) -> dict:
         old_add = self.slave_addr
 
@@ -2090,7 +2079,6 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fap_4p(self, com_add=1, iib=0) -> dict:
         old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
@@ -2175,7 +2163,6 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fap_2p2s(self, com_add=1, iib=0) -> dict:
         old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
@@ -2434,7 +2421,6 @@ class BaseDRS:
             for val in ramp:
                 writer.writerow([val])
 
-    @print_deprecated
     def read_vars_fac_n(self, n=1, dt=0.5):
         vars_dict = {}
         old_add = self.slave_addr
@@ -2477,7 +2463,6 @@ class BaseDRS:
         self.set_param("Freq_TimeSlicer", 1, freq)
         self.save_param_bank(type_memory)
 
-    @print_deprecated
     def get_dsp_modules_bank(
         self,
         list_dsp_classes=None,
