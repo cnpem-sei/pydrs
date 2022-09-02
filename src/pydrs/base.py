@@ -3,11 +3,9 @@
 import csv
 import math
 import os
-from re import I
 import struct
 import time
 from typing import Union
-from warnings import warn
 
 from .consts import (
     COM_CREATE_BSMP_GROUP,
@@ -115,14 +113,14 @@ class BaseDRS:
 
     def read_var(self, var_id: str, size: int) -> bytes:
         """Reads a variable with a given ID
-        
+
         Parameters:
         -------
         var_id
             Variable ID
         size
             Variable size
-            
+
         Returns
         -------
         bytes

@@ -1,8 +1,5 @@
 """Handles received message validation"""
-from warnings import warn
-
 from .consts import ETH_ANSWER_NOQUEUE
-from .utils import checksum
 
 
 class SerialError(Exception):
