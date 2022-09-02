@@ -6,30 +6,36 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Welcome to pydrs’s documentation! &#8212; pydrs 1.2.0 documentation</title>
+    <title>Welcome to pydrs’s documentation! &#8212; pydrs 2.0.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
     <script data-url_root="#" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    
     <link rel="index" title="Index" href="genindex/" />
-    <link rel="search" title="Search" href="search/" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="search" title="Search" href="search/" /> 
   </head><body>
-  
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex/" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex/" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">pydrs 2.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Welcome to pydrs’s documentation!</a></li> 
+      </ul>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <section id="module-pydrs.base">
@@ -39,6 +45,12 @@
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pydrs.base.</span></span><span class="sig-name descname"><span class="pre">BaseDRS</span></span><a class="headerlink" href="#pydrs.base.BaseDRS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class, originates all communication child classes</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.close_loop">
+<span class="sig-name descname"><span class="pre">close_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.close_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the control loop</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.connect">
 <span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.connect" title="Permalink to this definition">¶</a></dt>
@@ -70,6 +82,13 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.enable_high_performance">
+<span class="sig-name descname"><span class="pre">enable_high_performance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.enable_high_performance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates variable groups to perform single readings, disables all extraneous implicit looping.
+<em>7000+, go like hell</em></p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.enable_onboard_eeprom">
 <span class="sig-name descname"><span class="pre">enable_onboard_eeprom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.enable_onboard_eeprom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enables onboard EEPROM</p>
@@ -88,15 +107,65 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.get_dsp_coeff">
+<span class="sig-name descname"><span class="pre">get_dsp_coeff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dsp_class</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dsp_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_floathex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.get_dsp_coeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get DSP coefficient values</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.get_dsp_modules_bank">
+<span class="sig-name descname"><span class="pre">get_dsp_modules_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.get_dsp_modules_bank" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.get_param">
-<span class="sig-name descname"><span class="pre">get_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_floathex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.get_param" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_floathex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.get_param" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get parameter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param_id</strong> – Parameter ID either as its human readable name or BSMP ID</p></li>
+<li><p><strong>n</strong> – Index for arrays of variables</p></li>
+<li><p><strong>return_floathex</strong> – Return hexadecimal representation of float alongside float value</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>list</em> – Value alongside reply message (if <cite>return_floathex</cite> is true)</p></li>
+<li><p><em>float</em> – Parameter value (if <cite>return_floathex</cite> is false)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.get_param_bank">
+<span class="sig-name descname"><span class="pre">get_param_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.get_param_bank" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.get_ps_name">
 <span class="sig-name descname"><span class="pre">get_ps_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.get_ps_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets power supply name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Power supply name</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -106,14 +175,31 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.load_dsp_coeffs_eeprom">
+<span class="sig-name descname"><span class="pre">load_dsp_coeffs_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dsp_class</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dsp_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.load_dsp_coeffs_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load DSP coefficient values from EEPROM into memory</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.load_dsp_modules_eeprom">
+<span class="sig-name descname"><span class="pre">load_dsp_modules_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.load_dsp_modules_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads DSP modules from EEPROM to memory</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.load_param_bank">
 <span class="sig-name descname"><span class="pre">load_param_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.load_param_bank" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads all parameter values into param_data</p>
+<dd><p>Loads all parameter values from EEPROM/BID to memory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>type_memory</strong> – Memory to save to. 1 for BID, 2 for EEPROM</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.load_param_eeprom">
-<span class="sig-name descname"><span class="pre">load_param_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.load_param_eeprom" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">load_param_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.load_param_eeprom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load parameter from EEPROM</p>
 </dd></dl>
 
@@ -124,34 +210,248 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.open_loop">
+<span class="sig-name descname"><span class="pre">open_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.open_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opens the control loop</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_csv_dsp_modules_bank">
-<span class="sig-name descname"><span class="pre">read_csv_dsp_modules_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dsp_modules_file_csv</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_csv_dsp_modules_bank" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns:
-dict[dsp_class_name] = {“class”:int, “coeffs”:[float]}</p>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_csv_dsp_modules_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dsp_modules_file_csv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_csv_dsp_modules_bank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads CSV file containing DSP modules parameter banks</p>
+<dl class="simple">
+<dt>dsp_modules_file_csv</dt><dd><p>CSV file</p>
+</dd>
+</dl>
+<p>dict[dsp_class_name] = {“class”:int, “coeffs”:[float]}</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_csv_file">
+<span class="sig-name descname"><span class="pre">read_csv_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_csv_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility function to translate CSV file to list</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_csv_param_bank">
+<span class="sig-name descname"><span class="pre">read_csv_param_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_csv_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_csv_param_bank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads parameter bank from CSV file</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_ps_status">
 <span class="sig-name descname"><span class="pre">read_ps_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_ps_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets power supply status</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Containing <cite>state</cite>, <cite>open_loop</cite> (whether control loop is open), <cite>interface</cite>, <cite>active</cite>, power supply <cite>model</cite>, <cite>unlocked</cite> (represents UDC lock status)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_var">
-<span class="sig-name descname"><span class="pre">read_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_var" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">read_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads a variable with a given ID</p>
+<dl class="simple">
+<dt>var_id</dt><dd><p>Variable ID</p>
+</dd>
+<dt>size</dt><dd><p>Variable size</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Raw variable response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2p4s_acdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2p4s_acdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2p4s_acdc" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2p4s_dcdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2p4s_dcdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2p4s_dcdc" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2p_acdc_imas">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2p_acdc_imas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_mod_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2p_acdc_imas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read FAC 2P ACDC IMAS specific power supply variabled</p>
+<dl class="simple">
+<dt>add_mod_a</dt><dd><p>Communication address for module</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dict containing FAC 2P ACDC IMAS variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2p_dcdc_imas">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2p_dcdc_imas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">com_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2p_dcdc_imas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read FAC 2P DCDC IMAS specific power supply variabled</p>
+<dl class="simple">
+<dt>com_add</dt><dd><p>Communication address for power supply</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dict containing FAC 2P DCDC IMAS variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2s_acdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2s_acdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2s_acdc" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2s_dcdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2s_dcdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2s_dcdc" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_acdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_acdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_acdc" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_dcdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_dcdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_dcdc" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_dcdc_ema">
+<span class="sig-name descname"><span class="pre">read_vars_fac_dcdc_ema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_dcdc_ema" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_n">
+<span class="sig-name descname"><span class="pre">read_vars_fac_n</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_n" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fap">
+<span class="sig-name descname"><span class="pre">read_vars_fap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fap" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fap_2p2s">
+<span class="sig-name descname"><span class="pre">read_vars_fap_2p2s</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fap_2p2s" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fap_4p">
+<span class="sig-name descname"><span class="pre">read_vars_fap_4p</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fap_4p" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fbp">
+<span class="sig-name descname"><span class="pre">read_vars_fbp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fbp" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fbp_dclink">
+<span class="sig-name descname"><span class="pre">read_vars_fbp_dclink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fbp_dclink" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>warn(</dt><dd><p>“From 2.0.0, most functions will not loop implicitly. Use a ‘for’ or ‘while’ loop instead”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.reset_counters">
+<span class="sig-name descname"><span class="pre">reset_counters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_counters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets counters</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.reset_input_buffer">
+<span class="sig-name descname"><span class="pre">reset_input_buffer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_input_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets input buffer for the given communication protocol</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.reset_interlocks">
-<span class="sig-name descname"><span class="pre">reset_interlocks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_interlocks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reset_interlocks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_interlocks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resets interlocks on connected DRS device</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.reset_udc">
 <span class="sig-name descname"><span class="pre">reset_udc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confirm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_udc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resets UDC firmware</p>
+<dd><p>Resets UDC</p>
 </dd></dl>
 
 <dl class="py method">
@@ -162,15 +462,38 @@ waveform’s start.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.save_dsp_coeffs_eeprom">
+<span class="sig-name descname"><span class="pre">save_dsp_coeffs_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dsp_class</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dsp_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.save_dsp_coeffs_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save DSP coefficients to EEPROM</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.save_dsp_modules_eeprom">
+<span class="sig-name descname"><span class="pre">save_dsp_modules_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.save_dsp_modules_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save DSP module configuration to EEPROM</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.save_param_bank">
 <span class="sig-name descname"><span class="pre">save_param_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.save_param_bank" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configures all paremeters according to values loaded into param_data</p>
+<dd><p>Saves all paremeter values loaded into memory to BID/EEPROM</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>type_memory</strong> – Memory to save to. 1 for BID, 2 for EEPROM</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.save_param_eeprom">
-<span class="sig-name descname"><span class="pre">save_param_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.save_param_eeprom" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">save_param_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.save_param_eeprom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save parameter to EEPROM</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.select_op_mode">
+<span class="sig-name descname"><span class="pre">select_op_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.select_op_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select operation mode</p>
 </dd></dl>
 
 <dl class="py method">
@@ -181,15 +504,70 @@ wfmref_data.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_dsp_modules_bank">
+<span class="sig-name descname"><span class="pre">set_dsp_modules_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dsp_modules_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_eeprom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_dsp_modules_bank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes DSP modules parameter bank from CSV file to memory</p>
+<dl class="simple">
+<dt>dsp_modules_file</dt><dd><p>CSV file</p>
+</dd>
+<dt>save_eeprom</dt><dd><p>Whether or not parameters should be saved to EEPROM as well</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_param">
-<span class="sig-name descname"><span class="pre">set_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_param" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_param" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set parameter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param_id</strong> – Parameter ID either as its human readable name or BSMP ID</p></li>
+<li><p><strong>n</strong> – Index for arrays of variables</p></li>
+<li><p><strong>value</strong> – Value to set</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value alongside parameter hex value</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_param_bank">
+<span class="sig-name descname"><span class="pre">set_param_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_param_bank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes content of file to parameter bank</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>param_file</strong> – Path to parameter bank file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Written parameter bank values</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_ps_name">
 <span class="sig-name descname"><span class="pre">set_ps_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ps_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.set_ps_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets power supply name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ps_name</strong> – New power supply name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_serial_termination">
+<span class="sig-name descname"><span class="pre">set_serial_termination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term_enable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_serial_termination" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set serial termination state</p>
 </dd></dl>
 
 <dl class="py method">
@@ -204,24 +582,29 @@ applied in trapezoidal mode.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref">
 <span class="sig-name descname"><span class="pre">set_slowref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">setpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets new slowref reference value</p>
+<dd><p>Sets new slowref setpoint value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>setpoint</strong> – Slowref setpoint value</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref_fbp">
 <span class="sig-name descname"><span class="pre">set_slowref_fbp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iRef1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_fbp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets slowref reference value for FBP power supplies</p>
+<dd><p>Sets slowref setpoint value for FBP power supplies</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref_fbp_readback_mon">
-<span class="sig-name descname"><span class="pre">set_slowref_fbp_readback_mon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iRef1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_fbp_readback_mon" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_slowref_fbp_readback_mon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iRef1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_fbp_readback_mon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets slowref reference value for FBP power supplies and returns current readback</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref_fbp_readback_ref">
-<span class="sig-name descname"><span class="pre">set_slowref_fbp_readback_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iRef1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_fbp_readback_ref" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_slowref_fbp_readback_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iRef1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iRef4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">bytes</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref_fbp_readback_ref" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets slowref reference value for FBP power supplies and returns reference current</p>
 </dd></dl>
 
@@ -239,7 +622,7 @@ applied in trapezoidal mode.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.store_param_bank_csv">
-<span class="sig-name descname"><span class="pre">store_param_bank_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bank</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.store_param_bank_csv" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">store_param_bank_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bank</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.store_param_bank_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves parameter bank to CSV file</p>
 </dd></dl>
 
@@ -251,13 +634,13 @@ applied in trapezoidal mode.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.turn_off">
-<span class="sig-name descname"><span class="pre">turn_off</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.turn_off" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">turn_off</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.turn_off" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turns off power supply</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.turn_on">
-<span class="sig-name descname"><span class="pre">turn_on</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.turn_on" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">turn_on</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.turn_on" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turns on power supply</p>
 </dd></dl>
 
@@ -282,30 +665,27 @@ applied in trapezoidal mode.</p>
 </section>
 
 
+            <div class="clearer"></div>
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="#">pydrs</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="#">Documentation overview</a><ul>
-  </ul></li>
+  <div>
+    <h3><a href="#">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Welcome to pydrs’s documentation!</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
-</div>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -316,32 +696,26 @@ applied in trapezoidal mode.</p>
     </div>
 </div>
 <script>document.getElementById('searchbox').style.display = "block"</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="footer">
-      &copy;2022, Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/index.rst.txt"
-          rel="nofollow">Page source</a>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex/" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex/" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">pydrs 2.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Welcome to pydrs’s documentation!</a></li> 
+      </ul>
     </div>
-
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+    </div>
   </body>
 </html>
