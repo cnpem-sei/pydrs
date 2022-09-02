@@ -135,7 +135,7 @@ class EthDRS(BaseDRS):
         base_msg = (self._slave_addr + msg).encode("ISO-8859-1")
         full_msg = self._format_message(checksum(base_msg), ETH_CMD_REQUEST)
         self.socket.sendall(full_msg)
-        try: 
+        try:
             self._get_reply()
             return
         except:
