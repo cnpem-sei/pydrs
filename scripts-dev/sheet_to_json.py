@@ -1,6 +1,6 @@
 import pylightxl
 
-ws = "Variáveis FAC_ACDC"
+ws = "Variáveis FAP_2P2S"
 
 sheet = list(pylightxl.readxl("input.xlsx").ws(ws).rows)
 

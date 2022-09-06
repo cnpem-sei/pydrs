@@ -1618,131 +1618,91 @@ class BaseDRS:
 
     def read_vars_fbp(self) -> dict:
         return self._read_vars_generic(
-            390, fbp.bsmp_vars, fbp.soft_interlocks, fbp.hard_interlocks
+            390, fbp.bsmp, fbp.soft_interlocks, fbp.hard_interlocks
         )
 
     def read_vars_fbp_dclink(self) -> dict:
         return self._read_vars_generic(
-            286, fbp.dclink_bsmp_vars, [], fbp.dclink_hard_interlocks
+            286, fbp.bsmp_dclink, [], fbp.dclink_hard_interlocks
         )
 
     def read_vars_fac_acdc(self, iib: bool = True) -> dict:
-        vars_dict = {
-            "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
-            "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-            "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
-        }
-
-        vars_dict = self._include_interlocks(
-            vars_dict, fac.list_acdc_soft_interlocks, fac.list_acdc_hard_interlocks
+        vars_dict = self._read_vars_generic(
+            366,
+            fac.bsmp_acdc,
+            fac.list_acdc_soft_interlocks,
+            fac.list_acdc_hard_interlocks,
         )
 
         if iib:
-            vars_dict["iib"] = {
-                "input_current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
-                "input_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                "igbt_temp": f"{round(self.read_bsmp_variable(38, 'float'), 3)} °C",
-                "driver_voltage": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
-                "driver_current": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
-                "inductor_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)}  °C",
-                "heatsink_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)}  °C",
-                "is": {
-                    "board_temp": f"{round(self.read_bsmp_variable(43, 'float'), 3)}  °C",
-                    "board_rh": f"{round(self.read_bsmp_variable(44, 'float'), 3)} %",
-                },
-                "cmd": {
-                    "load_voltage": f"{round(self.read_bsmp_variable(47, 'float'), 3)} V",
-                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
-                    "rectifier_inductor_temp": f"{round(self.read_bsmp_variable(49, 'float'), 3)} °C",
-                    "rectifier_heatsink_temp": f"{round(self.read_bsmp_variable(50, 'float'), 3)} °C",
-                    "external_boards_voltage": f"{round(self.read_bsmp_variable(51, 'float'), 3)} V",
-                    "auxiliary_board_current": f"{round(self.read_bsmp_variable(52, 'float'), 3)} A",
-                    "idb_board_current": f"{round(self.read_bsmp_variable(53, 'float'), 3)} A",
-                    "ground_leakage_current": f"{round(self.read_bsmp_variable(54, 'float'), 3)} A",
-                    "board_temp": f"{round(self.read_bsmp_variable(55, 'float'), 3)} °C",
-                    "board_rh": f"{round(self.read_bsmp_variable(56, 'float'), 3)} %",
-                },
-            }
-
-            vars_dict["is"]["interlocks"] = self.decode_interlocks(
-                self.read_bsmp_variable(45, "uint32_t"),
+            vars_dict["iib_is_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_interlocks_is"],
                 fac.list_acdc_iib_is_interlocks,
             )
 
-            vars_dict["is"]["alarms"] = self.decode_interlocks(
-                self.read_bsmp_variable(46, "uint32_t"), fac.list_acdc_iib_is_alarms
+            vars_dict["iib_is_alarms"] = self.decode_interlocks(
+                vars_dict["iib_alarms_is"],
+                fac.list_acdc_iib_is_alarms,
             )
 
-            vars_dict["cmd"]["interlocks"] = self.decode_interlocks(
-                self.read_bsmp_variable(57, "uint32_t"),
+            vars_dict["iib_cmd_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_interlocks_cmd"],
                 fac.list_acdc_iib_cmd_interlocks,
             )
 
-            vars_dict["cmd"]["interlocks"] = self.decode_interlocks(
-                self.read_bsmp_variable(58, "uint32_t"),
+            vars_dict["iib_cmd_alarms"] = self.decode_interlocks(
+                vars_dict["iib_alarms_cmd"],
                 fac.list_acdc_iib_cmd_alarms,
             )
+
+            vars_dict["iib_cmd_alarms_raw"] = vars_dict.pop("iib_alarms_cmd")
+            vars_dict["iib_cmd_interlocks_raw"] = vars_dict.pop("iib_interlocks_cmd")
+            vars_dict["iib_is_alarms_raw"] = vars_dict.pop("iib_alarms_is")
+            vars_dict["iib_is_interlocks_raw"] = vars_dict.pop("iib_interlocks_is")
 
         return vars_dict
 
     def read_vars_fac_dcdc(self, iib=True) -> dict:
-        # TODO: Is this rounding really necessary?
-        wref_index = (
-            round(self.read_bsmp_variable(20, "uint32_t"), 3)
-            - round(self.read_bsmp_variable(18, "uint32_t"), 3)
-        ) / 2 + 1
-
-        vars_dict = {
-            "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
-            "wfmref_index": wref_index,
-            "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-            "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-            "load_current_ddct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-            "cap_bank_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-            "duty_cycle": f"{round(self.read_bsmp_variable(37, 'float'), 3)} %",
-        }
-
-        vars_dict = self._include_interlocks(
-            vars_dict,
+        vars_dict = self._read_vars_generic(
+            346,
+            fac.bsmp_dcdc,
             fac.list_dcdc_soft_interlocks,
             fac.list_dcdc_hard_interlocks,
         )
 
-        if iib:
-            vars_dict["iib"] = {
-                "cap_bank_voltage": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
-                "input_current": f"{round(self.read_bsmp_variable(39, 'float'), 3)} A",
-                "output_current": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
-                "igbt_leg_1_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)} °C",
-                "igbt_leg_2_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)} °C",
-                "inductor_temp": f"{round(self.read_bsmp_variable(43, 'float'), 3)} °C",
-                "heatsink_temp": f"{round(self.read_bsmp_variable(44, 'float'), 3)} °C",
-                "driver_voltage": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
-                "driver_current_1": f"{round(self.read_bsmp_variable(46, 'float'), 3)} A",
-                "driver_current_2": f"{round(self.read_bsmp_variable(47, 'float'), 3)} A",
-                "ground_leakage_current": f"{round(self.read_bsmp_variable(48, 'float'), 3)} A",
-                "board_temp": f"{round(self.read_bsmp_variable(49, 'float'), 3)} °C",
-                "board_rh": f"{round(self.read_bsmp_variable(50, 'float'), 3)} °C",
-            }
+        vars_dict["wfmref_index"] = round(
+            (
+                self.read_bsmp_variable(20, "uint32_t")
+                - self.read_bsmp_variable(18, "uint32_t")
+            )
+            / 2
+            + 1,
+            3,
+        )
 
-            vars_dict["iib"]["interlocks"] = self.decode_interlocks(
-                self.read_bsmp_variable(51, "uint32_t"),
+        if iib:
+            vars_dict["iib_interlocks_raw"] = vars_dict["iib_interlocks"]
+            vars_dict["iib_alarms_raw"] = vars_dict["iib_alarms"]
+
+            vars_dict["iib_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_interlocks_raw"],
                 fac.list_dcdc_iib_interlocks,
             )
 
-            vars_dict["iib"]["alarms"] = self.decode_interlocks(
-                self.read_bsmp_variable(52, "uint32_t"),
+            vars_dict["iib_cmd_alarms"] = self.decode_interlocks(
+                vars_dict["iib_alarms_raw"],
                 fac.list_dcdc_iib_alarms,
             )
 
         return vars_dict
 
     def read_vars_fac_dcdc_ema(self, iib=False) -> dict:
-        vars_dict = {
-            "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-            "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
-            "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
-        }
+        vars_dict = self._read_vars_generic(
+            dasdasdasdasda,
+            fac.bsmp_dcdc_ema,
+            fac.list_dcdc_ema_soft_interlocks,
+            fac.list_dcdc_ema_hard_interlocks,
+        )
 
         vars_dict = self._include_interlocks(
             vars_dict,
@@ -1751,22 +1711,6 @@ class BaseDRS:
         )
 
         if iib:
-            vars_dict["iib"] = {
-                "input_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                "input_current": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                "output_current": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
-                "igbt_1_temp": f"{round(self.read_bsmp_variable(39, 'float'), 3)} °C",
-                "igbt_2_temp": f"{round(self.read_bsmp_variable(40, 'float'), 3)} °C",
-                "inductor_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)} °C",
-                "heatsink_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)} °C",
-                "driver_voltage": f"{round(self.read_bsmp_variable(43, 'float'), 3)} V",
-                "driver_current_1": f"{round(self.read_bsmp_variable(44, 'float'), 3)} A",
-                "driver_current_2": f"{round(self.read_bsmp_variable(45, 'float'), 3)} A",
-                "ground_leakage_current": f"{round(self.read_bsmp_variable(46, 'float'), 3)} A",
-                "board_temp": f"{round(self.read_bsmp_variable(47, 'float'), 3)} °C",
-                "board_rh": f"{round(self.read_bsmp_variable(48, 'float'), 3)} °C",
-            }
-
             vars_dict["iib"]["alarms"] = self.decode_interlocks(
                 self.read_bsmp_variable(49, "uint32_t"),
                 fac.list_dcdc_ema_iib_interlocks,
@@ -1780,11 +1724,6 @@ class BaseDRS:
         return vars_dict
 
     def _read_fac_2s_acdc_module(self, iib: bool) -> dict:
-        vars_dict = {
-            "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
-            "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-            "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)} %",
-        }
 
         vars_dict = self._include_interlocks(
             vars_dict,

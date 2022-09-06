@@ -29,11 +29,11 @@ dclink_hard_interlocks = [
     "External_Interlock",
 ]
 
-bsmp_vars = {
+bsmp = {
     "i_load": {"addr": 33, "format": "f", "size": 4, "egu": "A"},
     "v_load": {"addr": 34, "format": "f", "size": 4, "egu": "V"},
     "v_dclink": {"addr": 35, "format": "f", "size": 4, "egu": "V"},
-    "temp_switches": {"addr": 36, "format": "f", "size": 4, "egu": "ºC"},
+    "temp_switches": {"addr": 36, "format": "f", "size": 4, "egu": "°C"},
     "duty_cycle": {"addr": 37, "format": "f", "size": 4, "egu": "%"},
     "ps_alarms": {"addr": 38, "format": "I", "size": 4, "egu": ""},
     "ps_status_1": {"addr": 46, "format": "H", "size": 2, "egu": ""},
@@ -66,7 +66,7 @@ bsmp_vars = {
     "ps_alarms_4": {"addr": 73, "format": "I", "size": 4, "egu": ""},
 }
 
-dclink_bsmp_vars = {
+bsmp_dclink = {
     "modules_status": {"addr": 33, "format": "I", "size": 4, "egu": ""},
     "v_out": {"addr": 34, "format": "f", "size": 4, "egu": "V"},
     "v_out_1": {"addr": 35, "format": "f", "size": 4, "egu": "V"},

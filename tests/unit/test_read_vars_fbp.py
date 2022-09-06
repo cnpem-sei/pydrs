@@ -55,7 +55,7 @@ class TestEthConnect(unittest.TestCase):
         self.assertEqual(read_vals["v_load"], "0.0 V")
         self.assertEqual(read_vals["v_dclink"], "0.0 V")
         self.assertEqual(read_vals["duty_cycle"], "0.0 %")
-        self.assertEqual(read_vals["temp_switches"], "0.0 ºC")
+        self.assertEqual(read_vals["temp_switches"], "0.0 °C")
 
         ret_val[254:258] = [0x00, 0x00, 0x00, 0x40]
         ret_val[258:262] = [0x00, 0x00, 0x00, 0x41]
@@ -70,7 +70,7 @@ class TestEthConnect(unittest.TestCase):
         self.assertEqual(read_vals["v_load"], "8.0 V")
         self.assertEqual(read_vals["v_dclink"], "32.0 V")
         self.assertEqual(read_vals["duty_cycle"], "32.0 %")
-        self.assertEqual(read_vals["temp_switches"], "128.0 ºC")
+        self.assertEqual(read_vals["temp_switches"], "128.0 °C")
 
 
 if __name__ == "__main__":
