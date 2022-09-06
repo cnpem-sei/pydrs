@@ -50,7 +50,6 @@ from .validation import (
     SerialError,
     SerialErrPckgLen,
     SerialInvalidCmd,
-    print_deprecated,
 )
 
 logger = get_logger(name=__file__)
@@ -129,8 +128,10 @@ class BaseDRS:
         return self._transfer(COM_READ_VAR + var_id, size)
 
     def enable_high_performance(self):
-        """Creates variable groups to perform single readings, disables all extraneous implicit looping.
-        *7000+, go like hell*"""
+        raise NotImplementedError
+        """
+        Creates variable groups to perform single readings, disables all extraneous implicit looping.
+        *7000+, go like hell*
 
         ps = self.read_ps_status()
         ps_model = {"fbp": fbp, "fac": fac, "fap": fap}[
@@ -156,6 +157,7 @@ class BaseDRS:
         if self.var_group_index is None:
             self._create_bsmp_group(list(ps_model_vars.values()))
             self.var_group_index = len(var_groups)
+        """
 
     # BSMP entity calls
 
@@ -654,7 +656,6 @@ class BaseDRS:
 
         return csv_param_list
 
-    @print_deprecated
     def get_param_bank(
         self,
         list_param: list = None,
@@ -1566,17 +1567,15 @@ class BaseDRS:
     def _interlock_name_assigned(self, active_interlocks, index, list_interlocks):
         active_interlocks.append(f"bit {index}: {list_interlocks[index]}")
 
-    def _include_interlocks(self, vars_dict: dict, soft: list, hard: list) -> dict:
-        vars_dict["soft_interlocks"] = self.decode_interlocks(
-            self.read_bsmp_variable(31, "uint32_t"), soft
-        )
-        vars_dict["hard_interlocks"] = self.decode_interlocks(
-            self.read_bsmp_variable(32, "uint32_t"), hard
-        )
+    def _decode_all_interlocks(self, interlocks: list, soft: list, hard: list) -> dict:
+        interlocks = [struct.unpack("I", i)[0] for i in interlocks]
 
-        return vars_dict
+        return {
+            "soft_interlocks": self.decode_interlocks(interlocks[0], soft),
+            "hard_interlocks": self.decode_interlocks(interlocks[1], hard),
+        }
 
-    def decode_interlocks(self, reg_interlocks, list_interlocks: list) -> list:
+    def decode_interlocks(self, reg_interlocks: int, list_interlocks: list) -> list:
         active_interlocks = []
 
         if not reg_interlocks:
@@ -1593,82 +1592,40 @@ class BaseDRS:
 
         return active_interlocks
 
-    @print_deprecated
+    def _read_vars_generic(
+        self, length: int, template: dict, soft_ilocks: list, hard_ilocks: list
+    ) -> dict:
+        index = 0
+
+        vals = self._transfer(
+            f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(1)}",
+            length,
+        )[246:-1]
+
+        vars_dict = self._decode_all_interlocks(
+            [vals[:4], vals[4:8]], soft_ilocks, hard_ilocks
+        )
+
+        index += 8
+
+        for key, data in template.items():
+            vars_dict[
+                key
+            ] = f"{round(struct.unpack(data['format'], vals[index:index+data['size']])[0], 3)} {data['egu']}"
+            index += data["size"]
+
+        return vars_dict
+
     def read_vars_fbp(self) -> dict:
-        vars_dict = {}
-        if self.var_group_index is not None:
-            vals = self._transfer(
-                f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(self.var_group_index)}",
-                25,
-            )[4:-1]
-
-            for i, key in enumerate(fbp.bsmp_vars):
-                vars_dict[key] = struct.unpack("f", vals[i : i + 4])[0]
-
-            vars_dict = {
-                **vars_dict,
-                "load_resistance": f"{round(vars_dict['load_voltage']/vars_dict['load_voltage'], 3)} Ohm",
-                "load_power": f"{round(vars_dict['load_voltage']*vars_dict['load_voltage'], 3)} W",
-            }
-
-            for key in vars_dict:
-                if key in fbp.bsmp_vars:
-                    vars_dict[
-                        key
-                    ] = f"{round(vars_dict[key],3)} {fbp.bsmp_vars[key]['egu']}"
-        else:
-            vars_dict = {
-                "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                "load_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
-                "load_resistance": str(
-                    abs(
-                        round(
-                            self.read_bsmp_variable(34, "float")
-                            / self.read_bsmp_variable(33, "float"),
-                            3,
-                        )
-                    )
-                )
-                + " Ohm",
-                "load_power": str(
-                    abs(
-                        round(
-                            self.read_bsmp_variable(34, "float")
-                            * self.read_bsmp_variable(33, "float"),
-                            3,
-                        )
-                    )
-                )
-                + " W",
-                "dc_link_voltage": f"{round(self.read_bsmp_variable(35, 'float'), 3)} V",
-                "heatsink_temp": f"{round(self.read_bsmp_variable(36, 'float'), 3)} °C",
-                "duty_cycle": f"{round(self.read_bsmp_variable(37, 'float'), 3)} %",
-            }
-
-        vars_dict = self._include_interlocks(
-            vars_dict, fbp.soft_interlocks, fbp.hard_interlocks
+        return self._read_vars_generic(
+            390, fbp.bsmp_vars, fbp.soft_interlocks, fbp.hard_interlocks
         )
-        return vars_dict
 
-    @print_deprecated
     def read_vars_fbp_dclink(self) -> dict:
-        vars_dict = {
-            "modules_status": self.read_bsmp_variable(33, "uint32_t"),
-            "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
-            "ps1_voltage": f"{round(self.read_bsmp_variable(35, 'float'), 3)} V",
-            "ps2_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-            "ps3_voltage": f"{round(self.read_bsmp_variable(37, 'float'), 3)} V",
-            "dig_pot_tap": self.read_bsmp_variable(38, "uint8_t"),
-        }
-
-        vars_dict["hard_interlocks"] = self.decode_interlocks(
-            self.read_bsmp_variable(32, "uint32_t"),
-            fbp.dclink_hard_interlocks,
+        return self._read_vars_generic(
+            286, fbp.dclink_bsmp_vars, [], fbp.dclink_hard_interlocks
         )
 
-        return vars_dict
-
-    @print_deprecated
     def read_vars_fac_acdc(self, iib: bool = True) -> dict:
         vars_dict = {
             "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
@@ -1728,7 +1685,6 @@ class BaseDRS:
 
         return vars_dict
 
-    @print_deprecated
     def read_vars_fac_dcdc(self, iib=True) -> dict:
         # TODO: Is this rounding really necessary?
         wref_index = (
@@ -1781,7 +1737,6 @@ class BaseDRS:
 
         return vars_dict
 
-    @print_deprecated
     def read_vars_fac_dcdc_ema(self, iib=False) -> dict:
         vars_dict = {
             "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
@@ -1881,7 +1836,6 @@ class BaseDRS:
 
         return vars_dict
 
-    @print_deprecated
     def read_vars_fac_2s_acdc(self, add_mod_a=2, iib=False) -> dict:
         vars_dict = {}
         old_add = self.slave_addr
@@ -1897,7 +1851,6 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fac_2s_dcdc(self, com_add=1, iib=False) -> dict:
         old_add = self.slave_addr
         iib_offset = 14 * (iib - 1)
@@ -1952,7 +1905,6 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fac_2p4s_acdc(self, add_mod_a=1, iib=0):
         self.read_vars_fac_2s_acdc(add_mod_a, iib)
 
@@ -1986,7 +1938,6 @@ class BaseDRS:
 
         return vars_dict
 
-    @print_deprecated
     def read_vars_fac_2p4s_dcdc(self, com_add=1, iib=False) -> dict:
         old_add = self.slave_addr
 
@@ -2033,13 +1984,11 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fap(self, com_add=1, iib=True) -> dict:
         old_add = self.slave_addr
 
         try:
             self.slave_addr = com_add
-            self.read_vars_common()
             iload = self.read_bsmp_variable(33, "float")
 
             vars_dict = {
@@ -2090,7 +2039,6 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fap_4p(self, com_add=1, iib=0) -> dict:
         old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
@@ -2146,7 +2094,7 @@ class BaseDRS:
                     ),
                 }
 
-            if iib >= 0:
+            if iib > 0:
                 vars_dict[f"iib_{iib}"] = {
                     **vars_dict[f"iib_{iib}"],
                     **{
@@ -2175,7 +2123,6 @@ class BaseDRS:
         finally:
             self.slave_addr = old_add
 
-    @print_deprecated
     def read_vars_fap_2p2s(self, com_add=1, iib=0) -> dict:
         old_add = self.slave_addr
         iib_offset = 16 * (iib - 1)
@@ -2434,7 +2381,6 @@ class BaseDRS:
             for val in ramp:
                 writer.writerow([val])
 
-    @print_deprecated
     def read_vars_fac_n(self, n=1, dt=0.5):
         vars_dict = {}
         old_add = self.slave_addr
@@ -2477,7 +2423,6 @@ class BaseDRS:
         self.set_param("Freq_TimeSlicer", 1, freq)
         self.save_param_bank(type_memory)
 
-    @print_deprecated
     def get_dsp_modules_bank(
         self,
         list_dsp_classes=None,
