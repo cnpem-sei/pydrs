@@ -1510,6 +1510,34 @@ class BaseDRS(object):
         return vars
 
     @print_deprecated
+    def read_vars_fbp_ufjf(self, n: int = 1, dt: float = 0.5) -> dict:
+        vars = {}
+        for _ in range(n):
+            self.read_vars_common()
+            vars = {
+                "I1 Load Current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+                "I2 Load Current": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+                "PS2 Current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
+                "PS3 Current": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
+                "PS1 Load Voltage": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
+                "PS2 Load Voltage": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
+                "PS3 Load Voltage": f"{round(self.read_bsmp_variable(40, 'float'), 3)} V",
+                "PS4 Load Voltage": f"{round(self.read_bsmp_variable(41, 'float'), 3)} V",
+                "I1 Duty Cycle": f"{100*round(self.read_bsmp_variable(42, 'float'), 3)}%",
+                "I2 Duty Cycle": f"{100*round(self.read_bsmp_variable(43, 'float'), 3)}%",
+            }
+
+            vars = self._include_interlocks(
+                vars, list_fbp_soft_interlocks, list_fbp_hard_interlocks
+            )
+
+            prettier_print(vars)
+
+            time.sleep(dt)
+        return vars
+
+
+    @print_deprecated
     def read_vars_fbp_dclink(self, n: int = 1, dt: float = 0.5) -> dict:
         vars = {}
         try:
