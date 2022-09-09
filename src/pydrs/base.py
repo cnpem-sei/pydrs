@@ -50,7 +50,6 @@ from .validation import (
     SerialError,
     SerialErrPckgLen,
     SerialInvalidCmd,
-    print_deprecated,
 )
 
 logger = get_logger(name=__file__)
@@ -2134,7 +2133,7 @@ class BaseDRS:
                     ),
                 }
 
-            if iib >= 0:
+            if iib > 0:
                 vars_dict[f"iib_{iib}"] = {
                     **vars_dict[f"iib_{iib}"],
                     **{
@@ -2515,6 +2514,13 @@ class BaseDRS:
                             dsp_modules_bank[dsp_classes_names[dsp_class]][
                                 "coeffs"
                             ].append(dsp_coeffs)
+
+                if return_floathex:
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"] = (
+                        [dsp_coeffs, dsp_coeffs_hex]
+                    )
+                else:
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"] = dsp_coeffs
 
         if print_modules:
             prettier_print(dsp_modules_bank)
