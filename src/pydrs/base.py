@@ -1717,7 +1717,7 @@ class BaseDRS:
                 fac.list_acdc_iib_cmd_interlocks,
             )
 
-            vars_dict["cmd"]["interlocks"] = self.decode_interlocks(
+            vars_dict["cmd"]["alarms"] = self.decode_interlocks(
                 self.read_bsmp_variable(58, "uint32_t"),
                 fac.list_acdc_iib_cmd_alarms,
             )
@@ -1806,12 +1806,12 @@ class BaseDRS:
                 "board_rh": f"{round(self.read_bsmp_variable(48, 'float'), 3)} °C",
             }
 
-            vars_dict["iib"]["alarms"] = self.decode_interlocks(
+            vars_dict["iib"]["interlocks"] = self.decode_interlocks(
                 self.read_bsmp_variable(49, "uint32_t"),
                 fac.list_dcdc_ema_iib_interlocks,
             )
 
-            vars_dict["iib"]["interlocks"] = self.decode_interlocks(
+            vars_dict["iib"]["alarms"] = self.decode_interlocks(
                 self.read_bsmp_variable(50, "uint32_t"),
                 fac.list_dcdc_ema_iib_alarms,
             )
@@ -2067,11 +2067,11 @@ class BaseDRS:
                     "board_rh": f"{round(self.read_bsmp_variable(55, 'float'), 3)} %",
                 }
 
-                vars_dict["iib"]["alarms"] = self.decode_interlocks(
+                vars_dict["iib"]["interlocks"] = self.decode_interlocks(
                     self.read_bsmp_variable(56, "uint32_t"), fap.list_iib_interlocks
                 )
 
-                vars_dict["iib"]["interlocks"] = self.decode_interlocks(
+                vars_dict["iib"]["alarms"] = self.decode_interlocks(
                     self.read_bsmp_variable(57, "uint32_t"), fap.list_iib_alarms
                 )
 
