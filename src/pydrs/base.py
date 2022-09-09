@@ -19,7 +19,6 @@ from .consts import (
     COM_WRITE_VAR,
     DP_MODULE_MAX_COEFF,
     NUM_MAX_COEFFS_DSP,
-    UDC_FIRMWARE_VERSION,
     WRITE_DOUBLE_SIZE_PAYLOAD,
     WRITE_FLOAT_SIZE_PAYLOAD,
     common,
@@ -62,9 +61,7 @@ class BaseDRS:
         self.slave_addr = 1
         self.var_group_index: int = None
 
-        print(
-            "\n pyDRS - compatible UDC firmware version: " + UDC_FIRMWARE_VERSION + "\n"
-        )
+        self.vars_size_cache = {}
 
     def __exit__(self, _, _1, _2):
         self.disconnect()
@@ -129,35 +126,6 @@ class BaseDRS:
 
     def enable_high_performance(self):
         raise NotImplementedError
-        """
-        Creates variable groups to perform single readings, disables all extraneous implicit looping.
-        *7000+, go like hell*
-
-        ps = self.read_ps_status()
-        ps_model = {"fbp": fbp, "fac": fac, "fap": fap}[
-            ps["model"].split(" ")[0].lower()
-        ]
-        ps_submodel = "_".join(ps["model"].split(" ")[1:])
-        ps_model_vars = list(
-            [
-                g_var["addr"]
-                for g_var in (
-                    getattr(ps_model, f"{ps_submodel}_bsmp_vars").values()
-                    if ps_submodel
-                    else ps_model.bsmp_vars.values()
-                )
-            ]
-        )
-
-        var_groups = self._get_bsmp_groups()
-        for i in range(0, len(var_groups)):
-            if ps_model_vars == var_groups[i]:
-                self.var_group_index = i
-
-        if self.var_group_index is None:
-            self._create_bsmp_group(list(ps_model_vars.values()))
-            self.var_group_index = len(var_groups)
-        """
 
     # BSMP entity calls
 
@@ -1593,13 +1561,15 @@ class BaseDRS:
         return active_interlocks
 
     def _read_vars_generic(
-        self, length: int, template: dict, soft_ilocks: list, hard_ilocks: list
+        self, template: dict, soft_ilocks: list, hard_ilocks: list
     ) -> dict:
         index = 0
 
+        # Dynamically obtaining transfer sizes incurs a 70 uS penalty per execution
+
         vals = self._transfer(
             f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(1)}",
-            length,
+            262 + sum([data["size"] for data in template.values()]),
         )[246:-1]
 
         vars_dict = self._decode_all_interlocks(
@@ -1618,53 +1588,49 @@ class BaseDRS:
 
     def read_vars_fbp(self) -> dict:
         return self._read_vars_generic(
-            390, fbp.bsmp, fbp.soft_interlocks, fbp.hard_interlocks
+            fbp.bsmp, fbp.soft_interlocks, fbp.hard_interlocks
         )
 
     def read_vars_fbp_dclink(self) -> dict:
-        return self._read_vars_generic(
-            286, fbp.bsmp_dclink, [], fbp.dclink_hard_interlocks
-        )
+        return self._read_vars_generic(fbp.bsmp_dclink, [], fbp.dclink_hard_interlocks)
 
     def read_vars_fac_acdc(self, iib: bool = True) -> dict:
         vars_dict = self._read_vars_generic(
-            366,
             fac.bsmp_acdc,
             fac.list_acdc_soft_interlocks,
             fac.list_acdc_hard_interlocks,
         )
 
         if iib:
-            vars_dict["iib_is_interlocks"] = self.decode_interlocks(
-                vars_dict["iib_interlocks_is"],
-                fac.list_acdc_iib_is_interlocks,
-            )
-
-            vars_dict["iib_is_alarms"] = self.decode_interlocks(
-                vars_dict["iib_alarms_is"],
-                fac.list_acdc_iib_is_alarms,
-            )
-
-            vars_dict["iib_cmd_interlocks"] = self.decode_interlocks(
-                vars_dict["iib_interlocks_cmd"],
-                fac.list_acdc_iib_cmd_interlocks,
-            )
-
-            vars_dict["iib_cmd_alarms"] = self.decode_interlocks(
-                vars_dict["iib_alarms_cmd"],
-                fac.list_acdc_iib_cmd_alarms,
-            )
-
             vars_dict["iib_cmd_alarms_raw"] = vars_dict.pop("iib_alarms_cmd")
             vars_dict["iib_cmd_interlocks_raw"] = vars_dict.pop("iib_interlocks_cmd")
             vars_dict["iib_is_alarms_raw"] = vars_dict.pop("iib_alarms_is")
             vars_dict["iib_is_interlocks_raw"] = vars_dict.pop("iib_interlocks_is")
 
+            vars_dict["iib_is_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_is_interlocks_raw"],
+                fac.list_acdc_iib_is_interlocks,
+            )
+
+            vars_dict["iib_is_alarms"] = self.decode_interlocks(
+                vars_dict["iib_is_alarms_raw"],
+                fac.list_acdc_iib_is_alarms,
+            )
+
+            vars_dict["iib_cmd_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_cmd_interlocks_raw"],
+                fac.list_acdc_iib_cmd_interlocks,
+            )
+
+            vars_dict["iib_cmd_alarms"] = self.decode_interlocks(
+                vars_dict["iib_cmd_alarms_raw"],
+                fac.list_acdc_iib_cmd_alarms,
+            )
+
         return vars_dict
 
     def read_vars_fac_dcdc(self, iib=True) -> dict:
         vars_dict = self._read_vars_generic(
-            346,
             fac.bsmp_dcdc,
             fac.list_dcdc_soft_interlocks,
             fac.list_dcdc_hard_interlocks,
@@ -1698,80 +1664,57 @@ class BaseDRS:
 
     def read_vars_fac_dcdc_ema(self, iib=False) -> dict:
         vars_dict = self._read_vars_generic(
-            dasdasdasdasda,
             fac.bsmp_dcdc_ema,
             fac.list_dcdc_ema_soft_interlocks,
             fac.list_dcdc_ema_hard_interlocks,
         )
 
-        vars_dict = self._include_interlocks(
-            vars_dict,
-            fac.list_dcdc_ema_soft_interlocks,
-            fac.list_dcdc_ema_hard_interlocks,
-        )
-
         if iib:
-            vars_dict["iib"]["alarms"] = self.decode_interlocks(
-                self.read_bsmp_variable(49, "uint32_t"),
+            vars_dict["iib_interlocks_raw"] = vars_dict["iib_interlocks"]
+            vars_dict["iib_alarms_raw"] = vars_dict["iib_alarms"]
+
+            vars_dict["iib_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_interlocks_raw"],
                 fac.list_dcdc_ema_iib_interlocks,
             )
 
-            vars_dict["iib"]["interlocks"] = self.decode_interlocks(
-                self.read_bsmp_variable(50, "uint32_t"),
+            vars_dict["iib_alarms"] = self.decode_interlocks(
+                vars_dict["iib_alarms_raw"],
                 fac.list_dcdc_ema_iib_alarms,
             )
 
         return vars_dict
 
     def _read_fac_2s_acdc_module(self, iib: bool) -> dict:
-
-        vars_dict = self._include_interlocks(
-            vars_dict,
+        vars_dict = self._read_vars_generic(
+            fac.bsmp_2s_acdc,
             fac.list_2s_acdc_soft_interlocks,
             fac.list_2s_acdc_hard_interlocks,
         )
 
         if iib:
-            vars_dict["iib"]["is"] = {
-                "input_current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
-                "input_voltage": f"{round(self.read_bsmp_variable(37, 'float'), 3)} V",
-                "igbt_temp": f"{round(self.read_bsmp_variable(38, 'float'), 3)} °C",
-                "driver_voltage": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
-                "driver_current": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
-                "inductor_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)} °C",
-                "heatsink_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)} °C",
-                "board_temp": f"{round(self.read_bsmp_variable(43, 'float'), 3)} °C",
-                "board_rh": f"{round(self.read_bsmp_variable(44, 'float'), 3)} %",
-            }
+            vars_dict["iib_cmd_alarms_raw"] = vars_dict.pop("iib_alarms_cmd")
+            vars_dict["iib_cmd_interlocks_raw"] = vars_dict.pop("iib_interlocks_cmd")
+            vars_dict["iib_is_alarms_raw"] = vars_dict.pop("iib_alarms_is")
+            vars_dict["iib_is_interlocks_raw"] = vars_dict.pop("iib_interlocks_is")
 
-            vars_dict["iib"]["cmd"] = {
-                "load_voltage": f"{round(self.read_bsmp_variable(47, 'float'), 3)} V",
-                "cap_bank_load_voltage": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
-                "rectifier_inductor_temp": f"{round(self.read_bsmp_variable(49, 'float'), 3)} °C",
-                "rectifier_heatsink_temp": f"{round(self.read_bsmp_variable(50, 'float'), 3)} °C",
-                "external_boards_voltage": f"{round(self.read_bsmp_variable(51, 'float'), 3)} V",
-                "auxiliary_board_current": f"{round(self.read_bsmp_variable(52, 'float'), 3)} A",
-                "idb_board_current": f"{round(self.read_bsmp_variable(53, 'float'), 3)} A",
-                "ground_leakage_current": f"{round(self.read_bsmp_variable(54, 'float'), 3)} A",
-                "board_temp": f"{round(self.read_bsmp_variable(55, 'float'), 3)} °C",
-                "board_rh": f"{round(self.read_bsmp_variable(56, 'float'), 3)} %",
-            }
+            vars_dict["iib_is_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_is_interlocks_raw"],
+                fac.list_2s_acdc_iib_is_interlocks,
+            )
 
-        vars_dict["iib"]["is"]["interlocks"] = self.decode_interlocks(
-            self.read_bsmp_variable(45, "uint32_t"), fac.list_2s_acdc_iib_is_interlocks
-        )
+            vars_dict["iib_is_alarms"] = self.decode_interlocks(
+                vars_dict["iib_is_alarms_raw"], fac.list_2s_acdc_iib_is_alarms
+            )
 
-        vars_dict["iib"]["is"]["alarms"] = self.decode_interlocks(
-            self.read_bsmp_variable(46, "uint32_t"), fac.list_2s_acdc_iib_is_alarms
-        )
+            vars_dict["iib_cmd_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_cmd_interlocks_raw"],
+                fac.list_2s_acdc_iib_cmd_interlocks,
+            )
 
-        vars_dict["iib"]["cmd"]["interlocks"] = self.decode_interlocks(
-            self.read_bsmp_variable(57, "uint32_t"), fac.list_2s_acdc_iib_cmd_interlocks
-        )
-
-        vars_dict["iib"]["cmd"]["alarms"] = self.decode_interlocks(
-            self.read_bsmp_variable(58, "uint32_t"), fac.list_2s_acdc_iib_cmd_alarms
-        )
+            vars_dict["iib_cmd_alarms"] = self.decode_interlocks(
+                vars_dict["iib_cmd_alarms_raw"], fac.list_2s_acdc_iib_cmd_alarms
+            )
 
         return vars_dict
 
