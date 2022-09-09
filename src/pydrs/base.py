@@ -2221,7 +2221,7 @@ class BaseDRS:
                     ),
                 }
 
-            if iib >= 0:
+            if iib > 0:
                 vars_dict[f"iib_{iib}"] = {
                     **vars_dict[f"iib_{iib}"],
                     **{
