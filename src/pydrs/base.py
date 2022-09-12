@@ -1803,7 +1803,7 @@ class BaseDRS:
 
     def read_vars_fac_2s_dcdc(self, iib=False) -> dict:
         """Reads FAC 2S DCDC power supply variables
-
+        
         Parameters:
         -------
         iib
@@ -2136,6 +2136,13 @@ class BaseDRS:
                             dsp_modules_bank[dsp_classes_names[dsp_class]][
                                 "coeffs"
                             ].append(dsp_coeffs)
+
+                if return_floathex:
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"] = (
+                        [dsp_coeffs, dsp_coeffs_hex]
+                    )
+                else:
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"] = dsp_coeffs
 
         if print_modules:
             prettier_print(dsp_modules_bank)
