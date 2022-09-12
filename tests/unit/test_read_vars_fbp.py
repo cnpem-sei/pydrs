@@ -1,12 +1,12 @@
 import unittest
 from unittest.mock import patch
 
-from pydrs import EthDRS, GenericDRS
+from pydrs import GenericDRS
 
 return_value = b"\x00" * 390
 
 
-class TestEthConnect(unittest.TestCase):
+class TestFBP(unittest.TestCase):
     @patch("pydrs.EthDRS._transfer")
     def setUp(self, transfer):
         self.drs = GenericDRS("127.0.0.1", 5000)
@@ -17,9 +17,6 @@ class TestEthConnect(unittest.TestCase):
             return self.sequence.pop()
         except IndexError:
             return b""
-
-    def test_generic(self):
-        self.assertIsInstance(self.drs, EthDRS)
 
     def test_no_interlocks(self):
         self.drs._transfer.return_value = return_value
@@ -71,6 +68,10 @@ class TestEthConnect(unittest.TestCase):
         self.assertEqual(read_vals["v_dclink"], "32.0 V")
         self.assertEqual(read_vals["duty_cycle"], "32.0 %")
         self.assertEqual(read_vals["temp_switches"], "128.0 °C")
+
+    def test_dclink(self):
+        self.drs._transfer.return_value = b"\x00" * 283
+        read_vals = self.drs.read_vars_fbp_dclink()
 
 
 if __name__ == "__main__":

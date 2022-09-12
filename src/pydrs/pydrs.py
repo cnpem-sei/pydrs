@@ -156,7 +156,7 @@ class EthDRS(BaseDRS):
 
     def connect(self, address: str = "127.0.0.1", port: int = 5000):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(2)
+        self.socket.settimeout(5)
 
         self.socket.connect((address, port))
         self.socket.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)

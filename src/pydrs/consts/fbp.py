@@ -72,5 +72,5 @@ bsmp_dclink = {
     "v_out_1": {"addr": 35, "format": "f", "size": 4, "egu": "V"},
     "v_out_2": {"addr": 36, "format": "f", "size": 4, "egu": "V"},
     "v_out_3": {"addr": 37, "format": "f", "size": 4, "egu": "V"},
-    "dig_pot_tap": {"addr": 38, "format": "B", "size": 4, "egu": "%"},
+    "dig_pot_tap": {"addr": 38, "format": "B", "size": 1, "egu": "%"},
 }
