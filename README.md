@@ -4,7 +4,7 @@
 ![Latest tag](https://img.shields.io/github/tag/lnls-sirius/pydrs.svg?style=flat)
 [![Latest release](https://img.shields.io/github/release/lnls-sirius/pydrs.svg?style=flat)](https://github.com/lnls-sirius/pydrs/releases)
 [![PyPI version fury.io](https://badge.fury.io/py/pydrs.svg)](https://pypi.python.org/pypi/pydrs/)
-[![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://lnls-sirius.github.io/pydrs/)
+[![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://cnpem-sei.github.io/pydrs/)
 
 ## What is PyDRS?
 
