@@ -18,9 +18,6 @@ In order to cover all DRS driven current power supplies whilst meeting models sp
 1. **Common variables**: Variables used by all power supplies models, for example, general status and operating mode parameters. These variables occupy the first 25 BSMP variable Id's.
 2. **Specific variables**: Each power supply model (chosen through the *PS Model* parameter) defines ID variables greater than 24 according to its application. Thus, when communicating with a power supply, its model should prior be known in order to correctly use the specifications of those BSMP variables. This includes measures of feedback and monitoring and also interlocks records.
 
-
-Development packages are listed at [requirements-dev.txt](requirements_dev.txt) and runtime dependencies at [requirements.txt](requirements.txt).
-
 ## Basic Small Messages Protocol Library
 The BSMP - Basic Small Messages Protocol - is a stateless, synchronous and lightweight protocol. It was designed to be used in serial communication networks of small embedded devices which contain a device with the role of a master.
 
@@ -119,9 +116,7 @@ pip install -e .
 ### Tests
 
 ```command
-pip install -r requirements.txt
-pip install -r requirements_dev.txt
-pip install -e . -v
+pip install -e .[dev] -v
 coverage run -m unittest discover
 coverage xml
 coverage report
@@ -157,33 +152,18 @@ Although old method names and operations are still supported and work as expecte
 
 ### Basic usage (pre 1.2.0)
 
-When all installation is done, python or ipython instance can be called.
-
-![14](https://user-images.githubusercontent.com/19196344/138935751-d90dc9b9-1409-4dc4-98bd-66f480dcd489.png)
+**Disclaimer:** TCP (ethernet) communication is not available on versions prior to 1.2.0
 
 
-Import pydrs
+```python
+>>> import pydrs # Import the module
+>>> drs = pydrs.SerialDRS()
 
-![image](https://user-images.githubusercontent.com/19196344/139112617-2629340e-fac9-4002-8456-1e3b079cd837.png)
+ pyDRS - compatible UDC firmware version: 0.44 2022-06-30
 
-
-Create *drs* object.
-
-![image](https://user-images.githubusercontent.com/19196344/139116187-fc58c909-9b4f-46fe-91ca-d80796f3256d.png)
-
-
-Establish the connection.
-
-![image](https://user-images.githubusercontent.com/19196344/139116355-790b9f0e-8536-4203-9276-b3e592329661.png)
-
-
-Set the device address to communicate.
-
-![image](https://user-images.githubusercontent.com/19196344/139116450-1b083db1-b257-40ca-868c-350b9af193e4.png)
-
-
-Use BSMP commands to control the device.
-
-![image](https://user-images.githubusercontent.com/19196344/139116593-7fcbd965-85e4-460e-a912-91782a21d412.png)
-
+>>> drs.connect("COM3", 115200)
+>>> drs.set_slave_addr(5) # Set slave address (optional)
+>>> drs.read_ps_status() # Run your command
+{'state': 'Off', 'open_loop': 0, 'interface': 0, 'active': 1, 'model': 'FBP', 'unlocked': 0}
+```
 
