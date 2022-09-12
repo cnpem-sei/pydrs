@@ -36,6 +36,7 @@ bsmp = {
     "temp_switches": {"addr": 36, "format": "f", "size": 4, "egu": "°C"},
     "duty_cycle": {"addr": 37, "format": "f", "size": 4, "egu": "%"},
     "ps_alarms": {"addr": 38, "format": "I", "size": 4, "egu": ""},
+    "reserved": {"addr": 39, "format": "7s", "size": 7, "egu": ""},
     "ps_status_1": {"addr": 46, "format": "H", "size": 2, "egu": ""},
     "ps_status_2": {"addr": 47, "format": "H", "size": 2, "egu": ""},
     "ps_status_3": {"addr": 48, "format": "H", "size": 2, "egu": ""},

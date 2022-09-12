@@ -19,15 +19,15 @@ class TestFAP(unittest.TestCase):
             return b""
 
     def test_no_interlocks(self):
-        self.drs._transfer.return_value = b"\x00" * 368
+        self.drs._transfer.return_value = b"\x00" * 359
         self.drs.read_vars_fap()
 
     def test_4p(self):
-        self.drs._transfer.return_value = b"\x00" * 622
+        self.drs._transfer.return_value = b"\x00" * 615
         self.drs.read_vars_fap_4p()
 
     def test_2p2s(self):
-        self.drs._transfer.return_value = b"\x00" * 642
+        self.drs._transfer.return_value = b"\x00" * 635
         self.drs.read_vars_fap_2p2s()
 
 

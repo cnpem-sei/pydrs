@@ -70,7 +70,7 @@ class TestFBP(unittest.TestCase):
         self.assertEqual(read_vals["temp_switches"], "128.0 °C")
 
     def test_dclink(self):
-        self.drs._transfer.return_value = b"\x00" * 283
+        self.drs._transfer.return_value = b"\x00" * 276
         read_vals = self.drs.read_vars_fbp_dclink()
 
 

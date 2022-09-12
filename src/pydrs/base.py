@@ -1493,6 +1493,7 @@ class BaseDRS:
 
         for key, var in template.items():
             try:
+                print(key, var, index)
                 val = f"{round(struct.unpack(var['format'], data[index:index+var['size']])[0], 3)} {var['egu']}"
             except TypeError:
                 val = struct.unpack(var["format"], data[index : index + var["size"]])[0]
@@ -1505,14 +1506,14 @@ class BaseDRS:
         if vals is None:
             vals = self._transfer(
                 f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(1)}",
-                390,
+                0,
             )[4:]
 
             if len(vals) < 246:
                 raise SerialErrPckgLen(
                     f"Expected at least 246 bytes, received {len(vals)}"
                 )
-
+        print(vals)
         vars_dict = self._parse_vars(vals, common.bsmp)
         vars_dict["status"] = self._parse_status(int(vars_dict["ps_status"]))
 
@@ -1590,10 +1591,12 @@ class BaseDRS:
 
         vals = self._transfer(
             f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(1)}",
-            262 + sum([data["size"] for data in template.values()]),
+            255 + sum([data["size"] for data in template.values()]),
         )
 
-        vars_dict = self.read_vars_common(vals[:246])
+        # 1 byte for checksum, 246 common variable bytes, 8 header bytes
+
+        vars_dict = self.read_vars_common(vals[4:246])
         vals = vals[246:-1]
 
         vars_dict = {
