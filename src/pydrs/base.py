@@ -106,7 +106,7 @@ class BaseDRS:
     def read_var(self, var_id: str, size: int) -> bytes:
         """Reads a variable with a given ID
 
-        Parameters:
+        Parameters
         -------
         var_id
             Variable ID
@@ -128,12 +128,12 @@ class BaseDRS:
     def _create_bsmp_group(self, group: list) -> bytes:
         """Creates BSMP group from the variables described in `group`
 
-        Parameters:
+        Parameters
         -------
         group
             List of variables to include in new group
 
-        Returns:
+        Returns
         -------
         bytes
             UDC response"""
@@ -145,7 +145,7 @@ class BaseDRS:
     def _get_bsmp_groups(self) -> list:
         """Gets list of BSMP variable groups with variables contained in them.
 
-        Returns:
+        Returns
         -------
         list
             List of variable groups, each containing all variables in the group"""
@@ -163,12 +163,12 @@ class BaseDRS:
     def _get_bsmp_group_vars(self, group: int) -> list:
         """Gets list of BSMP variables contained in a group
 
-        Parameters:
+        Parameters
         -------
         group
             Variable group index
 
-        Returns:
+        Returns
         -------
         list
             List of variables contained in group"""
@@ -1607,7 +1607,7 @@ class BaseDRS:
     def read_vars_fbp(self) -> dict:
         """Reads FBP 2S ACDC power supply variables
 
-        Returns:
+        Returns
         -------
         dict
             Dictionary with power supply variables
@@ -1619,7 +1619,7 @@ class BaseDRS:
     def read_vars_fbp_dclink(self) -> dict:
         """Reads FBP DCLink power supply variables
 
-        Returns:
+        Returns
         -------
         dict
             Dictionary with power supply variables
@@ -1629,12 +1629,12 @@ class BaseDRS:
     def read_vars_fac_acdc(self, iib: bool = True) -> dict:
         """Reads FAC ACDC power supply variables
 
-        Parameters:
+        Parameters
         -------
         iib
             Whether or not IIB interlocks should be parsed and returned alongside other data
 
-        Returns:
+        Returns
         -------
         dict
             Dictionary with power supply variables
@@ -1676,12 +1676,12 @@ class BaseDRS:
     def read_vars_fac_dcdc(self, iib: bool = True) -> dict:
         """Reads FAC DCDC power supply variables
 
-        Parameters:
+        Parameters
         -------
         iib
             Whether or not IIB interlocks should be parsed and returned alongside other data
 
-        Returns:
+        Returns
         -------
         dict
             Dictionary with power supply variables
@@ -1721,12 +1721,12 @@ class BaseDRS:
     def read_vars_fac_dcdc_ema(self, iib=False) -> dict:
         """Reads FAC DCDC EMA power supply variables
 
-        Parameters:
+        Parameters
         -------
         iib
             Whether or not IIB interlocks should be parsed and returned alongside other data
 
-        Returns:
+        Returns
         -------
         dict
             Dictionary with power supply variables
@@ -1789,12 +1789,12 @@ class BaseDRS:
     def read_vars_fac_2s_acdc(self, iib=False) -> dict:
         """Reads FAC 2S ACDC power supply variables
 
-        Parameters:
+        Parameters
         -------
         iib
             Whether or not IIB interlocks should be parsed and returned alongside other data
 
-        Returns:
+        Returns
         -------
         dict
             Dictionary with power supply variables
@@ -1804,12 +1804,12 @@ class BaseDRS:
     def read_vars_fac_2s_dcdc(self, iib=False) -> dict:
         """Reads FAC 2S DCDC power supply variables
 
-        Parameters:
+        Parameters
         -------
         iib
             Whether or not IIB interlocks should be parsed and returned alongside other data
 
-        Returns:
+        Returns
         -------
         dict
             Dictionary with power supply variables
@@ -1843,7 +1843,7 @@ class BaseDRS:
     def read_vars_fac_2p4s_dcdc(self) -> dict:
         """Reads FAC 2P4S DCDC power supply variables
 
-        Returns:
+        Returns
         -------
         dict
             Dictionary with power supply variables
@@ -1870,12 +1870,12 @@ class BaseDRS:
     def read_vars_fap(self, iib=True) -> dict:
         """Reads FAP power supply variables
 
-        Parameters:
+        Parameters
         -------
         iib
             Whether or not IIB interlocks should be parsed and returned alongside other data
 
-        Returns:
+        Returns
         -------
         dict
             Dictionary with power supply variables
@@ -1966,7 +1966,7 @@ class BaseDRS:
         """
         Read FAC 2P ACDC IMAS specific power supply variables
 
-        Returns:
+        Returns
         -------
         dict
             Dict containing FAC 2P ACDC IMAS variables
@@ -1981,7 +1981,7 @@ class BaseDRS:
         """
         Read FAC 2P DCDC IMAS specific power supply variables
 
-        Returns:
+        Returns
         -------
         dict
             Dict containing FAC 2P DCDC IMAS variables
@@ -2081,7 +2081,7 @@ class BaseDRS:
         """
         Gets DSP modules parameter bank
 
-        Parameters:
+        Parameters
         -------
         list_dsp_classes
             List of DSP classes to get
@@ -2090,7 +2090,7 @@ class BaseDRS:
         return_floathex
             Return hexadecimal representation of float alongside float
 
-        Returns:
+        Returns
         -------
         dict
             Dict containing DSP modules parameter bank
@@ -2146,7 +2146,7 @@ class BaseDRS:
         """
         Writes DSP modules parameter bank from CSV file to memory
 
-        Parameters:
+        Parameters
         -------
         dsp_modules_file
             CSV file
@@ -2187,12 +2187,12 @@ class BaseDRS:
         """
         Reads CSV file containing DSP modules parameter banks
 
-        Parameters:
+        Parameters
         -------
         dsp_modules_file_csv
             CSV file
 
-        Returns:
+        Returns
         -------
         dict[dsp_class_name] = {"class":int, "coeffs":[float]}
         """
