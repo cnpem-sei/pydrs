@@ -17,16 +17,11 @@ logger = get_logger(name=__file__)
 class SerialDRS(BaseDRS):
     """DRS communication through serial ports"""
 
-    def __init__(self, port: str = None, baud: int = 115200):
+    def __init__(self, port: str, baud: int = 115200):
         super().__init__()
         self.ser: typing.Optional[serial.Serial] = None
 
-        if port is None:
-            print(
-                "From 2.0.0 onwards, creating the object then using 'connect' to connect will be deprecated. Please use 'SerialDRS(port, baud)' instead."
-            )
-        else:
-            self.connect(port, baud)
+        self.connect(port, baud)
 
     def _transfer_write(self, msg: str):
         full_msg = (self._slave_addr + msg).encode("ISO-8859-1")
@@ -83,15 +78,10 @@ class SerialDRS(BaseDRS):
 class EthDRS(BaseDRS):
     """DRS communication through TCP/IP"""
 
-    def __init__(self, address: str = None, port: int = 5000):
+    def __init__(self, address: str, port: int = 5000):
         super().__init__()
         self._serial_timeout = 50
-        if address is None:
-            print(
-                "From 2.0.0 onwards, creating the object then using 'connect' to connect will be deprecated. Please use 'EthDRS(address, port)' instead."
-            )
-        else:
-            self.connect(address, port)
+        self.connect(address, port)
 
     def _format_message(self, msg: bytes, msg_type: bytes) -> bytes:
         msg = msg_type + struct.Struct(">f").pack(self._serial_timeout) + msg
@@ -156,7 +146,7 @@ class EthDRS(BaseDRS):
 
     def connect(self, address: str = "127.0.0.1", port: int = 5000):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(2)
+        self.socket.settimeout(5)
 
         self.socket.connect((address, port))
         self.socket.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
