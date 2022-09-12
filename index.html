@@ -82,13 +82,6 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="pydrs.base.BaseDRS.enable_high_performance">
-<span class="sig-name descname"><span class="pre">enable_high_performance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.enable_high_performance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates variable groups to perform single readings, disables all extraneous implicit looping.
-<em>7000+, go like hell</em></p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.enable_onboard_eeprom">
 <span class="sig-name descname"><span class="pre">enable_onboard_eeprom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.enable_onboard_eeprom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enables onboard EEPROM</p>
@@ -154,7 +147,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.get_param_bank">
-<span class="sig-name descname"><span class="pre">get_param_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_param</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_modules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_floathex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.get_param_bank" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_param_bank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_param</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_floathex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.get_param_bank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets parameter bank values loaded into memory</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -288,13 +281,19 @@ setting a different timeout is recommended</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2p_acdc_imas">
-<span class="sig-name descname"><span class="pre">read_vars_fac_2p_acdc_imas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_mod_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2p_acdc_imas" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read FAC 2P ACDC IMAS specific power supply variabled</p>
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2p4s_dcdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2p4s_dcdc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2p4s_dcdc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FAC 2P4S DCDC power supply variables</p>
 <dl class="simple">
-<dt>add_mod_a</dt><dd><p>Communication address for module</p>
+<dt>dict</dt><dd><p>Dictionary with power supply variables</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2p_acdc_imas">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2p_acdc_imas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2p_acdc_imas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read FAC 2P ACDC IMAS specific power supply variables</p>
 <dl class="simple">
 <dt>dict</dt><dd><p>Dict containing FAC 2P ACDC IMAS variables</p>
 </dd>
@@ -304,13 +303,113 @@ setting a different timeout is recommended</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2p_dcdc_imas">
 <span class="sig-name descname"><span class="pre">read_vars_fac_2p_dcdc_imas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">com_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2p_dcdc_imas" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read FAC 2P DCDC IMAS specific power supply variabled</p>
+<dd><p>Read FAC 2P DCDC IMAS specific power supply variables</p>
 <dl class="simple">
-<dt>com_add</dt><dd><p>Communication address for power supply</p>
+<dt>dict</dt><dd><p>Dict containing FAC 2P DCDC IMAS variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2s_acdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2s_acdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2s_acdc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FAC 2S ACDC power supply variables</p>
+<dl class="simple">
+<dt>iib</dt><dd><p>Whether or not IIB interlocks should be parsed and returned alongside other data</p>
 </dd>
 </dl>
 <dl class="simple">
-<dt>dict</dt><dd><p>Dict containing FAC 2P DCDC IMAS variables</p>
+<dt>dict</dt><dd><p>Dictionary with power supply variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2s_dcdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2s_dcdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2s_dcdc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FAC 2S DCDC power supply variables</p>
+<dl class="simple">
+<dt>iib</dt><dd><p>Whether or not IIB interlocks should be parsed and returned alongside other data</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with power supply variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_acdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_acdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iib</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_acdc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FAC ACDC power supply variables</p>
+<dl class="simple">
+<dt>iib</dt><dd><p>Whether or not IIB interlocks should be parsed and returned alongside other data</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with power supply variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_dcdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_dcdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iib</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_dcdc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FAC DCDC power supply variables</p>
+<dl class="simple">
+<dt>iib</dt><dd><p>Whether or not IIB interlocks should be parsed and returned alongside other data</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with power supply variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_dcdc_ema">
+<span class="sig-name descname"><span class="pre">read_vars_fac_dcdc_ema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_dcdc_ema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FAC DCDC EMA power supply variables</p>
+<dl class="simple">
+<dt>iib</dt><dd><p>Whether or not IIB interlocks should be parsed and returned alongside other data</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with power supply variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fap">
+<span class="sig-name descname"><span class="pre">read_vars_fap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FAP power supply variables</p>
+<dl class="simple">
+<dt>iib</dt><dd><p>Whether or not IIB interlocks should be parsed and returned alongside other data</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with power supply variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fbp">
+<span class="sig-name descname"><span class="pre">read_vars_fbp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fbp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FBP 2S ACDC power supply variables</p>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with power supply variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fbp_dclink">
+<span class="sig-name descname"><span class="pre">read_vars_fbp_dclink</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fbp_dclink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FBP DCLink power supply variables</p>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with power supply variables</p>
 </dd>
 </dl>
 </dd></dl>
