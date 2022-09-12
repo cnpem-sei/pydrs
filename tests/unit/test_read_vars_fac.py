@@ -20,35 +20,35 @@ class TestFAC(unittest.TestCase):
 
     def test_2p4s_acdc(self):
         self.drs._transfer.return_value = b"\x00" * 367
-        read_vals = self.drs.read_vars_fac_2p4s_acdc()
+        self.drs.read_vars_fac_2p4s_acdc()
 
     def test_2p4s_dcdc(self):
         self.drs._transfer.return_value = b"\x00" * 455
-        read_vals = self.drs.read_vars_fac_2p4s_dcdc()
+        self.drs.read_vars_fac_2p4s_dcdc()
 
     def test_2p_acdc_imas(self):
         self.drs._transfer.return_value = b"\x00" * 275
-        read_vals = self.drs.read_vars_fac_2p_acdc_imas()
+        self.drs.read_vars_fac_2p_acdc_imas()
 
     def test_2s_acdc(self):
         self.drs._transfer.return_value = b"\x00" * 367
-        read_vals = self.drs.read_vars_fac_2s_acdc()
+        self.drs.read_vars_fac_2s_acdc()
 
     def test_2s_dcdc(self):
         self.drs._transfer.return_value = b"\x00" * 399
-        read_vals = self.drs.read_vars_fac_2s_dcdc()
+        self.drs.read_vars_fac_2s_dcdc()
 
     def test_acdc(self):
         self.drs._transfer.return_value = b"\x00" * 359
-        read_vals = self.drs.read_vars_fac_acdc()
+        self.drs.read_vars_fac_acdc()
 
     def test_dcdc(self):
         self.drs._transfer.return_value = b"\x00" * 339
-        read_vals = self.drs.read_vars_fac_dcdc()
+        self.drs.read_vars_fac_dcdc()
 
     def test_dcdc_ema(self):
         self.drs._transfer.return_value = b"\x00" * 331
-        read_vals = self.drs.read_vars_fac_dcdc_ema()
+        self.drs.read_vars_fac_dcdc_ema()
 
 
 if __name__ == "__main__":

@@ -1,7 +1,8 @@
+import unittest
+from unittest.mock import patch
+
 from pydrs import GenericDRS
 from pydrs.consts import common
-from unittest.mock import patch
-import unittest
 
 status_keys = ["state", "open_loop", "interface", "active", "model", "unlocked"]
 
@@ -33,7 +34,7 @@ class TestFBP(unittest.TestCase):
             vals = self.drs._parse_status(i)
             self.assertEqual(vals["state"], state)
 
-    def test_parse_status_state(self):
+    def test_parse_status_model(self):
         for i, model in enumerate(common.ps_models):
             vals = self.drs._parse_status(i << 8)
             self.assertEqual(vals["model"], model)

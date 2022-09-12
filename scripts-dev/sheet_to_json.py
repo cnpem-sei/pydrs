@@ -1,6 +1,6 @@
 import pylightxl
 
-ws = "Variáveis FAP_2P2S"
+ws = "Variáveis comuns"
 
 sheet = list(pylightxl.readxl("input.xlsx").ws(ws).rows)
 
@@ -20,7 +20,7 @@ for row in sheet:
                 "addr": row[1],
                 "format": name_to_format[row[2]],
                 "size": row[5],
-                "egu": row[8],
+                "egu": row[7],
             }
         except KeyError:
             pass

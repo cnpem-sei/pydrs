@@ -45,11 +45,7 @@ from .utils import (
     size_to_hex,
     uint32_to_hex,
 )
-from .validation import (
-    SerialError,
-    SerialErrPckgLen,
-    SerialInvalidCmd,
-)
+from .validation import SerialError, SerialErrPckgLen, SerialInvalidCmd
 
 logger = get_logger(name=__file__)
 
@@ -1493,7 +1489,6 @@ class BaseDRS:
 
         for key, var in template.items():
             try:
-                print(key, var, index)
                 val = f"{round(struct.unpack(var['format'], data[index:index+var['size']])[0], 3)} {var['egu']}"
             except TypeError:
                 val = struct.unpack(var["format"], data[index : index + var["size"]])[0]
@@ -1513,7 +1508,6 @@ class BaseDRS:
                 raise SerialErrPckgLen(
                     f"Expected at least 246 bytes, received {len(vals)}"
                 )
-        print(vals)
         vars_dict = self._parse_vars(vals, common.bsmp)
         vars_dict["status"] = self._parse_status(int(vars_dict["ps_status"]))
 
