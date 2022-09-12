@@ -382,8 +382,6 @@ bsmp_dcdc_ema = {
 }
 
 bsmp_2s_acdc = {
-    "ps_soft_interlocks": {"addr": 31, "format": "I", "size": 4, "egu": ""},
-    "ps_hard_interlocks": {"addr": 32, "format": "I", "size": 4, "egu": ""},
     "v_capacitor_bank": {"addr": 33, "format": "f", "size": 4, "egu": "V"},
     "i_out_rectifier": {"addr": 34, "format": "f", "size": 4, "egu": "A"},
     "duty_cycle": {"addr": 35, "format": "f", "size": 4, "egu": "p.u."},
@@ -452,8 +450,6 @@ bsmp_2s_dcdc = {
 }
 
 bsmp_2p_acdc_imas = {
-    "ps_soft_interlocks": {"addr": 31, "format": "I", "size": 4, "egu": ""},
-    "ps_hard_interlocks": {"addr": 32, "format": "I", "size": 4, "egu": ""},
     "v_capacitor_bank": {"addr": 33, "format": "f", "size": 4, "egu": "V"},
     "i_out_rectifier": {"addr": 34, "format": "f", "size": 4, "egu": "A"},
     "duty_cycle": {"addr": 35, "format": "f", "size": 4, "egu": "p.u."},

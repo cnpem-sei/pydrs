@@ -2042,20 +2042,8 @@ class BaseDRS:
             for val in ramp:
                 writer.writerow([val])
 
-    def read_vars_fac_n(self, n=1, dt=0.5):
-        vars_dict = {}
-        old_add = self.slave_addr
-        try:
-            print("\n-----------------------\n")
-            self.slave_addr = 1
-            vars_dict["dcdc"] = self.read_vars_fac_dcdc()
-            print("\n-----------------------\n")
-            self.slave_addr = 2
-            vars_dict["acdc"] = self.read_vars_fac_acdc()
-
-            return vars_dict
-        finally:
-            self.slave_addr = old_add
+    def read_vars_fac_n(self):
+        raise NotImplementedError
 
     def set_buf_samples_freq(self, fs):
         self.set_param("Freq_TimeSlicer", 1, fs)
