@@ -7,8 +7,10 @@ return_value = b"\x00" * 590
 
 
 class TestFAC(unittest.TestCase):
+    @patch("socket.socket")
     @patch("pydrs.EthDRS._transfer")
-    def setUp(self, transfer):
+    def setUp(self, transfer, socket):
+        socket = socket.return_value
         self.drs = GenericDRS("127.0.0.1", 5000)
         self.drs._transfer = transfer
 
