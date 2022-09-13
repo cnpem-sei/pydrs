@@ -882,7 +882,12 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def enable_scope(self) -> bytes:
-        """Enables scope"""
+        """Enables scope
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -892,7 +897,12 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def disable_scope(self) -> bytes:
-        """Disables scope"""
+        """Disables scope
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -918,7 +928,17 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def select_op_mode(self, op_mode: int) -> bytes:
-        """Select operation mode"""
+        """Select operation mode
+
+        Parameters
+        -------
+        op_mode
+            Operation mode (check BSMP specification for power supplies for more information)
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_op_mode = double_to_hex(common.op_modes.index(op_mode))
         send_packet = (
@@ -953,7 +973,17 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def unlock_udc(self, password: int) -> bytes:
-        """Unlocks UDC, enables password protected commands to be ran"""
+        """Unlocks UDC, enables password protected commands to be ran
+
+        Parameters
+        -------
+        password
+            Password
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
         send_packet = (
@@ -965,7 +995,17 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def lock_udc(self, password: int) -> bytes:
-        """Locks UDC, disables password protected commands"""
+        """Locks UDC, disables password protected commands
+
+        Parameters
+        -------
+        password
+            Password
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
         send_packet = (
@@ -1030,7 +1070,12 @@ class BaseDRS:
         """Updates signal generator parameters in continuous operation.
         Amplitude and offset are updated instantaneously, frequency is
         updated on the next 1 second update cycle. *This function cannot be
-        applied in trapezoidal mode."""
+        applied in trapezoidal mode.
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1 + 4 + 4 + 4)
         hex_freq = float_to_hex(freq)
         hex_amplitude = float_to_hex(amplitude)
@@ -1046,7 +1091,12 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def enable_siggen(self) -> bytes:
-        """Enables signal generator"""
+        """Enables signal generator
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -1056,7 +1106,12 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def disable_siggen(self) -> bytes:
-        """Disables signal generator"""
+        """Disables signal generator
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -1141,7 +1196,20 @@ class BaseDRS:
         }
 
     def read_csv_file(self, filename: str, type: str = "float") -> list:
-        """Utility function to translate CSV file to list"""
+        """Utility function to translate CSV file to list
+
+        Parameters
+        -------
+        filename
+            File location
+        type
+            Type to consider for the variables in the file, determines whether or not a parsed float or a string is returned in the list
+
+        Returns
+        -------
+        list
+            List of rows
+        """
         csv_list = []
         with open(filename, newline="") as f:
             reader = csv.reader(f)
@@ -1160,7 +1228,23 @@ class BaseDRS:
     ======================================================================
     """
 
-    def read_bsmp_variable(self, id_var: int, type_var: str):
+    def read_bsmp_variable(self, id_var: int, type_var: str) -> Union[float, int]:
+        """Reads a BSMP variable
+
+        Parameters
+        -------
+        id_var
+            Variable's numeric ID
+        type_var
+            Type of variable to read (float, uint8_t, uint16_t, uint32_t)
+
+        Returns
+        -------
+        float
+            Variable value (if given type was float)
+        int
+            Variable value (if given type was an integer of any length)
+        """
         reply_msg = self.read_var(index_to_hex(id_var), type_size[type_var])
         val = struct.unpack(type_format[type_var], reply_msg)
         return val[3]
@@ -1179,6 +1263,12 @@ class BaseDRS:
         return val[0].decode("utf-8")
 
     def read_udc_version(self) -> dict:
+        """Gets UDC's ARM and DSP firmware version
+
+        Returns
+        -------
+        dict
+            Dictionary containing both ARM and DSP firmware versions"""
         return {"arm": self.read_udc_arm_version(), "c28": self.read_udc_c28_version()}
 
     """
@@ -1280,12 +1370,7 @@ class BaseDRS:
         )
         return self._transfer(send_packet, 5)
 
-    """
-    ======================================================================
-                     Métodos de Escrita de Curvas BSMP
-            O retorno do método são os bytes de retorno da mensagem
-    ======================================================================
-    """
+    # Methods for writing curves
 
     def send_wfmref_curve(self, block_idx: int, data) -> bytes:
         # TODO: Could use list comprehension in val
@@ -1497,7 +1582,18 @@ class BaseDRS:
 
         return vars_dict
 
-    def read_vars_common(self, vals: dict = None) -> dict:
+    def read_vars_common(self, vals: bytes = None) -> dict:
+        """Reads common variables for all power supplies
+
+        Parameters
+        -------
+        vals
+            Bytes read from power supply (useful for caching, preventing redundant reads)
+
+        Returns
+        -------
+        dict
+            Dictionary containing common variables"""
         if vals is None:
             vals = self._transfer(
                 f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(1)}",
@@ -1557,6 +1653,20 @@ class BaseDRS:
     def decode_interlocks(
         self, reg_interlocks: Union[int, str], list_interlocks: list
     ) -> list:
+        """Decodes interlocks from a raw interlock readout value
+
+        Parameters
+        -------
+        reg_interlocks
+            Raw interlock value
+        list_interlocks
+            List mapping each interlock bit to an interlock message
+
+        Returns
+        -------
+        list
+            List of interlocks"""
+
         active_interlocks = []
 
         if isinstance(reg_interlocks, str):
@@ -1838,6 +1948,19 @@ class BaseDRS:
         return vars_dict
 
     def read_vars_fac_2p4s_acdc(self, iib=0):
+        """Reads FAC 2P4S ACDC power supply variables (alias for `read_vars_fac_2s_acdc`)
+
+        Parameters
+        -------
+        iib
+            Whether or not IIB interlocks should be parsed and returned alongside other data
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+
+        """
         self.read_vars_fac_2s_acdc(iib)
 
     def read_vars_fac_2p4s_dcdc(self) -> dict:
