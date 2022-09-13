@@ -58,6 +58,26 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.decode_interlocks">
+<span class="sig-name descname"><span class="pre">decode_interlocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_interlocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_interlocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.decode_interlocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decodes interlocks from a raw interlock readout value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reg_interlocks</strong> – Raw interlock value</p></li>
+<li><p><strong>list_interlocks</strong> – List mapping each interlock bit to an interlock message</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of interlocks</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.disable_onboard_eeprom">
 <span class="sig-name descname"><span class="pre">disable_onboard_eeprom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.disable_onboard_eeprom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Disables onboard EEPROM</p>
@@ -67,12 +87,28 @@
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.disable_scope">
 <span class="sig-name descname"><span class="pre">disable_scope</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.disable_scope" title="Permalink to this definition">¶</a></dt>
 <dd><p>Disables scope</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.disable_siggen">
 <span class="sig-name descname"><span class="pre">disable_siggen</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.disable_siggen" title="Permalink to this definition">¶</a></dt>
 <dd><p>Disables signal generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -91,12 +127,28 @@
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.enable_scope">
 <span class="sig-name descname"><span class="pre">enable_scope</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.enable_scope" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enables scope</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.enable_siggen">
 <span class="sig-name descname"><span class="pre">enable_siggen</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.enable_siggen" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enables signal generator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -218,12 +270,44 @@ setting a different timeout is recommended</p></li>
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.lock_udc">
 <span class="sig-name descname"><span class="pre">lock_udc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.lock_udc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Locks UDC, disables password protected commands</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>password</strong> – Password</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>UDC response</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.open_loop">
 <span class="sig-name descname"><span class="pre">open_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.open_loop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Opens the control loop</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_bsmp_variable">
+<span class="sig-name descname"><span class="pre">read_bsmp_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_bsmp_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a BSMP variable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_var</strong> – Variable’s numeric ID</p></li>
+<li><p><strong>type_var</strong> – Type of variable to read (float, uint8_t, uint16_t, uint32_t)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>float</em> – Variable value (if given type was float)</p></li>
+<li><p><em>int</em> – Variable value (if given type was an integer of any length)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -247,6 +331,20 @@ setting a different timeout is recommended</p></li>
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_csv_file">
 <span class="sig-name descname"><span class="pre">read_csv_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'float'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_csv_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility function to translate CSV file to list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – File location</p></li>
+<li><p><strong>type</strong> – Type to consider for the variables in the file, determines whether or not a parsed float or a string is returned in the list</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of rows</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -270,6 +368,20 @@ setting a different timeout is recommended</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_udc_version">
+<span class="sig-name descname"><span class="pre">read_udc_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_udc_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets UDC’s ARM and DSP firmware version</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing both ARM and DSP firmware versions</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_var">
 <span class="sig-name descname"><span class="pre">read_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads a variable with a given ID</p>
@@ -285,6 +397,40 @@ setting a different timeout is recommended</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_common">
+<span class="sig-name descname"><span class="pre">read_vars_common</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_common" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads common variables for all power supplies</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>vals</strong> – Bytes read from power supply (useful for caching, preventing redundant reads)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing common variables</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.read_vars_fac_2p4s_acdc">
+<span class="sig-name descname"><span class="pre">read_vars_fac_2p4s_acdc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.read_vars_fac_2p4s_acdc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads FAC 2P4S ACDC power supply variables (alias for <cite>read_vars_fac_2s_acdc</cite>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>iib</strong> – Whether or not IIB interlocks should be parsed and returned alongside other data</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with power supply variables</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -525,6 +671,17 @@ waveform’s start.</p>
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.select_op_mode">
 <span class="sig-name descname"><span class="pre">select_op_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.select_op_mode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select operation mode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>op_mode</strong> – Operation mode (check BSMP specification for power supplies for more information)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>UDC response</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -610,6 +767,14 @@ wfmref_data.</p>
 Amplitude and offset are updated instantaneously, frequency is
 updated on the next 1 second update cycle. <a href="#id1"><span class="problematic" id="id2">*</span></a>This function cannot be
 applied in trapezoidal mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -681,6 +846,17 @@ applied in trapezoidal mode.</p>
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.unlock_udc">
 <span class="sig-name descname"><span class="pre">unlock_udc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.unlock_udc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unlocks UDC, enables password protected commands to be ran</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>password</strong> – Password</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>UDC response</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
