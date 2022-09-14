@@ -1613,11 +1613,11 @@ class BaseDRS:
                 or (vars_dict["status"]["model"] == "FAC_2S_ACDC")
                 or (vars_dict["status"]["model"] == "FAC_2P4S_ACDC")
             ):
-                vars_dict["ps_setpoint"][-1] = "V"
-                vars_dict["ps_reference"][-1] = "V"
+                vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "V"
+                vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "V"
         else:
-            vars_dict["ps_setpoint"][-1] = "%"
-            vars_dict["ps_reference"][-1] = "%"
+            vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "%"
+            vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "%"
 
         vars_dict["siggen_type"] = common.sig_gen_types[int(vars_dict["siggen_type"])]
         vars_dict["wfmref_sync_mode"] = common.wfmref_sync_modes[
@@ -1698,7 +1698,7 @@ class BaseDRS:
             255 + sum([data["size"] for data in template.values()]),
         )
 
-        # 1 byte for checksum, 246 common variable bytes, 8 header bytes
+        # 1 byte for checksum, 246 common variable bytes, 8 interlock bytes
 
         vars_dict = self.read_vars_common(vals[4:246])
         vals = vals[246:-1]
@@ -1947,7 +1947,7 @@ class BaseDRS:
 
         return vars_dict
 
-    def read_vars_fac_2p4s_acdc(self, iib=0):
+    def read_vars_fac_2p4s_acdc(self, iib=0) -> dict:
         """Reads FAC 2P4S ACDC power supply variables (alias for `read_vars_fac_2s_acdc`)
 
         Parameters
@@ -1961,7 +1961,7 @@ class BaseDRS:
             Dictionary with power supply variables
 
         """
-        self.read_vars_fac_2s_acdc(iib)
+        return self.read_vars_fac_2s_acdc(iib)
 
     def read_vars_fac_2p4s_dcdc(self) -> dict:
         """Reads FAC 2P4S DCDC power supply variables
@@ -1988,7 +1988,7 @@ class BaseDRS:
                 vars_dict[f"iib_alarms_{i}_raw"], fac.list_2p4s_dcdc_iib_alarms
             )
 
-        return
+        return vars_dict
 
     def read_vars_fap(self, iib=True) -> dict:
         """Reads FAP power supply variables

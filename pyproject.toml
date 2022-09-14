@@ -19,11 +19,6 @@ classifiers=[
     "Operating System :: OS Independent"
 ]
 description=""
-dependencies = [
-    "matplotlib",
-    "numpy",
-    "pyserial==3.5"
-]
 readme="README.md"
 license = {text = "MIT License"}
 requires-python=">=3.6"
