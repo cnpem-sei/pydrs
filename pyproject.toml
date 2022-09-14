@@ -19,11 +19,6 @@ classifiers=[
     "Operating System :: OS Independent"
 ]
 description=""
-dependencies = [
-    "matplotlib",
-    "numpy",
-    "pyserial==3.5"
-]
 readme="README.md"
 license = {text = "MIT License"}
 requires-python=">=3.6"
@@ -41,15 +36,15 @@ where = ["src"]
 
 [project.optional-dependencies]
 dev = [
-    "bandit==1.7.0",
-    "black==21.10b0",
-    "flake8==4.0.1",
-    "flake8-bandit==2.1.2",
-    "flake8-bugbear==21.9.2",
-    "flake8-implicit-str-concat==0.2.0",
-    "mypy==0.812",
+    "bandit==1.7.4",
+    "black==22.8.0",
+    "flake8==5.0.4",
+    "flake8-bandit==4.1.1",
+    "flake8-bugbear==22.8.23",
+    "flake8-implicit-str-concat==0.3.0",
+    "mypy==0.971",
     "mypy-extensions==0.4.3",
-    "pyflakes==2.4.0",
+    "pyflakes==2.5.0",
     "types-setuptools",
     "pytest==7.1.2"
 ]
