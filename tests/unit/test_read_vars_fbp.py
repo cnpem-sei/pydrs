@@ -73,7 +73,7 @@ class TestFBP(unittest.TestCase):
 
     def test_dclink(self):
         self.drs._transfer.return_value = b"\x00" * 276
-        self.drs.read_vars_fbp_dclink()
+        self.assertIsInstance(self.drs.read_vars_fbp_dclink(), dict)
 
 
 if __name__ == "__main__":

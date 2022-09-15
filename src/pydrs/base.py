@@ -1687,15 +1687,17 @@ class BaseDRS:
         return active_interlocks
 
     def _read_vars_generic(
-        self, template: dict, soft_ilocks: list, hard_ilocks: list
+        self, template: dict, soft_ilocks: list, hard_ilocks: list, length: int = None
     ) -> dict:
         index = 0
+        if length is None:
+            length = 255 + sum([data["size"] for data in template.values()])
 
         # Dynamically obtaining transfer sizes incurs a 70 uS penalty per execution
 
         vals = self._transfer(
             f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(1)}",
-            255 + sum([data["size"] for data in template.values()]),
+            length,
         )
 
         # 1 byte for checksum, 246 common variable bytes, 8 interlock bytes
@@ -1868,6 +1870,7 @@ class BaseDRS:
             fac.bsmp_2s_acdc,
             fac.list_2s_acdc_soft_interlocks,
             fac.list_2s_acdc_hard_interlocks,
+            399,
         )
 
         if iib:

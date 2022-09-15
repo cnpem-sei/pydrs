@@ -3,8 +3,6 @@ from unittest.mock import patch
 
 from pydrs import GenericDRS
 
-return_value = b"\x00" * 590
-
 
 class TestFAC(unittest.TestCase):
     @patch("socket.socket")
@@ -22,35 +20,35 @@ class TestFAC(unittest.TestCase):
 
     def test_2p4s_acdc(self):
         self.drs._transfer.return_value = b"\x00" * 367
-        self.drs.read_vars_fac_2p4s_acdc()
+        self.assertIsInstance(self.drs.read_vars_fac_2p4s_acdc(), dict)
 
     def test_2p4s_dcdc(self):
         self.drs._transfer.return_value = b"\x00" * 455
-        self.drs.read_vars_fac_2p4s_dcdc()
+        self.assertIsInstance(self.drs.read_vars_fac_2p4s_dcdc(), dict)
 
     def test_2p_acdc_imas(self):
         self.drs._transfer.return_value = b"\x00" * 275
-        self.drs.read_vars_fac_2p_acdc_imas()
+        self.assertIsInstance(self.drs.read_vars_fac_2p_acdc_imas(), dict)
 
     def test_2s_acdc(self):
         self.drs._transfer.return_value = b"\x00" * 367
-        self.drs.read_vars_fac_2s_acdc()
+        self.assertIsInstance(self.drs.read_vars_fac_2s_acdc(), dict)
 
     def test_2s_dcdc(self):
         self.drs._transfer.return_value = b"\x00" * 399
-        self.drs.read_vars_fac_2s_dcdc()
+        self.assertIsInstance(self.drs.read_vars_fac_2s_dcdc(), dict)
 
     def test_acdc(self):
         self.drs._transfer.return_value = b"\x00" * 359
-        self.drs.read_vars_fac_acdc()
+        self.assertIsInstance(self.drs.read_vars_fac_acdc(), dict)
 
     def test_dcdc(self):
         self.drs._transfer.return_value = b"\x00" * 339
-        self.drs.read_vars_fac_dcdc()
+        self.assertIsInstance(self.drs.read_vars_fac_dcdc(), dict)
 
     def test_dcdc_ema(self):
         self.drs._transfer.return_value = b"\x00" * 331
-        self.drs.read_vars_fac_dcdc_ema()
+        self.assertIsInstance(self.drs.read_vars_fac_dcdc_ema(), dict)
 
 
 if __name__ == "__main__":

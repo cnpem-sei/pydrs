@@ -22,15 +22,15 @@ class TestFAP(unittest.TestCase):
 
     def test_no_interlocks(self):
         self.drs._transfer.return_value = b"\x00" * 359
-        self.drs.read_vars_fap()
+        self.assertIsInstance(self.drs.read_vars_fap(), dict)
 
     def test_4p(self):
         self.drs._transfer.return_value = b"\x00" * 615
-        self.drs.read_vars_fap_4p()
+        self.assertIsInstance(self.drs.read_vars_fap_4p(), dict)
 
     def test_2p2s(self):
         self.drs._transfer.return_value = b"\x00" * 635
-        self.drs.read_vars_fap_2p2s()
+        self.assertIsInstance(self.drs.read_vars_fap_2p2s(), dict)
 
 
 if __name__ == "__main__":
