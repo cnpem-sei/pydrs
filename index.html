@@ -49,6 +49,14 @@
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.close_loop">
 <span class="sig-name descname"><span class="pre">close_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.close_loop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Closes the control loop</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -287,6 +295,14 @@ setting a different timeout is recommended</p></li>
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.open_loop">
 <span class="sig-name descname"><span class="pre">open_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.open_loop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Opens the control loop</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -623,11 +639,19 @@ setting a different timeout is recommended</p></li>
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.reset_interlocks">
 <span class="sig-name descname"><span class="pre">reset_interlocks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_interlocks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resets interlocks on connected DRS device</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.reset_udc">
-<span class="sig-name descname"><span class="pre">reset_udc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confirm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_udc" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reset_udc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_udc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resets UDC</p>
 </dd></dl>
 
@@ -636,6 +660,23 @@ setting a different timeout is recommended</p></li>
 <span class="sig-name descname"><span class="pre">reset_wfmref</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.reset_wfmref" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resets WfmRef, next sync pulse takes index back to the
 waveform’s start.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.run_bsmp_func">
+<span class="sig-name descname"><span class="pre">run_bsmp_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.run_bsmp_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a given BSMP function</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>id_func</strong> – Numeric ID for BSMP function</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>UDC response</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -665,6 +706,21 @@ waveform’s start.</p>
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.save_param_eeprom">
 <span class="sig-name descname"><span class="pre">save_param_eeprom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_memory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.save_param_eeprom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save parameter to EEPROM</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param_id</strong> – Parameter ID, either as its name or numeric ID</p></li>
+<li><p><strong>n</strong> – Index to save (in arrays)</p></li>
+<li><p><strong>type_memory</strong> – Type of memory to save to. 1 for BID, 2 for EEPROM.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>UDC response</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -780,10 +836,16 @@ applied in trapezoidal mode.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.set_slowref">
 <span class="sig-name descname"><span class="pre">set_slowref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">setpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.set_slowref" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets new slowref setpoint value</p>
+<dd><p>Sets new slow reference (setpoint) value</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>setpoint</strong> – Slowref setpoint value</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>UDC response</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bytes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -818,10 +880,38 @@ applied in trapezoidal mode.</p>
 <dd><p>Sets slowref reference value and returns reference current</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.slave_addr">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">slave_addr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pydrs.base.BaseDRS.slave_addr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Power supply address in the serial network</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydrs.base.BaseDRS.store_dsp_modules_bank_csv">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">store_dsp_modules_bank_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bank</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.store_dsp_modules_bank_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves DSP parameter bank to CSV file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bank</strong> – Parameter bank to be stored</p></li>
+<li><p><strong>filename</strong> – Output filename</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.store_param_bank_csv">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">store_param_bank_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bank</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydrs.base.BaseDRS.store_param_bank_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves parameter bank to CSV file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bank</strong> – Parameter bank to be stored</p></li>
+<li><p><strong>filename</strong> – Location of output file</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -834,12 +924,28 @@ applied in trapezoidal mode.</p>
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.turn_off">
 <span class="sig-name descname"><span class="pre">turn_off</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.turn_off" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turns off power supply</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pydrs.base.BaseDRS.turn_on">
 <span class="sig-name descname"><span class="pre">turn_on</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#pydrs.base.BaseDRS.turn_on" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turns on power supply</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>UDC response</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
