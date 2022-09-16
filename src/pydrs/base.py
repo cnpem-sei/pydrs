@@ -97,6 +97,7 @@ class BaseDRS:
 
     @property
     def slave_addr(self) -> int:
+        """Power supply address in the serial network"""
         return struct.unpack("B", self._slave_addr.encode())[0]
 
     @slave_addr.setter
@@ -119,9 +120,6 @@ class BaseDRS:
             Raw variable response"""
         self.reset_input_buffer()
         return self._transfer(COM_READ_VAR + var_id, size)
-
-    def enable_high_performance(self):
-        raise NotImplementedError
 
     # BSMP entity calls
 
@@ -178,7 +176,12 @@ class BaseDRS:
         return [i for i in bsmp_vars[4:-1]]
 
     def turn_on(self) -> bytes:
-        """Turns on power supply"""
+        """Turns on power supply
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -188,7 +191,12 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def turn_off(self) -> bytes:
-        """Turns off power supply"""
+        """Turns off power supply
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -198,7 +206,12 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def open_loop(self) -> bytes:
-        """Opens the control loop"""
+        """Opens the control loop
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -208,7 +221,12 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def close_loop(self) -> bytes:
-        """Closes the control loop"""
+        """Closes the control loop
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -218,7 +236,12 @@ class BaseDRS:
         return self._transfer(send_packet, 6)
 
     def reset_interlocks(self) -> bytes:
-        """Resets interlocks on connected DRS device"""
+        """Resets interlocks on connected DRS device
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
@@ -277,12 +300,18 @@ class BaseDRS:
         return ps_name
 
     def set_slowref(self, setpoint: float) -> bytes:
-        """Sets new slowref setpoint value
+        """Sets new slow reference (setpoint) value
 
         Parameters
         -------
         setpoint
-            Slowref setpoint value"""
+            Slowref setpoint value
+
+        Returns
+        -------
+        bytes
+            UDC response
+        """
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
@@ -479,8 +508,21 @@ class BaseDRS:
     def save_param_eeprom(
         self, param_id: Union[int, str], n: int = 0, type_memory: int = 2
     ) -> bytes:
-        """Save parameter to EEPROM"""
-        # TODO: Raise exception instead of printing?
+        """Save parameter to EEPROM
+
+        Parameters
+        -------
+        param_id
+            Parameter ID, either as its name or numeric ID
+        n
+            Index to save (in arrays)
+        type_memory
+            Type of memory to save to. 1 for BID, 2 for EEPROM.
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(
             1 + 2 + 2 + 2
         )  # Payload: ID + param id + [n] + memory type
@@ -676,7 +718,14 @@ class BaseDRS:
 
     @staticmethod
     def store_param_bank_csv(bank: dict, filename: str):
-        """Saves parameter bank to CSV file"""
+        """Saves parameter bank to CSV file
+
+        Parameters
+        -------
+        bank
+            Parameter bank to be stored
+        filename
+            Location of output file"""
         with open(filename, "w", newline="") as f:
             writer = csv.writer(f, delimiter=",")
             for param, val in bank.items():
@@ -801,28 +850,31 @@ class BaseDRS:
         )
         return self._transfer(send_packet, 6)
 
-    def reset_udc(self, confirm=True):
+    def reset_udc(self):
         """Resets UDC"""
-        reply = "y"
-        if confirm:
-            reply = input(
-                "\nEste comando realiza o reset do firmware da placa UDC, e por isso, so e executado caso a fonte esteja desligada. \nCaso deseje apenas resetar interlocks, utilize o comando reset_interlocks(). \n\nTem certeza que deseja prosseguir? [Y/N]: "
-            )
-        if reply.lower() == "y":
-            payload_size = size_to_hex(1)  # Payload: ID
-            send_packet = (
-                COM_FUNCTION
-                + payload_size
-                + index_to_hex(common.functions.index("reset_udc"))
-            )
-            if self.var_group_index is not None:
-                self.enable_high_performance()
-            try:
-                self._transfer_write(send_packet)
-            except SerialErrPckgLen:
-                return
+        payload_size = size_to_hex(1)  # Payload: ID
+        send_packet = (
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("reset_udc"))
+        )
+        try:
+            self._transfer_write(send_packet)
+        except SerialErrPckgLen:
+            return
 
     def run_bsmp_func(self, id_func: int) -> bytes:
+        """Runs a given BSMP function
+
+        Parameters
+        -------
+        id_func
+            Numeric ID for BSMP function
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = COM_FUNCTION + payload_size + index_to_hex(id_func)
         return self._transfer(send_packet, 6)
@@ -1194,6 +1246,23 @@ class BaseDRS:
             "gain": self.read_bsmp_variable(17, "float"),
             "offset": self.read_bsmp_variable(18, "float"),
         }
+
+    @staticmethod
+    def store_dsp_modules_bank_csv(bank: dict, filename: str):
+        """Saves DSP parameter bank to CSV file
+
+        Parameters
+        -------
+        bank
+            Parameter bank to be stored
+        filename
+            Output filename
+        """
+        with open(filename + ".csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter=",")
+            for dsp_module, values in bank.items():
+                for i, coef in enumerate(values["coeffs"]):
+                    writer.writerow([dsp_module, values["class"], i] + coef)
 
     def read_csv_file(self, filename: str, type: str = "float") -> list:
         """Utility function to translate CSV file to list
@@ -2154,15 +2223,13 @@ class BaseDRS:
     """
 
     @staticmethod
-    def save_ramp_waveform(ramp):
-        filename = input("Digite o nome do arquivo: ")
+    def save_ramp_waveform(ramp: dict, filename: str):
         with open(filename + ".csv", "w", newline="") as f:
             writer = csv.writer(f, delimiter=";")
             writer.writerow(ramp)
 
     @staticmethod
-    def save_ramp_waveform_col(self, ramp):
-        filename = input("Digite o nome do arquivo: ")
+    def save_ramp_waveform_col(ramp: dict, filename: str):
         with open(filename + ".csv", "w", newline="") as f:
             writer = csv.writer(f)
             for val in ramp:
