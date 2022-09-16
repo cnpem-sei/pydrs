@@ -3450,6 +3450,14 @@ class BaseDRS(object):
             self.set_dsp_coeffs(3, dsp_id, [kp, ki, 0.95, -0.95])
         return [kp, ki]
 
+    def store_dsp_modules_bank_csv(self, bank):
+        filename = input("Digite o nome do arquivo: ")
+        with open(filename + ".csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter=",")
+            for dsp_module, values in bank.items():
+                for i, coef in enumerate(values["coeffs"]):
+                    writer.writerow([dsp_module, values["class"], i] + coef)
+
     def config_dsp_modules_drs_fap_tests(self):
         kp_load = 0
         ki_load = 20.95
