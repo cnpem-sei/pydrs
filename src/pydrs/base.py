@@ -41,7 +41,6 @@ from .utils import (
     format_list_size,
     get_logger,
     index_to_hex,
-    prettier_print,
     size_to_hex,
     uint32_to_hex,
 )
@@ -1499,6 +1498,7 @@ class BaseDRS:
 
     def send_full_wfmref_curve(self, block_idx: int, data) -> bytes:
         # TODO: Will always fail, fullwfmRef_Curve is not in list
+        raise NotImplementedError
         block_hex = size_to_hex(block_idx)
         val = []
         for k in range(0, len(data)):
@@ -1516,6 +1516,7 @@ class BaseDRS:
 
     def recv_full_wfmref_curve(self, block_idx: int) -> list:
         # TODO: Will always fail, fullwfmRef_Curve is not in list
+        raise NotImplementedError
         block_hex = size_to_hex(block_idx)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
@@ -1532,6 +1533,7 @@ class BaseDRS:
 
     def recv_samples_buffer_blocks(self, block_idx: int) -> list:
         # TODO: Will always fail, samplesBuffer_blocks is not in list
+        raise NotImplementedError
         block_hex = size_to_hex(block_idx)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
@@ -1552,6 +1554,7 @@ class BaseDRS:
 
     def recv_samples_buffer_allblocks(self) -> list:
         # TODO: Will fail
+        raise NotImplementedError
         buff = []
         # self.DisableSamplesBuffer()
         for i in range(0, 16):
@@ -2268,7 +2271,6 @@ class BaseDRS:
     def get_dsp_modules_bank(
         self,
         list_dsp_classes=None,
-        print_modules=True,
         return_floathex=False,
     ) -> dict:
         """
@@ -2327,9 +2329,6 @@ class BaseDRS:
                     dsp_modules_bank[dsp_classes_names[dsp_class]][
                         "coeffs"
                     ] = dsp_coeffs
-
-        if print_modules:
-            prettier_print(dsp_modules_bank)
 
         return dsp_modules_bank
 
