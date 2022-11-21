@@ -3,8 +3,7 @@ name: Sphinx docs
 on:
   push:
     branches:
-      - master
-      - dict-update
+      - v2
 
 jobs:
   deploy:

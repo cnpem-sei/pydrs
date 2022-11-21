@@ -1765,6 +1765,7 @@ class BaseDRS:
         if length is None:
             length = 255 + sum([data["size"] for data in template.values()])
 
+
         # Dynamically obtaining transfer sizes incurs a 70 uS penalty per execution
 
         vals = self._transfer(
@@ -1835,6 +1836,7 @@ class BaseDRS:
             vars_dict["iib_is_alarms_raw"] = vars_dict.pop("iib_alarms_is")
             vars_dict["iib_is_interlocks_raw"] = vars_dict.pop("iib_interlocks_is")
 
+
             vars_dict["iib_is_interlocks"] = self.decode_interlocks(
                 vars_dict["iib_is_interlocks_raw"],
                 fac.list_acdc_iib_is_interlocks,
@@ -1854,8 +1856,8 @@ class BaseDRS:
                 vars_dict["iib_cmd_alarms_raw"],
                 fac.list_acdc_iib_cmd_alarms,
             )
-
         return vars_dict
+
 
     def read_vars_fac_dcdc(self, iib: bool = True) -> dict:
         """Reads FAC DCDC power supply variables
@@ -2179,6 +2181,7 @@ class BaseDRS:
         """
         Read FAC 2P DCDC IMAS specific power supply variables
 
+
         Returns
         -------
         dict
@@ -2191,6 +2194,7 @@ class BaseDRS:
         )
 
     def check_param_bank(self, param_file: str):
+
         ps_param_list = []
 
         # max_sampling_freq = 600000
@@ -2252,6 +2256,14 @@ class BaseDRS:
         if send_drs:
             self.set_dsp_coeffs(3, dsp_id, [kp, ki, 0.95, -0.95])
         return {"kp": kp, "ki": ki}
+
+    def store_dsp_modules_bank_csv(self, bank):
+        filename = input("Digite o nome do arquivo: ")
+        with open(filename + ".csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter=",")
+            for dsp_module, values in bank.items():
+                for i, coef in enumerate(values["coeffs"]):
+                    writer.writerow([dsp_module, values["class"], i] + coef)
 
     def config_dsp_modules_drs_fap_tests(self):
         kp_load = 0
@@ -2330,6 +2342,7 @@ class BaseDRS:
                         dsp_coeffs
                     )
 
+
         return dsp_modules_bank
 
     def set_dsp_modules_bank(
@@ -2386,6 +2399,7 @@ class BaseDRS:
 
         Returns
         -------
+
         dict[dsp_class_name] = {"class":int, "coeffs":[float]}
         """
         dsp_coeffs_from_csv = {}
