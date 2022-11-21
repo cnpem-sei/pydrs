@@ -6,6 +6,7 @@
 *.py[cod]
 *.so
 *.spec
+*.swp
 .Python
 .code-workspace
 .coverage

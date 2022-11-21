@@ -2321,14 +2321,14 @@ class BaseDRS:
                             ].append(dsp_coeffs)
 
                 if return_floathex:
-                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"] = [
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append([
                         dsp_coeffs,
                         dsp_coeffs_hex,
-                    ]
+                    ])
                 else:
-                    dsp_modules_bank[dsp_classes_names[dsp_class]][
-                        "coeffs"
-                    ] = dsp_coeffs
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(
+                        dsp_coeffs
+                    )
 
         return dsp_modules_bank
 
