@@ -5,19 +5,27 @@ import math
 import os
 import struct
 import time
+from typing import Union
 
 from .consts import (
+    COM_CREATE_BSMP_GROUP,
     COM_FUNCTION,
+    COM_GET_BSMP_GROUP_LIST,
+    COM_GET_BSMP_GROUP_VARS,
+    COM_READ_BSMP_GROUP_VALUES,
     COM_READ_VAR,
     COM_REQUEST_CURVE,
     COM_SEND_WFM_REF,
     COM_WRITE_VAR,
     DP_MODULE_MAX_COEFF,
     NUM_MAX_COEFFS_DSP,
-    UDC_FIRMWARE_VERSION,
     WRITE_DOUBLE_SIZE_PAYLOAD,
     WRITE_FLOAT_SIZE_PAYLOAD,
+    common,
     dsp_classes_names,
+    fac,
+    fap,
+    fbp,
     num_blocks_curves_fax,
     num_blocks_curves_fbp,
     num_coeffs_dsp_modules,
@@ -26,73 +34,6 @@ from .consts import (
     type_format,
     type_size,
 )
-
-from .consts.common import (
-    list_common_vars,
-    list_curv,
-    list_func,
-    list_op_mode,
-    list_parameters,
-    list_ps_models,
-    list_sig_gen_types,
-)
-
-from .consts.fac import (
-    list_fac_2p4s_dcdc_hard_interlocks,
-    list_fac_2p4s_dcdc_iib_alarms,
-    list_fac_2p4s_dcdc_iib_interlocks,
-    list_fac_2p4s_dcdc_soft_interlocks,
-    list_fac_2p_acdc_imas_hard_interlocks,
-    list_fac_2p_acdc_imas_soft_interlocks,
-    list_fac_2p_dcdc_imas_hard_interlocks,
-    list_fac_2p_dcdc_imas_soft_interlocks,
-    list_fac_2s_acdc_hard_interlocks,
-    list_fac_2s_acdc_iib_cmd_alarms,
-    list_fac_2s_acdc_iib_cmd_interlocks,
-    list_fac_2s_acdc_iib_is_alarms,
-    list_fac_2s_acdc_iib_is_interlocks,
-    list_fac_2s_acdc_soft_interlocks,
-    list_fac_2s_dcdc_hard_interlocks,
-    list_fac_2s_dcdc_iib_alarms,
-    list_fac_2s_dcdc_iib_interlocks,
-    list_fac_2s_dcdc_soft_interlocks,
-    list_fac_acdc_hard_interlocks,
-    list_fac_acdc_iib_cmd_alarms,
-    list_fac_acdc_iib_cmd_interlocks,
-    list_fac_acdc_iib_is_alarms,
-    list_fac_acdc_iib_is_interlocks,
-    list_fac_acdc_soft_interlocks,
-    list_fac_dcdc_ema_hard_interlocks,
-    list_fac_dcdc_ema_iib_alarms,
-    list_fac_dcdc_ema_iib_interlocks,
-    list_fac_dcdc_ema_soft_interlocks,
-    list_fac_dcdc_hard_interlocks,
-    list_fac_dcdc_iib_alarms,
-    list_fac_dcdc_iib_interlocks,
-    list_fac_dcdc_soft_interlocks,
-)
-
-from .consts.fap import (
-    list_fap_2p2s_hard_interlocks,
-    list_fap_2p2s_soft_interlocks,
-    list_fap_4p_hard_interlocks,
-    list_fap_4p_iib_alarms,
-    list_fap_4p_iib_interlocks,
-    list_fap_4p_soft_interlocks,
-    list_fap_225A_hard_interlocks,
-    list_fap_225A_soft_interlocks,
-    list_fap_hard_interlocks,
-    list_fap_iib_alarms,
-    list_fap_iib_interlocks,
-    list_fap_soft_interlocks,
-)
-
-from .consts.fbp import (
-    list_fbp_dclink_hard_interlocks,
-    list_fbp_hard_interlocks,
-    list_fbp_soft_interlocks,
-)
-
 from .utils import (
     double_to_hex,
     float_list_to_hex,
@@ -102,24 +43,22 @@ from .utils import (
     index_to_hex,
     size_to_hex,
     uint32_to_hex,
-    prettier_print,
 )
-from .validation import SerialErrPckgLen, SerialInvalidCmd, print_deprecated
+from .validation import SerialError, SerialErrPckgLen, SerialInvalidCmd
 
 logger = get_logger(name=__file__)
 
 
-class BaseDRS(object):
+class BaseDRS:
     """Base class, originates all communication child classes"""
 
     def __init__(self):
         self.slave_addr = 1
+        self.var_group_index: int = None
 
-        print(
-            "\n pyDRS - compatible UDC firmware version: " + UDC_FIRMWARE_VERSION + "\n"
-        )
+        self.vars_size_cache = {}
 
-    def __exit__(self):
+    def __exit__(self, _, _1, _2):
         self.disconnect()
 
     def connect(self):
@@ -135,14 +74,14 @@ class BaseDRS(object):
         pass
 
     def _transfer(self, msg: str, size: int) -> bytes:
-        """Sends then receives data from target DRS device"""
-        pass
+        """Sends then receives data from target DRS device."""
+        return b""
 
     def _transfer_write(self, msg: str):
         """Transfers data to target DRS device"""
         pass
 
-    def _reset_input_buffer(self):
+    def reset_input_buffer(self):
         """Resets input buffer for the given communication protocol"""
         pass
 
@@ -157,112 +96,200 @@ class BaseDRS(object):
 
     @property
     def slave_addr(self) -> int:
+        """Power supply address in the serial network"""
         return struct.unpack("B", self._slave_addr.encode())[0]
 
     @slave_addr.setter
     def slave_addr(self, address: int):
         self._slave_addr = struct.pack("B", address).decode("ISO-8859-1")
 
-    def set_slave_add(self, address: int):
-        print(
-            f"From 2.0.0 onwards, the slave address will be a property. Use 'slave_addr = {address}' instead"
-        )
-        self.slave_addr = address
+    def read_var(self, var_id: str, size: int) -> bytes:
+        """Reads a variable with a given ID
 
-    def get_slave_add(self) -> int:
-        print(
-            "From 2.0.0 onwards, the slave address will be a property. Use 'slave_addr' instead"
-        )
-        return self.slave_addr
+        Parameters
+        -------
+        var_id
+            Variable ID
+        size
+            Variable size
 
-    """
-    ======================================================================
-                    Funções Internas da Classe
-    ======================================================================
-    """
-
-    def read_var(self, var_id: str, size: int):
-        """Reads a variable with a given ID"""
-        self._reset_input_buffer()
+        Returns
+        -------
+        bytes
+            Raw variable response"""
+        self.reset_input_buffer()
         return self._transfer(COM_READ_VAR + var_id, size)
 
-    """
-    ======================================================================
-                Métodos de Chamada de Entidades Funções BSMP
-            O retorno do método são os bytes de retorno da mensagem
-    ======================================================================
-    """
+    # BSMP entity calls
 
-    def turn_on(self):
-        """Turns on power supply"""
-        payload_size = size_to_hex(1)  # Payload: ID
-        send_packet = (
-            COM_FUNCTION + payload_size + index_to_hex(list_func.index("turn_on"))
+    def _create_bsmp_group(self, group: list) -> bytes:
+        """Creates BSMP group from the variables described in `group`
+
+        Parameters
+        -------
+        group
+            List of variables to include in new group
+
+        Returns
+        -------
+        bytes
+            UDC response"""
+        str_group = "".join(f"{index_to_hex(i)}" for i in group)
+        return self._transfer(
+            f"{COM_CREATE_BSMP_GROUP}{size_to_hex(len(group))}{str_group}", 5
         )
-        return self._transfer(send_packet, 6)
 
-    def turn_off(self):
-        """Turns off power supply"""
-        payload_size = size_to_hex(1)  # Payload: ID
-        send_packet = (
-            COM_FUNCTION + payload_size + index_to_hex(list_func.index("turn_off"))
+    def _get_bsmp_groups(self) -> list:
+        """Gets list of BSMP variable groups with variables contained in them.
+
+        Returns
+        -------
+        list
+            List of variable groups, each containing all variables in the group"""
+        var_group_amount = self._transfer(f"{COM_GET_BSMP_GROUP_LIST}\x00\x00", 0)[4]
+        var_groups = []
+
+        for i in range(0, var_group_amount):
+            try:
+                var_groups.append(self._get_bsmp_group_vars(i))
+            except SerialError:
+                pass
+
+        return var_groups
+
+    def _get_bsmp_group_vars(self, group: int) -> list:
+        """Gets list of BSMP variables contained in a group
+
+        Parameters
+        -------
+        group
+            Variable group index
+
+        Returns
+        -------
+        list
+            List of variables contained in group"""
+        bsmp_vars = self._transfer(
+            f"{COM_GET_BSMP_GROUP_VARS}\x00\x01{index_to_hex(group)}", 0
         )
-        return self._transfer(send_packet, 6)
+        return [i for i in bsmp_vars[4:-1]]
 
-    def open_loop(self):
-        payload_size = size_to_hex(1)  # Payload: ID
-        send_packet = (
-            COM_FUNCTION + payload_size + index_to_hex(list_func.index("open_loop"))
-        )
-        return self._transfer(send_packet, 6)
+    def turn_on(self) -> bytes:
+        """Turns on power supply
 
-    def close_loop(self):
-        payload_size = size_to_hex(1)  # Payload: ID
-        send_packet = (
-            COM_FUNCTION + payload_size + index_to_hex(list_func.index("closed_loop"))
-        )
-        return self._transfer(send_packet, 6)
-
-    def closed_loop(self):
-        print(
-            "This function will be replaced by the more aptly named close_loop in 2.0.0"
-        )
-        self.close_loop()
-
-    def reset_interlocks(self):
-        """Resets interlocks on connected DRS device"""
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("reset_interlocks"))
+            + index_to_hex(common.functions.index("turn_on"))
         )
         return self._transfer(send_packet, 6)
 
-    def read_ps_status(self) -> dict:
-        """Gets power supply status"""
-        reply_msg = self.read_var(index_to_hex(list_common_vars.index("ps_status")), 7)
-        val = struct.unpack("BBHHB", reply_msg)
+    def turn_off(self) -> bytes:
+        """Turns off power supply
+
+        Returns
+        -------
+        bytes
+            UDC response"""
+        payload_size = size_to_hex(1)  # Payload: ID
+        send_packet = (
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("turn_off"))
+        )
+        return self._transfer(send_packet, 6)
+
+    def open_loop(self) -> bytes:
+        """Opens the control loop
+
+        Returns
+        -------
+        bytes
+            UDC response"""
+        payload_size = size_to_hex(1)  # Payload: ID
+        send_packet = (
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("open_loop"))
+        )
+        return self._transfer(send_packet, 6)
+
+    def close_loop(self) -> bytes:
+        """Closes the control loop
+
+        Returns
+        -------
+        bytes
+            UDC response"""
+        payload_size = size_to_hex(1)  # Payload: ID
+        send_packet = (
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("closed_loop"))
+        )
+        return self._transfer(send_packet, 6)
+
+    def reset_interlocks(self) -> bytes:
+        """Resets interlocks on connected DRS device
+
+        Returns
+        -------
+        bytes
+            UDC response"""
+        payload_size = size_to_hex(1)  # Payload: ID
+        send_packet = (
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("reset_interlocks"))
+        )
+        return self._transfer(send_packet, 6)
+
+    @staticmethod
+    def _parse_status(status: int) -> dict:
         return {
-            "state": list_op_mode[(val[3] & 0b0000000000001111)],
-            "open_loop": (val[3] & 0b0000000000010000) >> 4,
-            "interface": (val[3] & 0b0000000001100000) >> 5,
-            "active": (val[3] & 0b0000000010000000) >> 7,
-            "model": list_ps_models[(val[3] & 0b0001111100000000) >> 8],
-            "unlocked": (val[3] & 0b0010000000000000) >> 13,
+            "state": common.op_modes[(status & 0b0000000000001111)],
+            "open_loop": (status & 0b0000000000010000) >> 4,
+            "interface": (status & 0b0000000001100000) >> 5,
+            "active": (status & 0b0000000010000000) >> 7,
+            "model": common.ps_models[(status & 0b0001111100000000) >> 8],
+            "unlocked": (status & 0b0010000000000000) >> 13,
         }
 
+    def read_ps_status(self) -> dict:
+        """Gets power supply status
+
+        Returns
+        -------
+        dict
+            Containing `state`, `open_loop` (whether control loop is open), `interface`, `active`, power supply `model`, `unlocked` (represents UDC lock status)"""
+        reply_msg = self.read_var(index_to_hex(common.vars.index("ps_status")), 7)
+        val = struct.unpack("BBHHB", reply_msg)
+        return self._parse_status(val[3])
+
     def set_ps_name(self, ps_name: str):
-        # TODO: Turn into property?
-        """Sets power supply name"""
+        """Sets power supply name
+
+        Parameters
+        -------
+        ps_name
+            New power supply name"""
         for n in range(len(ps_name)):
             self.set_param("PS_Name", n, float(ord(ps_name[n])))
         for i in range(n + 1, 64):
             self.set_param("PS_Name", i, float(ord(" ")))
 
     def get_ps_name(self) -> str:
-        # TODO: Turn into property?
-        """Gets power supply name"""
+        """Gets power supply name
+
+        Returns
+        -------
+        str
+            Power supply name"""
         ps_name = ""
         for n in range(64):
             ps_name += chr(int(self.get_param("PS_Name", n)))
@@ -272,13 +299,24 @@ class BaseDRS(object):
         return ps_name
 
     def set_slowref(self, setpoint: float) -> bytes:
-        """Sets new slowref reference value"""
+        """Sets new slow reference (setpoint) value
+
+        Parameters
+        -------
+        setpoint
+            Slowref setpoint value
+
+        Returns
+        -------
+        bytes
+            UDC response
+        """
         payload_size = size_to_hex(1 + 4)  # Payload: ID + iSlowRef
         hex_setpoint = float_to_hex(setpoint)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_slowref"))
+            + index_to_hex(common.functions.index("set_slowref"))
             + hex_setpoint
         )
         return self._transfer(send_packet, 6)
@@ -286,7 +324,7 @@ class BaseDRS(object):
     def set_slowref_fbp(
         self, iRef1: int = 0, iRef2: int = 0, iRef3: int = 0, iRef4: int = 0
     ) -> bytes:
-        """Sets slowref reference value for FBP power supplies"""
+        """Sets slowref setpoint value for FBP power supplies"""
         # TODO: Take int list instead?
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
         hex_iRef1 = float_to_hex(iRef1)
@@ -296,7 +334,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_slowref_fbp"))
+            + index_to_hex(common.functions.index("set_slowref_fbp"))
             + hex_iRef1
             + hex_iRef2
             + hex_iRef3
@@ -311,7 +349,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_slowref_readback_mon"))
+            + index_to_hex(common.functions.index("set_slowref_readback_mon"))
             + hex_setpoint
         )
         reply_msg = self._transfer(send_packet, 9)
@@ -320,7 +358,7 @@ class BaseDRS(object):
 
     def set_slowref_fbp_readback_mon(
         self, iRef1: int = 0, iRef2: int = 0, iRef3: int = 0, iRef4: int = 0
-    ):
+    ) -> list:
         """Sets slowref reference value for FBP power supplies and returns current readback"""
         # TODO: Take int list instead?
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
@@ -331,7 +369,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_slowref_fbp_readback_mon"))
+            + index_to_hex(common.functions.index("set_slowref_fbp_readback_mon"))
             + hex_iRef1
             + hex_iRef2
             + hex_iRef3
@@ -351,7 +389,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_slowref_readback_ref"))
+            + index_to_hex(common.functions.index("set_slowref_readback_ref"))
             + hex_setpoint
         )
         reply_msg = self._transfer(send_packet, 9)
@@ -360,7 +398,7 @@ class BaseDRS(object):
 
     def set_slowref_fbp_readback_ref(
         self, iRef1: int = 0, iRef2: int = 0, iRef3: int = 0, iRef4: int = 0
-    ):
+    ) -> Union[bytes, list]:
         """Sets slowref reference value for FBP power supplies and returns reference current"""
         # TODO: Take int list instead?
         payload_size = size_to_hex(1 + 4 * 4)  # Payload: ID + 4*iRef
@@ -371,7 +409,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_slowref_fbp_readback_ref"))
+            + index_to_hex(common.functions.index("set_slowref_fbp_readback_ref"))
             + hex_iRef1
             + hex_iRef2
             + hex_iRef3
@@ -384,22 +422,36 @@ class BaseDRS(object):
         except (SerialErrPckgLen, SerialInvalidCmd):
             return reply_msg
 
-    def set_param(self, param_id: int, n: int, value: float) -> bytes:
-        """Set parameter"""
+    def set_param(self, param_id: Union[str, int], n: int, value: float) -> tuple:
+        """Set parameter
+
+        Parameters
+        -------
+        param_id
+            Parameter ID either as its human readable name or BSMP ID
+        n
+            Index for arrays of variables
+        value
+            Value to set
+
+        Returns
+        -------
+        tuple
+            Value alongside parameter hex value"""
         # TODO: Turn into property?
         payload_size = size_to_hex(
             1 + 2 + 2 + 4
         )  # Payload: ID + param id + [n] + value
-        if type(param_id) == str:
-            hex_id = double_to_hex(list_parameters[param_id]["id"])
-        if type(param_id) == int:
+        if isinstance(param_id, str):
+            hex_id = double_to_hex(common.params[param_id]["id"])
+        if isinstance(param_id, int):
             hex_id = double_to_hex(param_id)
         hex_n = double_to_hex(n)
         hex_value = float_to_hex(value)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_param"))
+            + index_to_hex(common.functions.index("set_param"))
             + hex_id
             + hex_n
             + hex_value
@@ -408,23 +460,40 @@ class BaseDRS(object):
         reply_msg = self._transfer(send_packet, 6)
         return reply_msg, hex_value
 
-    def get_param(self, param_id, n=0, return_floathex=False):
-        """Get parameter"""
+    def get_param(self, param_id: Union[int, str], n=0, return_floathex=False):
+        """Get parameter
+
+        Parameters
+        -------
+        param_id
+            Parameter ID either as its human readable name or BSMP ID
+        n
+            Index for arrays of variables
+        return_floathex
+            Return hexadecimal representation of float alongside float value
+
+        Returns
+        -------
+        list
+            Value alongside reply message (if `return_floathex` is true)
+        float
+            Parameter value (if `return_floathex` is false)
+        """
         # Payload: ID + param id + [n]
         payload_size = size_to_hex(1 + 2 + 2)
-        if type(param_id) == str:
-            hex_id = double_to_hex(list_parameters[param_id]["id"])
-        if type(param_id) == int:
+        if isinstance(param_id, str):
+            hex_id = double_to_hex(common.params[param_id]["id"])
+        if isinstance(param_id, int):
             hex_id = double_to_hex(param_id)
         hex_n = double_to_hex(n)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("get_param"))
+            + index_to_hex(common.functions.index("get_param"))
             + hex_id
             + hex_n
         )
-        self._reset_input_buffer()
+        self.reset_input_buffer()
         try:
             reply_msg = self._transfer(send_packet, 9)
             val = struct.unpack("BBHfB", reply_msg)
@@ -436,23 +505,36 @@ class BaseDRS(object):
             return float("nan")
 
     def save_param_eeprom(
-        self, param_id: int, n: int = 0, type_memory: int = 2
+        self, param_id: Union[int, str], n: int = 0, type_memory: int = 2
     ) -> bytes:
-        """Save parameter to EEPROM"""
-        # TODO: Raise exception instead of printing?
+        """Save parameter to EEPROM
+
+        Parameters
+        -------
+        param_id
+            Parameter ID, either as its name or numeric ID
+        n
+            Index to save (in arrays)
+        type_memory
+            Type of memory to save to. 1 for BID, 2 for EEPROM.
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(
             1 + 2 + 2 + 2
         )  # Payload: ID + param id + [n] + memory type
-        if type(param_id) == str:
-            hex_id = double_to_hex(list_parameters[param_id]["id"])
-        if type(param_id) == int:
+        if isinstance(param_id, str):
+            hex_id = double_to_hex(common.params[param_id]["id"])
+        if isinstance(param_id, int):
             hex_id = double_to_hex(param_id)
         hex_n = double_to_hex(n)
         hex_type = double_to_hex(type_memory)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("save_param_eeprom"))
+            + index_to_hex(common.functions.index("save_param_eeprom"))
             + hex_id
             + hex_n
             + hex_type
@@ -460,22 +542,22 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def load_param_eeprom(
-        self, param_id: int, n: int = 0, type_memory: int = 2
+        self, param_id: str, n: int = 0, type_memory: int = 2
     ) -> bytes:
         """Load parameter from EEPROM"""
         payload_size = size_to_hex(
             1 + 2 + 2 + 2
         )  # Payload: ID + param id + [n] + memory type
-        if type(param_id) == str:
-            hex_id = double_to_hex(list_parameters[param_id]["id"])
-        if type(param_id) == int:
+        if isinstance(param_id, str):
+            hex_id = double_to_hex(common.params[param_id]["id"])
+        if isinstance(param_id, int):
             hex_id = double_to_hex(param_id)
         hex_n = double_to_hex(n)
         hex_type = double_to_hex(type_memory)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("load_param_eeprom"))
+            + index_to_hex(common.functions.index("load_param_eeprom"))
             + hex_id
             + hex_n
             + hex_type
@@ -484,13 +566,18 @@ class BaseDRS(object):
         return reply_msg
 
     def save_param_bank(self, type_memory: int = 2) -> bytes:
-        """Configures all paremeters according to values loaded into param_data"""
+        """Saves all paremeter values loaded into memory to BID/EEPROM
+
+        Parameters
+        -------
+        type_memory
+            Memory to save to. 1 for BID, 2 for EEPROM"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("save_param_bank"))
+            + index_to_hex(common.functions.index("save_param_bank"))
             + hex_type
         )
 
@@ -502,18 +589,34 @@ class BaseDRS(object):
         return ret
 
     def load_param_bank(self, type_memory: int = 2) -> bytes:
-        """Loads all parameter values into param_data"""
+        """Loads all parameter values from EEPROM/BID to memory
+
+        Parameters
+        -------
+        type_memory
+            Memory to save to. 1 for BID, 2 for EEPROM"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("load_param_bank"))
+            + index_to_hex(common.functions.index("load_param_bank"))
             + hex_type
         )
         return self._transfer(send_packet, 6)
 
-    def set_param_bank(self, param_file: str, hex_values: bool = False):
+    def set_param_bank(self, param_file: str) -> list:
+        """Writes content of file to parameter bank
+
+        Parameters
+        -------
+        param_file
+            Path to parameter bank file
+
+        Returns
+        -------
+        list
+            Written parameter bank values"""
         ps_param_list = {}
         with open(param_file, newline="") as f:
             reader = csv.reader(f)
@@ -522,33 +625,26 @@ class BaseDRS(object):
 
         for param in ps_param_list.keys():
             if param == "PS_Name":
-                ps_param_list[param] = str(ps_param_list[param][0])
-                self.set_ps_name(str(ps_param_list[param]))
-
+                # print(str(param[0]) + "[0]: " + str(param[1]))
+                self.set_ps_name(str(ps_param_list[param][0]))
             else:
-                param_values = []
                 for n in range(64):
                     try:
+                        # print(str(param[0]) + "[" + str(n) + "]: " + str(param[n + 1]))
                         _, param_hex = self.set_param(
                             param, n, float(ps_param_list[param][n])
                         )
-                        if hex_values:
-                            param_values.append(
-                                [
-                                    float(ps_param_list[param][n]),
-                                    param_hex.encode("latin-1"),
-                                ]
-                            )
-                        else:
-                            param_values.append(float(ps_param_list[param][n]))
-                    except:
+                        ps_param_list[param][n] = [
+                            ps_param_list[param][n],
+                            param_hex.encode("latin-1"),
+                        ]
+                    except Exception:
                         break
-                ps_param_list[param] = param_values
-
         return ps_param_list
         # self.save_param_bank()
 
     def read_csv_param_bank(self, param_csv_file: str):
+        """Reads parameter bank from CSV file"""
         csv_param_list = {}
         with open(param_csv_file, newline="") as f:
             reader = csv.reader(f)
@@ -563,20 +659,35 @@ class BaseDRS(object):
                 for n in range(64):
                     try:
                         param_values.append(float(csv_param_list[param][n]))
-                    except:
+                    except Exception:
                         break
                 csv_param_list[param] = param_values
 
         return csv_param_list
 
-    @print_deprecated
     def get_param_bank(
         self,
-        list_param: list = list_parameters.keys(),
+        list_param: list = None,
         timeout: float = 0.5,
-        print_modules: bool = True,
         return_floathex: bool = False,
     ) -> list:
+        """Gets parameter bank values loaded into memory
+
+        Parameters
+        -------
+        list_param
+            List of parameters to read (all, by default)
+        timeout
+            Timeout for this operation. Since this operation might take longer than usual,
+            setting a different timeout is recommended
+        print_modules
+            Print parameter bank values
+        return_floathex
+            Include hexadecimal representation of floats in returned value
+        """
+        if list_param is None:
+            list_param = common.params.keys()
+
         timeout_old = self.timeout
         param_bank = {}
 
@@ -585,32 +696,35 @@ class BaseDRS(object):
             for n in range(64):
                 p = None
                 if param_name == "PS_Name":
-                    param_row = self.get_ps_name()
+                    param_row.append(self.get_ps_name())
                     self.timeout = timeout
                     break
 
-                else:
-                    p = self.get_param(param_name, n, return_floathex=return_floathex)
+                p = self.get_param(param_name, n, return_floathex=return_floathex)
 
-                    if type(p) is not list:
-                        if math.isnan(p):
-                            break
-                    param_row.append(p)
-
-            if print_modules:
-                print(param_row)
+                if not isinstance(p, list):
+                    if math.isnan(p):
+                        break
+                param_row.append(p)
+                # if(print_modules):
+                # print(param_name + "[" + str(n) + "]: " + str(p))
 
             param_bank[param_name] = param_row
-
-        if print_modules:
-            prettier_print(param_bank)
 
         self.timeout = timeout_old
 
         return param_bank
 
-    def store_param_bank_csv(self, bank: dict, filename: str):
-        """Saves parameter bank to CSV file"""
+    @staticmethod
+    def store_param_bank_csv(bank: dict, filename: str):
+        """Saves parameter bank to CSV file
+
+        Parameters
+        -------
+        bank
+            Parameter bank to be stored
+        filename
+            Location of output file"""
         with open(filename, "w", newline="") as f:
             writer = csv.writer(f, delimiter=",")
             for param, val in bank.items():
@@ -630,8 +744,11 @@ class BaseDRS(object):
         self,
         dsp_class: int,
         dsp_id: int,
-        coeffs_list: list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        coeffs_list: list = None,
     ) -> bytes:
+        if coeffs_list is None:
+            coeffs_list = [0] * 12
+
         coeffs_list_full = format_list_size(coeffs_list, NUM_MAX_COEFFS_DSP)
         payload_size = size_to_hex(1 + 2 + 2 + 4 * NUM_MAX_COEFFS_DSP)
         hex_dsp_class = double_to_hex(dsp_class)
@@ -640,7 +757,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_dsp_coeffs"))
+            + index_to_hex(common.functions.index("set_dsp_coeffs"))
             + hex_dsp_class
             + hex_dsp_id
             + hex_coeffs
@@ -649,7 +766,8 @@ class BaseDRS(object):
 
     def get_dsp_coeff(
         self, dsp_class: int, dsp_id: int, coeff: int, return_floathex=False
-    ):
+    ) -> Union[tuple, float]:
+        """Get DSP coefficient values"""
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -657,23 +775,24 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("get_dsp_coeff"))
+            + index_to_hex(common.functions.index("get_dsp_coeff"))
             + hex_dsp_class
             + hex_dsp_id
             + hex_coeff
         )
-        self._reset_input_buffer()
+        self.reset_input_buffer()
         reply_msg = self._transfer(send_packet, 9)
         val = struct.unpack("BBHfB", reply_msg)
 
         if return_floathex:
             return val[3], reply_msg[4:8]
-        else:
-            return val[3]
+
+        return val[3]
 
     def save_dsp_coeffs_eeprom(
         self, dsp_class: int, dsp_id: int, type_memory: int = 2
     ) -> bytes:
+        """Save DSP coefficients to EEPROM"""
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -681,7 +800,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("save_dsp_coeffs_eeprom"))
+            + index_to_hex(common.functions.index("save_dsp_coeffs_eeprom"))
             + hex_dsp_class
             + hex_dsp_id
             + hex_type
@@ -691,6 +810,7 @@ class BaseDRS(object):
     def load_dsp_coeffs_eeprom(
         self, dsp_class: int, dsp_id: int, type_memory: int = 2
     ) -> bytes:
+        """Load DSP coefficient values from EEPROM into memory"""
         payload_size = size_to_hex(1 + 2 + 2 + 2)
         hex_dsp_class = double_to_hex(dsp_class)
         hex_dsp_id = double_to_hex(dsp_id)
@@ -698,7 +818,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("load_dsp_coeffs_eeprom"))
+            + index_to_hex(common.functions.index("load_dsp_coeffs_eeprom"))
             + hex_dsp_class
             + hex_dsp_id
             + hex_type
@@ -706,42 +826,54 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def save_dsp_modules_eeprom(self, type_memory: int = 2) -> bytes:
+        """Save DSP module configuration to EEPROM"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("save_dsp_modules_eeprom"))
+            + index_to_hex(common.functions.index("save_dsp_modules_eeprom"))
             + hex_type
         )
         return self._transfer(send_packet, 6)
 
     def load_dsp_modules_eeprom(self, type_memory: int = 2) -> bytes:
+        """Loads DSP modules from EEPROM to memory"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + memory type
         hex_type = double_to_hex(type_memory)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("load_dsp_modules_eeprom"))
+            + index_to_hex(common.functions.index("load_dsp_modules_eeprom"))
             + hex_type
         )
         return self._transfer(send_packet, 6)
 
-    def reset_udc(self, confirm=True):
-        """Resets UDC firmware"""
-        reply = "y"
-        if confirm:
-            reply = input(
-                "\nEste comando realiza o reset do firmware da placa UDC, e por isso, so e executado caso a fonte esteja desligada. \nCaso deseje apenas resetar interlocks, utilize o comando reset_interlocks(). \n\nTem certeza que deseja prosseguir? [Y/N]: "
-            )
-        if reply.lower() == "y":
-            payload_size = size_to_hex(1)  # Payload: ID
-            send_packet = (
-                COM_FUNCTION + payload_size + index_to_hex(list_func.index("reset_udc"))
-            )
+    def reset_udc(self):
+        """Resets UDC"""
+        payload_size = size_to_hex(1)  # Payload: ID
+        send_packet = (
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("reset_udc"))
+        )
+        try:
             self._transfer_write(send_packet)
+        except SerialErrPckgLen:
+            return
 
     def run_bsmp_func(self, id_func: int) -> bytes:
+        """Runs a given BSMP function
+
+        Parameters
+        -------
+        id_func
+            Numeric ID for BSMP function
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = COM_FUNCTION + payload_size + index_to_hex(id_func)
         return self._transfer(send_packet, 6)
@@ -773,7 +905,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("cfg_source_scope"))
+            + index_to_hex(common.functions.index("cfg_source_scope"))
             + hex_op_mode
         )
         return self._transfer(send_packet, 6)
@@ -784,7 +916,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("cfg_freq_scope"))
+            + index_to_hex(common.functions.index("cfg_freq_scope"))
             + hex_op_mode
         )
         return self._transfer(send_packet, 6)
@@ -795,24 +927,38 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("cfg_duration_scope"))
+            + index_to_hex(common.functions.index("cfg_duration_scope"))
             + hex_op_mode
         )
         return self._transfer(send_packet, 6)
 
     def enable_scope(self) -> bytes:
-        """Enables scope"""
+        """Enables scope
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            COM_FUNCTION + payload_size + index_to_hex(list_func.index("enable_scope"))
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("enable_scope"))
         )
         return self._transfer(send_packet, 6)
 
     def disable_scope(self) -> bytes:
-        """Disables scope"""
+        """Disables scope
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            COM_FUNCTION + payload_size + index_to_hex(list_func.index("disable_scope"))
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("disable_scope"))
         )
         return self._transfer(send_packet, 6)
 
@@ -826,28 +972,42 @@ class BaseDRS(object):
     def sync_pulse(self) -> bytes:
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            COM_FUNCTION + payload_size + index_to_hex(list_func.index("sync_pulse"))
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("sync_pulse"))
         )
         return self._transfer(send_packet, 6)
 
     def select_op_mode(self, op_mode: int) -> bytes:
+        """Select operation mode
+
+        Parameters
+        -------
+        op_mode
+            Operation mode (check BSMP specification for power supplies for more information)
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
-        hex_op_mode = double_to_hex(list_op_mode.index(op_mode))
+        hex_op_mode = double_to_hex(common.op_modes.index(op_mode))
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("select_op_mode"))
+            + index_to_hex(common.functions.index("select_op_mode"))
             + hex_op_mode
         )
         return self._transfer(send_packet, 6)
 
     def set_serial_termination(self, term_enable: int) -> bytes:
+        """Set serial termination state"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + enable
         hex_enable = double_to_hex(term_enable)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_serial_termination"))
+            + index_to_hex(common.functions.index("set_serial_termination"))
             + hex_enable
         )
         return self._transfer(send_packet, 6)
@@ -858,41 +1018,62 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_command_interface"))
+            + index_to_hex(common.functions.index("set_command_interface"))
             + hex_interface
         )
         return self._transfer(send_packet, 6)
 
     def unlock_udc(self, password: int) -> bytes:
-        """Unlocks UDC, enables password protected commands to be ran"""
+        """Unlocks UDC, enables password protected commands to be ran
+
+        Parameters
+        -------
+        password
+            Password
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("unlock_udc"))
+            + index_to_hex(common.functions.index("unlock_udc"))
             + hex_password
         )
         return self._transfer(send_packet, 6)
 
     def lock_udc(self, password: int) -> bytes:
-        """Locks UDC, disables password protected commands"""
+        """Locks UDC, disables password protected commands
+
+        Parameters
+        -------
+        password
+            Password
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1 + 2)  # Payload: ID + password
         hex_password = double_to_hex(password)
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("lock_udc"))
+            + index_to_hex(common.functions.index("lock_udc"))
             + hex_password
         )
         return self._transfer(send_packet, 6)
 
     def reset_counters(self) -> bytes:
+        """Resets counters"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("reset_counters"))
+            + index_to_hex(common.functions.index("reset_counters"))
         )
         return self._transfer(send_packet, 6)
 
@@ -908,9 +1089,10 @@ class BaseDRS(object):
         aux2: float,
         aux3: float,
     ) -> bytes:
+        """"""
         # TODO: take aux as list?
         payload_size = size_to_hex(1 + 2 + 2 + 4 + 4 + 4 + 4 * 4)
-        hex_sig_type = double_to_hex(list_sig_gen_types.index(sig_type))
+        hex_sig_type = double_to_hex(common.sig_gen_types.index(sig_type))
         hex_num_cycles = double_to_hex(num_cycles)
         hex_freq = float_to_hex(freq)
         hex_amplitude = float_to_hex(amplitude)
@@ -922,7 +1104,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("cfg_siggen"))
+            + index_to_hex(common.functions.index("cfg_siggen"))
             + hex_sig_type
             + hex_num_cycles
             + hex_freq
@@ -939,7 +1121,12 @@ class BaseDRS(object):
         """Updates signal generator parameters in continuous operation.
         Amplitude and offset are updated instantaneously, frequency is
         updated on the next 1 second update cycle. *This function cannot be
-        applied in trapezoidal mode."""
+        applied in trapezoidal mode.
+
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1 + 4 + 4 + 4)
         hex_freq = float_to_hex(freq)
         hex_amplitude = float_to_hex(amplitude)
@@ -947,7 +1134,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("set_siggen"))
+            + index_to_hex(common.functions.index("set_siggen"))
             + hex_freq
             + hex_amplitude
             + hex_offset
@@ -955,20 +1142,32 @@ class BaseDRS(object):
         return self._transfer(send_packet, 6)
 
     def enable_siggen(self) -> bytes:
-        """Enables signal generator"""
-        payload_size = size_to_hex(1)  # Payload: ID
-        send_packet = (
-            COM_FUNCTION + payload_size + index_to_hex(list_func.index("enable_siggen"))
-        )
-        return self._transfer(send_packet, 6)
+        """Enables signal generator
 
-    def disable_siggen(self) -> bytes:
-        """Disables signal generator"""
+        Returns
+        -------
+        bytes
+            UDC response"""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("disable_siggen"))
+            + index_to_hex(common.functions.index("enable_siggen"))
+        )
+        return self._transfer(send_packet, 6)
+
+    def disable_siggen(self) -> bytes:
+        """Disables signal generator
+
+        Returns
+        -------
+        bytes
+            UDC response"""
+        payload_size = size_to_hex(1)  # Payload: ID
+        send_packet = (
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("disable_siggen"))
         )
         return self._transfer(send_packet, 6)
 
@@ -980,6 +1179,7 @@ class BaseDRS(object):
         gain: float = 1.0,
         offset: int = 0,
     ) -> bytes:
+        """"""
         payload_size = size_to_hex(
             1 + 2 + 2 + 4 + 4 + 4
         )  # Payload: ID + idx + sync_mode + frequency + gain + offset
@@ -991,7 +1191,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("cfg_wfmref"))
+            + index_to_hex(common.functions.index("cfg_wfmref"))
             + hex_idx
             + hex_mode
             + hex_freq
@@ -1008,7 +1208,7 @@ class BaseDRS(object):
         send_packet = (
             COM_FUNCTION
             + payload_size
-            + index_to_hex(list_func.index("select_wfmref"))
+            + index_to_hex(common.functions.index("select_wfmref"))
             + hex_idx
         )
         return self._transfer(send_packet, 6)
@@ -1018,7 +1218,9 @@ class BaseDRS(object):
         waveform's start."""
         payload_size = size_to_hex(1)  # Payload: ID
         send_packet = (
-            COM_FUNCTION + payload_size + index_to_hex(list_func.index("reset_wfmref"))
+            COM_FUNCTION
+            + payload_size
+            + index_to_hex(common.functions.index("reset_wfmref"))
         )
         return self._transfer(send_packet, 6)
 
@@ -1044,14 +1246,45 @@ class BaseDRS(object):
             "offset": self.read_bsmp_variable(18, "float"),
         }
 
+    @staticmethod
+    def store_dsp_modules_bank_csv(bank: dict, filename: str):
+        """Saves DSP parameter bank to CSV file
+
+        Parameters
+        -------
+        bank
+            Parameter bank to be stored
+        filename
+            Output filename
+        """
+        with open(filename + ".csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter=",")
+            for dsp_module, values in bank.items():
+                for i, coef in enumerate(values["coeffs"]):
+                    writer.writerow([dsp_module, values["class"], i] + coef)
+
     def read_csv_file(self, filename: str, type: str = "float") -> list:
+        """Utility function to translate CSV file to list
+
+        Parameters
+        -------
+        filename
+            File location
+        type
+            Type to consider for the variables in the file, determines whether or not a parsed float or a string is returned in the list
+
+        Returns
+        -------
+        list
+            List of rows
+        """
         csv_list = []
         with open(filename, newline="") as f:
             reader = csv.reader(f)
             for row in reader:
                 if type == "float":
                     row_converted = float(row[0])
-                elif type == "string" or type == "str":
+                elif type in ("string", "str"):
                     row_converted = str(row[0])
                 csv_list.append(row_converted)
         return csv_list
@@ -1063,7 +1296,23 @@ class BaseDRS(object):
     ======================================================================
     """
 
-    def read_bsmp_variable(self, id_var: int, type_var: str):
+    def read_bsmp_variable(self, id_var: int, type_var: str) -> Union[float, int]:
+        """Reads a BSMP variable
+
+        Parameters
+        -------
+        id_var
+            Variable's numeric ID
+        type_var
+            Type of variable to read (float, uint8_t, uint16_t, uint32_t)
+
+        Returns
+        -------
+        float
+            Variable value (if given type was float)
+        int
+            Variable value (if given type was an integer of any length)
+        """
         reply_msg = self.read_var(index_to_hex(id_var), type_size[type_var])
         val = struct.unpack(type_format[type_var], reply_msg)
         return val[3]
@@ -1082,6 +1331,12 @@ class BaseDRS(object):
         return val[0].decode("utf-8")
 
     def read_udc_version(self) -> dict:
+        """Gets UDC's ARM and DSP firmware version
+
+        Returns
+        -------
+        dict
+            Dictionary containing both ARM and DSP firmware versions"""
         return {"arm": self.read_udc_arm_version(), "c28": self.read_udc_c28_version()}
 
     """
@@ -1097,7 +1352,7 @@ class BaseDRS(object):
         send_packet = (
             COM_WRITE_VAR
             + WRITE_FLOAT_SIZE_PAYLOAD
-            + index_to_hex(list_common_vars.index("sigGen_Freq"))
+            + index_to_hex(common.vars.index("sigGen_Freq"))
             + hex_float
         )
         return self._transfer(send_packet, 5)
@@ -1108,7 +1363,7 @@ class BaseDRS(object):
         send_packet = (
             COM_WRITE_VAR
             + WRITE_FLOAT_SIZE_PAYLOAD
-            + index_to_hex(list_common_vars.index("sigGen_Amplitude"))
+            + index_to_hex(common.vars.index("sigGen_Amplitude"))
             + hex_float
         )
         return self._transfer(send_packet, 5)
@@ -1119,7 +1374,7 @@ class BaseDRS(object):
         send_packet = (
             COM_WRITE_VAR
             + WRITE_FLOAT_SIZE_PAYLOAD
-            + index_to_hex(list_common_vars.index("sigGen_Offset"))
+            + index_to_hex(common.vars.index("sigGen_Offset"))
             + hex_float
         )
         return self._transfer(send_packet, 5)
@@ -1130,7 +1385,7 @@ class BaseDRS(object):
         send_packet = (
             COM_WRITE_VAR
             + WRITE_FLOAT_SIZE_PAYLOAD
-            + index_to_hex(list_common_vars.index("sigGen_Aux"))
+            + index_to_hex(common.vars.index("sigGen_Aux"))
             + hex_float
         )
         return self._transfer(send_packet, 5)
@@ -1141,7 +1396,7 @@ class BaseDRS(object):
         send_packet = (
             COM_WRITE_VAR
             + WRITE_DOUBLE_SIZE_PAYLOAD
-            + index_to_hex(list_common_vars.index("dp_ID"))
+            + index_to_hex(common.vars.index("dp_ID"))
             + hex_double
         )
         return self._transfer(send_packet, 5)
@@ -1152,7 +1407,7 @@ class BaseDRS(object):
         send_packet = (
             COM_WRITE_VAR
             + WRITE_DOUBLE_SIZE_PAYLOAD
-            + index_to_hex(list_common_vars.index("dp_Class"))
+            + index_to_hex(common.vars.index("dp_Class"))
             + hex_double
         )
         return self._transfer(send_packet, 5)
@@ -1178,17 +1433,12 @@ class BaseDRS(object):
         send_packet = (
             COM_WRITE_VAR
             + payload_size
-            + index_to_hex(list_common_vars.index("dp_Coeffs"))
+            + index_to_hex(common.vars.index("dp_Coeffs"))
             + str_float_list
         )
         return self._transfer(send_packet, 5)
 
-    """
-    ======================================================================
-                     Métodos de Escrita de Curvas BSMP
-            O retorno do método são os bytes de retorno da mensagem
-    ======================================================================
-    """
+    # Methods for writing curves
 
     def send_wfmref_curve(self, block_idx: int, data) -> bytes:
         # TODO: Could use list comprehension in val
@@ -1201,7 +1451,7 @@ class BaseDRS(object):
         send_packet = (
             COM_SEND_WFM_REF
             + payload_size
-            + index_to_hex(list_curv.index("wfmRef_Curve"))
+            + index_to_hex(common.curves.index("wfmRef_Curve"))
             + block_hex
             + curve_hex
         )
@@ -1214,7 +1464,7 @@ class BaseDRS(object):
         send_packet = (
             COM_REQUEST_CURVE
             + payload_size
-            + index_to_hex(list_curv.index("wfmRef_Curve"))
+            + index_to_hex(common.curves.index("wfmRef_Curve"))
             + block_hex
         )
         # Address+Command+Size+ID+Block_idx+data+checksum
@@ -1225,13 +1475,15 @@ class BaseDRS(object):
         return val
 
     def recv_samples_buffer(self) -> list:
+        raise NotImplementedError
+        """
         # TODO: Will always fail, samplesBuffer is not in list
         block_hex = size_to_hex(0)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
             COM_REQUEST_CURVE
             + payload_size
-            + index_to_hex(list_curv.index("samplesBuffer"))
+            + index_to_hex(common.curves.index("samplesBuffer"))
             + block_hex
         )
         # Address+Command+Size+ID+Block_idx+data+checksum
@@ -1240,12 +1492,13 @@ class BaseDRS(object):
         try:
             for k in range(7, len(recv_msg) - 1, 4):
                 val.extend(struct.unpack("f", recv_msg[k : k + 4]))
-        except:
+        except Exception:
             pass
-        return val
+        """
 
     def send_full_wfmref_curve(self, block_idx: int, data) -> bytes:
         # TODO: Will always fail, fullwfmRef_Curve is not in list
+        raise NotImplementedError
         block_hex = size_to_hex(block_idx)
         val = []
         for k in range(0, len(data)):
@@ -1255,7 +1508,7 @@ class BaseDRS(object):
         send_packet = (
             COM_SEND_WFM_REF
             + payload_size
-            + index_to_hex(list_curv.index("fullwfmRef_Curve"))
+            + index_to_hex(common.curves.index("fullwfmRef_Curve"))
             + block_hex
             + curve_hex
         )
@@ -1263,12 +1516,13 @@ class BaseDRS(object):
 
     def recv_full_wfmref_curve(self, block_idx: int) -> list:
         # TODO: Will always fail, fullwfmRef_Curve is not in list
+        raise NotImplementedError
         block_hex = size_to_hex(block_idx)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
             COM_REQUEST_CURVE
             + payload_size
-            + index_to_hex(list_curv.index("fullwfmRef_Curve"))
+            + index_to_hex(common.curves.index("fullwfmRef_Curve"))
             + block_hex
         )
         recv_msg = self._transfer(send_packet, 1 + 1 + 2 + 1 + 2 + 16384 + 1)
@@ -1279,12 +1533,13 @@ class BaseDRS(object):
 
     def recv_samples_buffer_blocks(self, block_idx: int) -> list:
         # TODO: Will always fail, samplesBuffer_blocks is not in list
+        raise NotImplementedError
         block_hex = size_to_hex(block_idx)
         payload_size = size_to_hex(1 + 2)  # Payload: ID+Block_index
         send_packet = (
             COM_REQUEST_CURVE
             + payload_size
-            + index_to_hex(list_curv.index("samplesBuffer_blocks"))
+            + index_to_hex(common.curves.index("samplesBuffer_blocks"))
             + block_hex
         )
         # t0 = time.time()
@@ -1299,6 +1554,7 @@ class BaseDRS(object):
 
     def recv_samples_buffer_allblocks(self) -> list:
         # TODO: Will fail
+        raise NotImplementedError
         buff = []
         # self.DisableSamplesBuffer()
         for i in range(0, 16):
@@ -1315,7 +1571,7 @@ class BaseDRS(object):
             COM_REQUEST_CURVE + payload_size + index_to_hex(curve_id) + block_hex
         )
         # t0 = time.time()
-        self._reset_input_buffer()
+        self.reset_input_buffer()
         # Address+Command+Size+ID+Block_idx+data+checksum
         recv_msg = self._transfer(
             send_packet, 1 + 1 + 2 + 1 + 2 + size_curve_block[curve_id] + 1
@@ -1363,15 +1619,14 @@ class BaseDRS(object):
                 )
             )
 
-        else:
-            for block_id in range(len(blocks)):
-                self.write_curve_block(curve, block_id, blocks[block_id])
+        for block_id in range(len(blocks)):
+            self.write_curve_block(curve, block_id, blocks[block_id])
 
         return blocks
 
     def read_buf_samples_ctom(self) -> list:
         buf = []
-        curve_id = list_curv.index("buf_samples_ctom")
+        curve_id = common.curves.index("buf_samples_ctom")
 
         ps_status = self.read_ps_status()
         if ps_status["model"] == "FBP":
@@ -1383,79 +1638,115 @@ class BaseDRS(object):
 
         return buf
 
-    """
-    ======================================================================
-                      Funções auxiliares
-    ======================================================================
-    """
+    # Auxiliary functions
 
-    def read_vars_common(self, all=False):
+    def _parse_vars(self, data: bytes, template: dict) -> dict:
+        vars_dict = {}
+        index = 0
 
-        loop_state = ["Closed Loop", "Open Loop"]
+        for key, var in template.items():
+            try:
+                val = f"{round(struct.unpack(var['format'], data[index:index+var['size']])[0], 3)} {var['egu']}"
+            except TypeError:
+                val = struct.unpack(var["format"], data[index : index + var["size"]])[0]
+            vars_dict[key] = val
+            index += var["size"]
 
-        ps_status = self.read_ps_status()
-        if ps_status["open_loop"] == 0:
+        return vars_dict
+
+    def read_vars_common(self, vals: bytes = None) -> dict:
+        """Reads common variables for all power supplies
+
+        Parameters
+        -------
+        vals
+            Bytes read from power supply (useful for caching, preventing redundant reads)
+
+        Returns
+        -------
+        dict
+            Dictionary containing common variables"""
+        if vals is None:
+            vals = self._transfer(
+                f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(1)}",
+                0,
+            )[4:]
+
+            if len(vals) < 246:
+                raise SerialErrPckgLen(
+                    f"Expected at least 246 bytes, received {len(vals)}"
+                )
+        vars_dict = self._parse_vars(vals, common.bsmp)
+        vars_dict["status"] = self._parse_status(int(vars_dict["ps_status"]))
+
+        if vars_dict["status"]["open_loop"] == 0:
             if (
-                (ps_status["model"] == "FAC_ACDC")
-                or (ps_status["model"] == "FAC_2S_ACDC")
-                or (ps_status["model"] == "FAC_2P4S_ACDC")
+                (vars_dict["status"]["model"] == "FAC_ACDC")
+                or (vars_dict["status"]["model"] == "FAC_2S_ACDC")
+                or (vars_dict["status"]["model"] == "FAC_2P4S_ACDC")
             ):
-                setpoint_unit = " V"
-            else:
-                setpoint_unit = " A"
+                vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "V"
+                vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "V"
         else:
-            setpoint_unit = " %"
+            vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "%"
+            vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "%"
 
-        resp = {
-            "ps_model": ps_status["model"],
-            "state": ps_status["state"],
-            "loop_state": loop_state[ps_status["open_loop"]],
-            "setpoint": str(round(self.read_bsmp_variable(1, "float"), 3))
-            + setpoint_unit,
-            "reference": str(round(self.read_bsmp_variable(2, "float"), 3))
-            + setpoint_unit,
-        }
+        vars_dict["siggen_type"] = common.sig_gen_types[int(vars_dict["siggen_type"])]
+        vars_dict["wfmref_sync_mode"] = common.wfmref_sync_modes[
+            int(vars_dict["wfmref_sync_mode"])
+        ]
+        vars_dict["version"] = {}
 
-        if not all:
-            prettier_print(resp)
-            return resp
+        for i, version in enumerate(common.versions):
+            var_str = vars_dict["firmware_version"][i * 16 : (i + 1) * 16]
 
-        resp_add = {
-            "status": ps_status,
-            "counter_set_slowref": self.read_bsmp_variable(4, "uint32_t"),
-            "counter_sync_pulse": self.read_bsmp_variable(5, "uint32_t"),
-            "wfm_ref_0": self.get_wfmref_vars(0),
-            "wfm_ref_1": self.get_wfmref_vars(1),
-            "scope": self.get_scope_vars(),
-            "sig_gen": self.get_siggen_vars(),
-        }
+            if b"\x00" in var_str:
+                continue
 
-        prettier_print({**resp, **resp_add})
-        return {**resp, **resp_add}
+            vars_dict["version"][version] = var_str.decode("UTF-8")
+        del vars_dict["firmware_version"]
+
+        return vars_dict
 
     def _interlock_unknown_assignment(self, active_interlocks, index):
-        active_interlocks.append("bit {}: Reserved".format(index))
+        active_interlocks.append(f"bit {index}: Reserved")
 
     def _interlock_name_assigned(self, active_interlocks, index, list_interlocks):
-        active_interlocks.append("bit {}: {}".format(index, list_interlocks[index]))
+        active_interlocks.append(f"bit {index}: {list_interlocks[index]}")
 
-    def _include_interlocks(self, vars: dict, soft: list, hard: list) -> dict:
-        soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-        if soft_itlks != 0:
-            vars["soft_interlocks"] = self.decode_interlocks(soft_itlks, soft)
-        else:
-            vars["soft_interlocks"] = []
+    def _decode_all_interlocks(self, interlocks: list, soft: list, hard: list) -> dict:
+        interlocks = [struct.unpack("I", i)[0] for i in interlocks]
 
-        hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-        if hard_itlks != 0:
-            vars["hard_interlocks"] = self.decode_interlocks(hard_itlks, hard)
-        else:
-            vars["hard_interlocks"] = []
+        return {
+            "soft_interlocks": self.decode_interlocks(interlocks[0], soft),
+            "hard_interlocks": self.decode_interlocks(interlocks[1], hard),
+        }
 
-        return vars
+    def decode_interlocks(
+        self, reg_interlocks: Union[int, str], list_interlocks: list
+    ) -> list:
+        """Decodes interlocks from a raw interlock readout value
 
-    def decode_interlocks(self, reg_interlocks, list_interlocks: list) -> list:
+        Parameters
+        -------
+        reg_interlocks
+            Raw interlock value
+        list_interlocks
+            List mapping each interlock bit to an interlock message
+
+        Returns
+        -------
+        list
+            List of interlocks"""
+
         active_interlocks = []
+
+        if isinstance(reg_interlocks, str):
+            reg_interlocks = int(reg_interlocks)
+
+        if not reg_interlocks:
+            return active_interlocks
+
         for index in range(32):
             if reg_interlocks & (1 << index):
                 if index < len(list_interlocks):
@@ -1467,1909 +1758,443 @@ class BaseDRS(object):
 
         return active_interlocks
 
-    @print_deprecated
-    def read_vars_fbp(self, n: int = 1, dt: float = 0.5) -> dict:
-        vars = {}
-        for _ in range(n):
-            self.read_vars_common()
-            vars = {
-                "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                "load_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
-                "load_resistance": str(
-                    abs(
-                        round(
-                            self.read_bsmp_variable(34, "float")
-                            / self.read_bsmp_variable(33, "float"),
-                            3,
-                        )
-                    )
-                )
-                + " Ohm",
-                "load_power": str(
-                    abs(
-                        round(
-                            self.read_bsmp_variable(34, "float")
-                            * self.read_bsmp_variable(33, "float"),
-                            3,
-                        )
-                    )
-                )
-                + " W",
-                "dc_link_voltage": f"{round(self.read_bsmp_variable(35, 'float'), 3)} V",
-                "heatsink_temp": f"{round(self.read_bsmp_variable(36, 'float'), 3)} °C",
-                "duty_cycle": f"{round(self.read_bsmp_variable(37, 'float'), 3)}%",
-            }
+    def _read_vars_generic(
+        self, template: dict, soft_ilocks: list, hard_ilocks: list, length: int = None
+    ) -> dict:
+        index = 0
+        if length is None:
+            length = 255 + sum([data["size"] for data in template.values()])
 
-            vars = self._include_interlocks(
-                vars, list_fbp_soft_interlocks, list_fbp_hard_interlocks
+
+        # Dynamically obtaining transfer sizes incurs a 70 uS penalty per execution
+
+        vals = self._transfer(
+            f"{COM_READ_BSMP_GROUP_VALUES}\x00\x01{index_to_hex(1)}",
+            length,
+        )
+
+        # 1 byte for checksum, 246 common variable bytes, 8 interlock bytes
+
+        vars_dict = self.read_vars_common(vals[4:246])
+        vals = vals[246:-1]
+
+        vars_dict = {
+            **vars_dict,
+            **self._decode_all_interlocks(
+                [vals[:4], vals[4:8]], soft_ilocks, hard_ilocks
+            ),
+        }
+
+        index += 8
+
+        return {**vars_dict, **self._parse_vars(vals[8:], template)}
+
+    def read_vars_fbp(self) -> dict:
+        """Reads FBP 2S ACDC power supply variables
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        return self._read_vars_generic(
+            fbp.bsmp, fbp.soft_interlocks, fbp.hard_interlocks
+        )
+
+    def read_vars_fbp_dclink(self) -> dict:
+        """Reads FBP DCLink power supply variables
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        return self._read_vars_generic(fbp.bsmp_dclink, [], fbp.dclink_hard_interlocks)
+
+    def read_vars_fac_acdc(self, iib: bool = True) -> dict:
+        """Reads FAC ACDC power supply variables
+
+        Parameters
+        -------
+        iib
+            Whether or not IIB interlocks should be parsed and returned alongside other data
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        vars_dict = self._read_vars_generic(
+            fac.bsmp_acdc,
+            fac.list_acdc_soft_interlocks,
+            fac.list_acdc_hard_interlocks,
+        )
+
+        if iib:
+            vars_dict["iib_cmd_alarms_raw"] = vars_dict.pop("iib_alarms_cmd")
+            vars_dict["iib_cmd_interlocks_raw"] = vars_dict.pop("iib_interlocks_cmd")
+            vars_dict["iib_is_alarms_raw"] = vars_dict.pop("iib_alarms_is")
+            vars_dict["iib_is_interlocks_raw"] = vars_dict.pop("iib_interlocks_is")
+
+
+            vars_dict["iib_is_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_is_interlocks_raw"],
+                fac.list_acdc_iib_is_interlocks,
             )
 
-            prettier_print(vars)
-
-            time.sleep(dt)
-        return vars
-
-    @print_deprecated
-    def read_vars_fbp_dclink(self, n: int = 1, dt: float = 0.5) -> dict:
-        vars = {}
-        try:
-            for _ in range(n):
-                self.read_vars_common()
-                vars = {
-                    "modules_status": self.read_bsmp_variable(33, "uint32_t"),
-                    "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
-                    "ps1_voltage": f"{round(self.read_bsmp_variable(35, 'float'), 3)} V",
-                    "ps2_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                    "ps3_voltage": f"{round(self.read_bsmp_variable(37, 'float'), 3)} V",
-                    "dig_pot_tap": self.read_bsmp_variable(38, "uint8_t"),
-                }
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                if hard_itlks:
-                    vars["hard_interlocks"] = self.decode_interlocks(
-                        hard_itlks, list_fbp_dclink_hard_interlocks
-                    )
-
-                prettier_print(vars)
-                time.sleep(dt)
-
-        except Exception:
-            pass
-
-        return vars
-
-    @print_deprecated
-    def read_vars_fac_acdc(self, n=1, dt: float = 0.5, iib: bool = True) -> dict:
-        vars = {}
-        for _ in range(n):
-            self.read_vars_common()
-            vars = {
-                "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
-                "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)}%",
-            }
-
-            vars = self._include_interlocks(
-                vars, list_fac_acdc_soft_interlocks, list_fac_acdc_hard_interlocks
+            vars_dict["iib_is_alarms"] = self.decode_interlocks(
+                vars_dict["iib_is_alarms_raw"],
+                fac.list_acdc_iib_is_alarms,
             )
 
-            if iib:
-                vars["iib"] = {
-                    "input_current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
-                    "input_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                    "igbt_temp": f"{round(self.read_bsmp_variable(38, 'float'), 3)} °C",
-                    "driver_voltage": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
-                    "driver_current": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
-                    "inductor_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)}  °C",
-                    "heatsink_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)}  °C",
-                    "is": {
-                        "board_temp": f"{round(self.read_bsmp_variable(43, 'float'), 3)}  °C",
-                        "board_rh": f"{round(self.read_bsmp_variable(44, 'float'), 3)}%",
-                    },
-                    "cmd": {
-                        "load_voltage": f"{round(self.read_bsmp_variable(47, 'float'), 3)} V",
-                        "cap_bank_voltage": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
-                        "rectifier_inductor_temp": f"{round(self.read_bsmp_variable(49, 'float'), 3)} °C",
-                        "rectifier_heatsink_temp": f"{round(self.read_bsmp_variable(50, 'float'), 3)} °C",
-                        "external_boards_voltage": f"{round(self.read_bsmp_variable(51, 'float'), 3)} V",
-                        "auxiliary_board_current": f"{round(self.read_bsmp_variable(52, 'float'), 3)} A",
-                        "idb_board_current": f"{round(self.read_bsmp_variable(53, 'float'), 3)} A",
-                        "ground_leakage_current": f"{round(self.read_bsmp_variable(54, 'float'), 3)} A",
-                        "board_temp": f"{round(self.read_bsmp_variable(55, 'float'), 3)} °C",
-                        "board_rh": f"{round(self.read_bsmp_variable(56, 'float'), 3)}%",
-                    },
-                }
-
-                iib_is_itlks = self.read_bsmp_variable(45, "uint32_t")
-                if iib_is_itlks:
-                    vars["is"]["interlocks"] = self.decode_interlocks(
-                        iib_is_itlks, list_fac_acdc_iib_is_interlocks
-                    )
-
-                iib_is_alarms = self.read_bsmp_variable(46, "uint32_t")
-                if iib_is_alarms:
-                    vars["is"]["alarms"] = self.decode_interlocks(
-                        iib_is_alarms, list_fac_acdc_iib_is_alarms
-                    )
-
-                iib_cmd_itlks = self.read_bsmp_variable(57, "uint32_t")
-                if iib_cmd_itlks:
-                    vars["cmd"]["interlocks"] = self.decode_interlocks(
-                        iib_cmd_itlks, list_fac_acdc_iib_cmd_interlocks
-                    )
-
-                iib_cmd_alarms = self.read_bsmp_variable(58, "uint32_t")
-                if iib_cmd_alarms:
-                    vars["cmd"]["interlocks"] = self.decode_interlocks(
-                        iib_cmd_alarms, list_fac_acdc_iib_cmd_alarms
-                    )
-
-            prettier_print(vars)
-            time.sleep(dt)
-        return vars
-
-    @print_deprecated
-    def read_vars_fac_dcdc(self, n=1, dt=0.5, iib=1):
-        vars = {}
-        try:
-            for _ in range(n):
-                # TODO: Is this rounding really necessary?
-                wref_index = (
-                    round(self.read_bsmp_variable(20, "uint32_t"), 3)
-                    - round(self.read_bsmp_variable(18, "uint32_t"), 3)
-                ) / 2 + 1
-                self.read_vars_common()
-
-                vars = {
-                    "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
-                    "wfmref_index": wref_index,
-                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "load_current_ddct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                    "duty_cycle": f"{round(self.read_bsmp_variable(37, 'float'), 3)}%",
-                }
-
-                vars = self._include_interlocks(
-                    vars, list_fac_dcdc_soft_interlocks, list_fac_dcdc_hard_interlocks
-                )
-
-                if iib:
-                    vars["iib"] = {
-                        "cap_bank_voltage": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
-                        "input_current": f"{round(self.read_bsmp_variable(39, 'float'), 3)} A",
-                        "output_current": f"{round(self.read_bsmp_variable(40, 'float'), 3)} A",
-                        "igbt_leg_1_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)} °C",
-                        "igbt_leg_2_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)} °C",
-                        "inductor_temp": f"{round(self.read_bsmp_variable(43, 'float'), 3)} °C",
-                        "heatsink_temp": f"{round(self.read_bsmp_variable(44, 'float'), 3)} °C",
-                        "driver_voltage": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
-                        "driver_current_1": f"{round(self.read_bsmp_variable(46, 'float'), 3)} A",
-                        "driver_current_2": f"{round(self.read_bsmp_variable(47, 'float'), 3)} A",
-                        "ground_leakage_current": f"{round(self.read_bsmp_variable(48, 'float'), 3)} A",
-                        "board_temp": f"{round(self.read_bsmp_variable(49, 'float'), 3)} °C",
-                        "board_rh": f"{round(self.read_bsmp_variable(50, 'float'), 3)} °C",
-                    }
-
-                    iib_itlks = self.read_bsmp_variable(51, "uint32_t")
-                    if iib_itlks:
-                        vars["iib"]["interlocks"] = self.decode_interlocks(
-                            iib_itlks, list_fac_dcdc_iib_interlocks
-                        )
-
-                    iib_alarms = self.read_bsmp_variable(52, "uint32_t")
-                    if iib_alarms:
-                        vars["iib"]["alarms"] = self.decode_interlocks(
-                            iib_alarms, list_fac_dcdc_iib_alarms
-                        )
-
-                prettier_print(vars)
-                time.sleep(dt)
-
-        except:
-            pass
-
-    @print_deprecated
-    def read_vars_fac_dcdc_ema(self, n=1, dt=0.5, iib=0):
-        vars = {}
-        try:
-            for _ in range(n):
-                self.read_vars_common()
-
-                vars = {
-                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "dclink_voltage": f"{round(self.read_bsmp_variable(34, 'float'), 3)} V",
-                    "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)}%",
-                }
-
-                vars = self._include_interlocks(
-                    vars,
-                    list_fac_dcdc_ema_soft_interlocks,
-                    list_fac_dcdc_ema_hard_interlocks,
-                )
-
-                if iib:
-                    vars["iib"] = {
-                        "input_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                        "input_current": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                        "output_current": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
-                        "igbt_1_temp": f"{round(self.read_bsmp_variable(39, 'float'), 3)} °C",
-                        "igbt_2_temp": f"{round(self.read_bsmp_variable(40, 'float'), 3)} °C",
-                        "inductor_temp": f"{round(self.read_bsmp_variable(41, 'float'), 3)} °C",
-                        "heatsink_temp": f"{round(self.read_bsmp_variable(42, 'float'), 3)} °C",
-                        "driver_voltage": f"{round(self.read_bsmp_variable(43, 'float'), 3)} V",
-                        "driver_current_1": f"{round(self.read_bsmp_variable(44, 'float'), 3)} A",
-                        "driver_current_2": f"{round(self.read_bsmp_variable(45, 'float'), 3)} A",
-                        "ground_leakage_current": f"{round(self.read_bsmp_variable(46, 'float'), 3)} A",
-                        "board_temp": f"{round(self.read_bsmp_variable(47, 'float'), 3)} °C",
-                        "board_rh": f"{round(self.read_bsmp_variable(48, 'float'), 3)} °C",
-                    }
-
-                    iib_itlks = self.read_bsmp_variable(49, "uint32_t")
-                    if iib_itlks:
-                        vars["iib"]["alarms"] = self.decode_interlocks(
-                            iib_itlks, list_fac_dcdc_ema_iib_interlocks
-                        )
-
-                    iib_alarms = self.read_bsmp_variable(50, "uint32_t")
-                    if iib_alarms:
-                        vars["iib"]["interlocks"] = self.decode_interlocks(
-                            iib_alarms, list_fac_dcdc_ema_iib_alarms
-                        )
-
-                prettier_print(vars)
-                time.sleep(dt)
-
-        except:
-            pass
-
-    @print_deprecated
-    def read_vars_fac_2s_acdc(self, n=1, add_mod_a=2, dt=0.5, iib=0):
-
-        old_add = self.slave_add
-
-        try:
-            for i in range(n):
-
-                self.slave_add = add_mod_a
-
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-                self.read_vars_common()
-
-                print("\n *** MODULE A ***")
-
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(soft_itlks, list_fac_2s_acdc_soft_interlocks)
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(hard_itlks, list_fac_2s_acdc_hard_interlocks)
-
-                iib_is_itlks = self.read_bsmp_variable(45, "uint32_t")
-                print("\nIIB IS Interlocks: " + str(iib_is_itlks))
-                if iib_is_itlks:
-                    self.decode_interlocks(
-                        iib_is_itlks, list_fac_2s_acdc_iib_is_interlocks
-                    )
-
-                iib_is_alarms = self.read_bsmp_variable(46, "uint32_t")
-                print("IIB IS Alarms: " + str(iib_is_alarms))
-                if iib_is_alarms:
-                    self.decode_interlocks(
-                        iib_is_alarms, list_fac_2s_acdc_iib_is_alarms
-                    )
-
-                iib_cmd_itlks = self.read_bsmp_variable(57, "uint32_t")
-                print("\nIIB Cmd Interlocks: " + str(iib_cmd_itlks))
-                if iib_cmd_itlks:
-                    self.decode_interlocks(
-                        iib_cmd_itlks, list_fac_2s_acdc_iib_cmd_interlocks
-                    )
-
-                iib_cmd_alarms = self.read_bsmp_variable(58, "uint32_t")
-                print("IIB Cmd Alarms: " + str(iib_cmd_alarms))
-                if iib_cmd_alarms:
-                    self.decode_interlocks(
-                        iib_cmd_alarms, list_fac_2s_acdc_iib_cmd_alarms
-                    )
-
-                print(
-                    "\nCapBank Voltage: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "Rectifier Current: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " %"
-                )
-
-                if iib:
-                    print(
-                        "\nIIB IS Input Current: "
-                        + str(round(self.read_bsmp_variable(36, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB IS Input Voltage: "
-                        + str(round(self.read_bsmp_variable(37, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB IS IGBT Temp: "
-                        + str(round(self.read_bsmp_variable(38, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IS Driver Voltage: "
-                        + str(round(self.read_bsmp_variable(39, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB IS Driver Current: "
-                        + str(round(self.read_bsmp_variable(40, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB IS Inductor Temp: "
-                        + str(round(self.read_bsmp_variable(41, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IS Heat-Sink Temp: "
-                        + str(round(self.read_bsmp_variable(42, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IS Board Temp: "
-                        + str(round(self.read_bsmp_variable(43, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IS Board RH: "
-                        + str(round(self.read_bsmp_variable(44, "float"), 3))
-                        + " %"
-                    )
-                    print(
-                        "IIB IS Interlocks: "
-                        + str(round(self.read_bsmp_variable(45, "uint32_t"), 3))
-                    )
-                    print(
-                        "IIB IS Alarms: "
-                        + str(round(self.read_bsmp_variable(46, "uint32_t"), 3))
-                    )
-
-                    print(
-                        "\nIIB Cmd Load Voltage: "
-                        + str(round(self.read_bsmp_variable(47, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Cmd CapBank Voltage: "
-                        + str(round(self.read_bsmp_variable(48, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Cmd Rectifier Inductor Temp: "
-                        + str(round(self.read_bsmp_variable(49, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Cmd Rectifier Heat-Sink Temp: "
-                        + str(round(self.read_bsmp_variable(50, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Cmd External Boards Voltage: "
-                        + str(round(self.read_bsmp_variable(51, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Cmd Auxiliary Board Current: "
-                        + str(round(self.read_bsmp_variable(52, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Cmd IDB Board Current: "
-                        + str(round(self.read_bsmp_variable(53, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Cmd Ground Leakage Current: "
-                        + str(round(self.read_bsmp_variable(54, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Cmd Board Temp: "
-                        + str(round(self.read_bsmp_variable(55, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Cmd Board RH: "
-                        + str(round(self.read_bsmp_variable(56, "float"), 3))
-                        + " %"
-                    )
-                    print(
-                        "IIB Cmd Interlocks: "
-                        + str(round(self.read_bsmp_variable(57, "uint32_t"), 3))
-                    )
-                    print(
-                        "IIB Cmd Alarms: "
-                        + str(round(self.read_bsmp_variable(58, "uint32_t"), 3))
-                    )
-
-                self.slave_add = add_mod_a + 1
-
-                print("\n *** MODULE B ***")
-
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(soft_itlks, list_fac_2s_acdc_soft_interlocks)
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(hard_itlks, list_fac_2s_acdc_hard_interlocks)
-
-                iib_is_itlks = self.read_bsmp_variable(45, "uint32_t")
-                print("\nIIB IS Interlocks: " + str(iib_is_itlks))
-                if iib_is_itlks:
-                    self.decode_interlocks(
-                        iib_is_itlks, list_fac_2s_acdc_iib_is_interlocks
-                    )
-
-                iib_is_alarms = self.read_bsmp_variable(46, "uint32_t")
-                print("IIB IS Alarms: " + str(iib_is_alarms))
-                if iib_is_alarms:
-                    self.decode_interlocks(
-                        iib_is_alarms, list_fac_2s_acdc_iib_is_alarms
-                    )
-
-                iib_cmd_itlks = self.read_bsmp_variable(57, "uint32_t")
-                print("\nIIB Cmd Interlocks: " + str(iib_cmd_itlks))
-                if iib_cmd_itlks:
-                    self.decode_interlocks(
-                        iib_cmd_itlks, list_fac_2s_acdc_iib_cmd_interlocks
-                    )
-
-                iib_cmd_alarms = self.read_bsmp_variable(58, "uint32_t")
-                print("IIB Cmd Alarms: " + str(iib_cmd_alarms))
-                if iib_cmd_alarms:
-                    self.decode_interlocks(
-                        iib_cmd_alarms, list_fac_2s_acdc_iib_cmd_alarms
-                    )
-
-                print(
-                    "\nCapBank Voltage: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "Rectifier Current: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " %"
-                )
-
-                if iib:
-                    print(
-                        "\nIIB IS Input Current: "
-                        + str(round(self.read_bsmp_variable(36, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB IS Input Voltage: "
-                        + str(round(self.read_bsmp_variable(37, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB IS IGBT Temp: "
-                        + str(round(self.read_bsmp_variable(38, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IS Driver Voltage: "
-                        + str(round(self.read_bsmp_variable(39, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB IS Driver Current: "
-                        + str(round(self.read_bsmp_variable(40, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB IS Inductor Temp: "
-                        + str(round(self.read_bsmp_variable(41, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IS Heat-Sink Temp: "
-                        + str(round(self.read_bsmp_variable(42, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IS Board Temp: "
-                        + str(round(self.read_bsmp_variable(43, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IS Board RH: "
-                        + str(round(self.read_bsmp_variable(44, "float"), 3))
-                        + " %"
-                    )
-                    print(
-                        "IIB IS Interlocks: "
-                        + str(round(self.read_bsmp_variable(45, "uint32_t"), 3))
-                    )
-                    print(
-                        "IIB IS Alarms: "
-                        + str(round(self.read_bsmp_variable(46, "uint32_t"), 3))
-                    )
-
-                    print(
-                        "\nIIB Cmd Load Voltage: "
-                        + str(round(self.read_bsmp_variable(47, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Cmd CapBank Voltage: "
-                        + str(round(self.read_bsmp_variable(48, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Cmd Rectifier Inductor Temp: "
-                        + str(round(self.read_bsmp_variable(49, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Cmd Rectifier Heat-Sink Temp: "
-                        + str(round(self.read_bsmp_variable(50, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Cmd External Boards Voltage: "
-                        + str(round(self.read_bsmp_variable(51, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Cmd Auxiliary Board Current: "
-                        + str(round(self.read_bsmp_variable(52, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Cmd IDB Board Current: "
-                        + str(round(self.read_bsmp_variable(53, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Cmd Ground Leakage Current: "
-                        + str(round(self.read_bsmp_variable(54, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Cmd Board Temp: "
-                        + str(round(self.read_bsmp_variable(55, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Cmd Board RH: "
-                        + str(round(self.read_bsmp_variable(56, "float"), 3))
-                        + " %"
-                    )
-                    print(
-                        "IIB Cmd Interlocks: "
-                        + str(round(self.read_bsmp_variable(57, "uint32_t"), 3))
-                    )
-                    print(
-                        "IIB Cmd Alarms: "
-                        + str(round(self.read_bsmp_variable(58, "uint32_t"), 3))
-                    )
-
-                time.sleep(dt)
-
-        finally:
-            self.slave_addr = old_add
-
-    @print_deprecated
-    def read_vars_fac_2s_dcdc(self, n=1, com_add=1, dt=0.5, iib=0):
-
-        old_add = self.slave_addr
-        iib_offset = 14 * (iib - 1)
-
-        try:
-            for i in range(n):
-
-                self.slave_addr = com_add
-
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-                self.read_vars_common()
-
-                print(
-                    "\nSync Pulse Counter: "
-                    + str(round(self.read_bsmp_variable(5, "uint32_t"), 3))
-                )
-
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(soft_itlks, list_fac_2s_dcdc_soft_interlocks)
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(hard_itlks, list_fac_2s_dcdc_hard_interlocks)
-
-                _load_current = round(self.read_bsmp_variable(33, "float"), 3)
-                print("\nLoad Current: {} A".format(_load_current))
-
-                _load_current_dcct1 = round(self.read_bsmp_variable(34, "float"), 3)
-                print("Load Current DCCT 1: {} A".format(_load_current_dcct1))
-
-                _load_current_dcct2 = round(self.read_bsmp_variable(35, "float"), 3)
-                print("Load Current DCCT 2: {} A".format(_load_current_dcct2))
-
-                print(
-                    "\nCapBank Voltage 1: "
-                    + str(round(self.read_bsmp_variable(36, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "CapBank Voltage 2: "
-                    + str(round(self.read_bsmp_variable(37, "float"), 3))
-                    + " V"
-                )
-
-                print(
-                    "\nDuty-Cycle 1: "
-                    + str(round(self.read_bsmp_variable(38, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "Duty-Cycle 2: "
-                    + str(round(self.read_bsmp_variable(39, "float"), 3))
-                    + " %"
-                )
-
-                if iib:
-                    print(
-                        "\nIIB CapBank Voltage: "
-                        + str(
-                            round(self.read_bsmp_variable(40 + iib_offset, "float"), 3)
-                        )
-                        + " V"
-                    )
-                    print(
-                        "IIB Input Current: "
-                        + str(
-                            round(self.read_bsmp_variable(41 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB Output Current: "
-                        + str(
-                            round(self.read_bsmp_variable(42 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB IGBT Leg 1 Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(43 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB IGBT Leg 2 Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(44 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB Inductor Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(45 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB Heat-Sink Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(46 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB Driver Voltage: "
-                        + str(
-                            round(self.read_bsmp_variable(47 + iib_offset, "float"), 3)
-                        )
-                        + " V"
-                    )
-                    print(
-                        "IIB Driver Current 1: "
-                        + str(
-                            round(self.read_bsmp_variable(48 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB Driver Current 2: "
-                        + str(
-                            round(self.read_bsmp_variable(49 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB Board Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(50 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB Board RH: "
-                        + str(
-                            round(self.read_bsmp_variable(51 + iib_offset, "float"), 3)
-                        )
-                        + " %"
-                    )
-
-                    iib_itlks = self.read_bsmp_variable(52 + iib_offset, "uint32_t")
-                    print("\nIIB Interlocks: " + str(iib_itlks))
-                    if iib_itlks:
-                        self.decode_interlocks(
-                            iib_itlks, list_fac_2s_dcdc_iib_interlocks
-                        )
-
-                    iib_alarms = self.read_bsmp_variable(53 + iib_offset, "uint32_t")
-                    print("IIB Alarms: " + str(iib_alarms))
-                    if iib_alarms:
-                        self.decode_interlocks(iib_alarms, list_fac_2s_dcdc_iib_alarms)
-
-                time.sleep(dt)
-
-        finally:
-            self.slave_addr = old_add
-
-    @print_deprecated
-    def read_vars_fac_2p4s_acdc(self, n=1, add_mod_a=1, dt=0.5, iib=0):
-        self.read_vars_fac_2s_acdc(n, add_mod_a, dt, iib)
-
-    @print_deprecated
-    def read_vars_fac_2p4s_dcdc(self, n=1, com_add=1, dt=0.5, iib=0):
-
-        old_add = self.slave_addr
-
-        try:
-            for i in range(n):
-
-                self.slave_addr = com_add
-
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-                self.read_vars_common()
-
-                print(
-                    "\nSync Pulse Counter: "
-                    + str(round(self.read_bsmp_variable(5, "uint32_t"), 3))
-                )
-
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(
-                        soft_itlks, list_fac_2p4s_dcdc_soft_interlocks
-                    )
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(
-                        hard_itlks, list_fac_2p4s_dcdc_hard_interlocks
-                    )
-
-                print(
-                    "\nLoad Current: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                )
-                print(
-                    "Load Current DCCT 1: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                )
-                print(
-                    "Load Current DCCT 2: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                )
-
-                print(
-                    "\nArm Current 1: "
-                    + str(round(self.read_bsmp_variable(36, "float"), 3))
-                )
-                print(
-                    "Arm Current 2: "
-                    + str(round(self.read_bsmp_variable(37, "float"), 3))
-                )
-
-                print(
-                    "\nCapBank Voltage 1: "
-                    + str(round(self.read_bsmp_variable(38, "float"), 3))
-                )
-                print(
-                    "CapBank Voltage 2: "
-                    + str(round(self.read_bsmp_variable(39, "float"), 3))
-                )
-                print(
-                    "CapBank Voltage 3: "
-                    + str(round(self.read_bsmp_variable(40, "float"), 3))
-                )
-                print(
-                    "CapBank Voltage 4: "
-                    + str(round(self.read_bsmp_variable(41, "float"), 3))
-                )
-                print(
-                    "CapBank Voltage 5: "
-                    + str(round(self.read_bsmp_variable(42, "float"), 3))
-                )
-                print(
-                    "CapBank Voltage 6: "
-                    + str(round(self.read_bsmp_variable(43, "float"), 3))
-                )
-                print(
-                    "CapBank Voltage 7: "
-                    + str(round(self.read_bsmp_variable(44, "float"), 3))
-                )
-                print(
-                    "CapBank Voltage 8: "
-                    + str(round(self.read_bsmp_variable(45, "float"), 3))
-                )
-
-                print(
-                    "\nDuty-Cycle 1: "
-                    + str(round(self.read_bsmp_variable(46, "float"), 3))
-                )
-                print(
-                    "Duty-Cycle 2: "
-                    + str(round(self.read_bsmp_variable(47, "float"), 3))
-                )
-                print(
-                    "Duty-Cycle 3: "
-                    + str(round(self.read_bsmp_variable(48, "float"), 3))
-                )
-                print(
-                    "Duty-Cycle 4: "
-                    + str(round(self.read_bsmp_variable(49, "float"), 3))
-                )
-                print(
-                    "Duty-Cycle 5: "
-                    + str(round(self.read_bsmp_variable(50, "float"), 3))
-                )
-                print(
-                    "Duty-Cycle 6: "
-                    + str(round(self.read_bsmp_variable(51, "float"), 3))
-                )
-                print(
-                    "Duty-Cycle 7: "
-                    + str(round(self.read_bsmp_variable(52, "float"), 3))
-                )
-                print(
-                    "Duty-Cycle 8: "
-                    + str(round(self.read_bsmp_variable(53, "float"), 3))
-                )
-
-                if iib:
-
-                    print(
-                        "\nIIB CapBank Voltage: "
-                        + str(round(self.read_bsmp_variable(54, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Input Current: "
-                        + str(round(self.read_bsmp_variable(55, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Output Current: "
-                        + str(round(self.read_bsmp_variable(56, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB IGBT Leg 1 Temp: "
-                        + str(round(self.read_bsmp_variable(57, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IGBT Leg 2 Temp: "
-                        + str(round(self.read_bsmp_variable(58, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Inductor Temp: "
-                        + str(round(self.read_bsmp_variable(59, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Heat-Sink Temp: "
-                        + str(round(self.read_bsmp_variable(60, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Driver Voltage: "
-                        + str(round(self.read_bsmp_variable(61, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Driver Current 1: "
-                        + str(round(self.read_bsmp_variable(62, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Driver Current 2: "
-                        + str(round(self.read_bsmp_variable(63, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Board Temp: "
-                        + str(round(self.read_bsmp_variable(64, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Board RH: "
-                        + str(round(self.read_bsmp_variable(65, "float"), 3))
-                        + " %"
-                    )
-
-                    iib_itlks = self.read_bsmp_variable(66, "uint32_t")
-                    print("\nIIB Interlocks: " + str(iib_itlks))
-                    if iib_itlks:
-                        self.decode_interlocks(
-                            iib_itlks, list_fac_2p4s_dcdc_iib_interlocks
-                        )
-
-                    iib_alarms = self.read_bsmp_variable(67, "uint32_t")
-                    print("IIB Alarms: " + str(iib_alarms))
-                    if iib_alarms:
-                        self.decode_interlocks(
-                            iib_alarms, list_fac_2p4s_dcdc_iib_alarms
-                        )
-
-                    print(
-                        "\nIIB CapBank Voltage: "
-                        + str(round(self.read_bsmp_variable(68, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Input Current: "
-                        + str(round(self.read_bsmp_variable(69, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Output Current: "
-                        + str(round(self.read_bsmp_variable(70, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB IGBT Leg 1 Temp: "
-                        + str(round(self.read_bsmp_variable(71, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB IGBT Leg 2 Temp: "
-                        + str(round(self.read_bsmp_variable(72, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Inductor Temp: "
-                        + str(round(self.read_bsmp_variable(73, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Heat-Sink Temp: "
-                        + str(round(self.read_bsmp_variable(74, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Driver Voltage: "
-                        + str(round(self.read_bsmp_variable(75, "float"), 3))
-                        + " V"
-                    )
-                    print(
-                        "IIB Driver Current 1: "
-                        + str(round(self.read_bsmp_variable(76, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Driver Current 2: "
-                        + str(round(self.read_bsmp_variable(77, "float"), 3))
-                        + " A"
-                    )
-                    print(
-                        "IIB Board Temp: "
-                        + str(round(self.read_bsmp_variable(78, "float"), 3))
-                        + " °C"
-                    )
-                    print(
-                        "IIB Board RH: "
-                        + str(round(self.read_bsmp_variable(79, "float"), 3))
-                        + " %"
-                    )
-
-                    iib_itlks = self.read_bsmp_variable(80, "uint32_t")
-                    print("\nIIB Interlocks: " + str(iib_itlks))
-                    if iib_itlks:
-                        self.decode_interlocks(
-                            iib_itlks, list_fac_2p4s_dcdc_iib_interlocks
-                        )
-
-                    iib_alarms = self.read_bsmp_variable(81, "uint32_t")
-                    print("IIB Alarms: " + str(iib_alarms))
-                    if iib_alarms:
-                        self.decode_interlocks(
-                            iib_alarms, list_fac_2p4s_dcdc_iib_alarms
-                        )
-
-                time.sleep(dt)
-
-        finally:
-            self.slave_addr = old_add
-
-    @print_deprecated
-    def read_vars_fap(self, n=1, com_add=1, dt=0.5, iib=1):
-        vars = {}
-        old_add = self.slave_addr
-
-        try:
-            for i in range(n):
-
-                self.slave_addr = com_add
-                self.read_vars_common()
-                iload = self.read_bsmp_variable(33, "float")
-
-                vars = {
-                    "load_current": f"{round(iload,3)} A",
-                    "load_current_dcct_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "load_current_dcct_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                    "load_resistance": f"{abs(round(self.read_bsmp_variable(43, 'float') / iload, 3)) if iload != 0 else 0} Ohm",
-                    "load_power": f"{abs(round(self.read_bsmp_variable(43, 'float')* self.read_bsmp_variable(33, 'float'),3))} W",
-                    "dclink_voltage": f"{round(self.read_bsmp_variable(36, 'float'), 3)} V",
-                    "igbt_1_current": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                    "igbt_2_current": f"{round(self.read_bsmp_variable(38, 'float'), 3)} A",
-                    "igbt_1_duty_cycle": f"{round(self.read_bsmp_variable(39, 'float'), 3)}%",
-                    "igbt_2_duty_cycle": f"{round(self.read_bsmp_variable(40, 'float'), 3)}%",
-                    "differential_duty_cycle": f"{round(self.read_bsmp_variable(41, 'float'), 3)}%",
-                }
-
-                vars = vars = self._include_interlocks(
-                    vars, list_fap_soft_interlocks, list_fap_hard_interlocks
-                )
-
-                if iib:
-                    vars["iib"] = {
-                        "input_voltage": f"{round(self.read_bsmp_variable(42, 'float'), 3)} V",
-                        "output_voltage": f"{round(self.read_bsmp_variable(43, 'float'), 3)} V",
-                        "igbt_1_current": f"{round(self.read_bsmp_variable(44, 'float'), 3)} V",
-                        "igbt_2_current": f"{round(self.read_bsmp_variable(45, 'float'), 3)} V",
-                        "igbt_1_temp": f"{round(self.read_bsmp_variable(46, 'float'), 3)} °C",
-                        "igbt_2_temp": f"{round(self.read_bsmp_variable(47, 'float'), 3)} °C",
-                        "driver_voltage": f"{round(self.read_bsmp_variable(48, 'float'), 3)} V",
-                        "driver_current_1": f"{round(self.read_bsmp_variable(49, 'float'), 3)} A",
-                        "driver_current_2": f"{round(self.read_bsmp_variable(50, 'float'), 3)} A",
-                        "inductor_temp": f"{round(self.read_bsmp_variable(51, 'float'), 3)} °C",
-                        "heatsink_temp": f"{round(self.read_bsmp_variable(52, 'float'), 3)} °C",
-                        "ground_leakage_current": f"{round(self.read_bsmp_variable(53, 'float'), 3)} A",
-                        "board_temp": f"{round(self.read_bsmp_variable(54, 'float'), 3)} °C",
-                        "board_rh": f"{round(self.read_bsmp_variable(55, 'float'), 3)}%",
-                    }
-
-                    iib_itlks = self.read_bsmp_variable(56, "uint32_t")
-                    if iib_itlks:
-                        vars["iib"]["alarms"] = self.decode_interlocks(
-                            iib_itlks, list_fap_iib_interlocks
-                        )
-
-                    iib_alarms = self.read_bsmp_variable(57, "uint32_t")
-                    if iib_alarms:
-                        vars["iib"]["interlocks"] = self.decode_interlocks(
-                            iib_alarms, list_fap_iib_alarms
-                        )
-
-                prettier_print(vars)
-                time.sleep(dt)
-
-        finally:
-            self.slave_addr = old_add
-
-    @print_deprecated
-    def read_vars_fap_4p(self, n=1, com_add=1, dt=0.5, iib=0):
-
-        old_add = self.slave_addr
-        iib_offset = 16 * (iib - 1)
-
-        try:
-            for i in range(n):
-
-                self.slave_addr = com_add
-
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-                self.read_vars_common()
-
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(soft_itlks, list_fap_4p_soft_interlocks)
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(hard_itlks, list_fap_4p_hard_interlocks)
-
-                for j in range(4):
-                    iib_itlks = self.read_bsmp_variable(72 + j * 16, "uint32_t")
-                    print("\nIIB " + str(j + 1) + " Interlocks: " + str(iib_itlks))
-                    if iib_itlks:
-                        self.decode_interlocks(iib_itlks, list_fap_4p_iib_interlocks)
-
-                    iib_alarms = self.read_bsmp_variable(73 + j * 16, "uint32_t")
-                    print("IIB " + str(j + 1) + " Alarms: " + str(iib_alarms))
-                    if iib_alarms:
-                        self.decode_interlocks(iib_alarms, list_fap_4p_iib_alarms)
-
-                print(
-                    "\n Mean Load Current: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Load Current 1: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Load Current 2: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " A"
-                )
-
-                print(
-                    "Load Voltage: "
-                    + str(round(self.read_bsmp_variable(36, "float"), 3))
-                    + " V"
-                )
-
-                print(
-                    "\nIGBT 1 Current Mod 1: "
-                    + str(round(self.read_bsmp_variable(37, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 2 Current Mod 1: "
-                    + str(round(self.read_bsmp_variable(38, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 1 Current Mod 2: "
-                    + str(round(self.read_bsmp_variable(39, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 2 Current Mod 2: "
-                    + str(round(self.read_bsmp_variable(40, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 1 Current Mod 3: "
-                    + str(round(self.read_bsmp_variable(41, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 2 Current Mod 3: "
-                    + str(round(self.read_bsmp_variable(42, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 1 Current Mod 4: "
-                    + str(round(self.read_bsmp_variable(43, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 2 Current Mod 4: "
-                    + str(round(self.read_bsmp_variable(44, "float"), 3))
-                    + " A"
-                )
-
-                print(
-                    "\nDC-Link Voltage Mod 1: "
-                    + str(round(self.read_bsmp_variable(45, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "DC-Link Voltage Mod 2: "
-                    + str(round(self.read_bsmp_variable(46, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "DC-Link Voltage Mod 3: "
-                    + str(round(self.read_bsmp_variable(47, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "DC-Link Voltage Mod 4: "
-                    + str(round(self.read_bsmp_variable(48, "float"), 3))
-                    + " V"
-                )
-
-                print(
-                    "\nMean Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(49, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 1 Duty-Cycle Mod 1: "
-                    + str(round(self.read_bsmp_variable(50, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 2 Duty-Cycle Mod 1: "
-                    + str(round(self.read_bsmp_variable(51, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 1 Duty-Cycle Mod 2: "
-                    + str(round(self.read_bsmp_variable(52, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 2 Duty-Cycle Mod 2: "
-                    + str(round(self.read_bsmp_variable(53, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 1 Duty-Cycle Mod 3: "
-                    + str(round(self.read_bsmp_variable(54, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 2 Duty-Cycle Mod 3: "
-                    + str(round(self.read_bsmp_variable(55, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 1 Duty-Cycle Mod 4: "
-                    + str(round(self.read_bsmp_variable(56, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 2 Duty-Cycle Mod 4: "
-                    + str(round(self.read_bsmp_variable(57, "float"), 3))
-                    + " %"
-                )
-
-                if not iib == 0:
-                    print(
-                        "\nIIB "
-                        + str(iib)
-                        + " Input Voltage: "
-                        + str(
-                            round(self.read_bsmp_variable(58 + iib_offset, "float"), 3)
-                        )
-                        + " V"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Output Voltage: "
-                        + str(
-                            round(self.read_bsmp_variable(59 + iib_offset, "float"), 3)
-                        )
-                        + " V"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " IGBT 1 Current: "
-                        + str(
-                            round(self.read_bsmp_variable(60 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " IGBT 2 Current: "
-                        + str(
-                            round(self.read_bsmp_variable(61 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " IGBT 1 Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(62 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " IGBT 2 Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(63 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Driver Voltage: "
-                        + str(
-                            round(self.read_bsmp_variable(64 + iib_offset, "float"), 3)
-                        )
-                        + " V"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Driver Current 1: "
-                        + str(
-                            round(self.read_bsmp_variable(65 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Driver Current 2: "
-                        + str(
-                            round(self.read_bsmp_variable(66 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Inductor Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(67 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Heat-Sink Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(68 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Ground Leakage Current: "
-                        + str(
-                            round(self.read_bsmp_variable(69 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Board Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(70 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Board RH: "
-                        + str(
-                            round(self.read_bsmp_variable(71 + iib_offset, "float"), 3)
-                        )
-                        + " %"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Interlocks: "
-                        + str(
-                            round(
-                                self.read_bsmp_variable(72 + iib_offset, "uint32_t"), 3
-                            )
-                        )
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Alarms: "
-                        + str(
-                            round(
-                                self.read_bsmp_variable(73 + iib_offset, "uint32_t"), 3
-                            )
-                        )
-                    )
-
-                time.sleep(dt)
-
-        finally:
-            self.slave_addr = old_add
-
-    @print_deprecated
-    def read_vars_fap_2p2s(self, n=1, com_add=1, dt=0.5, iib=0):
-
-        old_add = self.slave_addr
-        iib_offset = 16 * (iib - 1)
-
-        try:
-            for i in range(n):
-
-                self.slave_addr = com_add
-
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-                self.read_vars_common()
-
-                soft_itlks = self.read_bsmp_variable(31, "uint32_t")
-                print("\nSoft Interlocks: " + str(soft_itlks))
-                if soft_itlks:
-                    self.decode_interlocks(soft_itlks, list_fap_2p2s_soft_interlocks)
-                    print("")
-
-                hard_itlks = self.read_bsmp_variable(32, "uint32_t")
-                print("Hard Interlocks: " + str(hard_itlks))
-                if hard_itlks:
-                    self.decode_interlocks(hard_itlks, list_fap_2p2s_hard_interlocks)
-
-                for j in range(4):
-                    iib_itlks = self.read_bsmp_variable(78 + j * 16, "uint32_t")
-                    print("\nIIB " + str(j + 1) + " Interlocks: " + str(iib_itlks))
-                    if iib_itlks:
-                        self.decode_interlocks(iib_itlks, list_fap_4p_iib_interlocks)
-
-                    iib_alarms = self.read_bsmp_variable(79 + j * 16, "uint32_t")
-                    print("IIB " + str(j + 1) + " Alarms: " + str(iib_alarms))
-                    if iib_alarms:
-                        self.decode_interlocks(iib_alarms, list_fap_4p_iib_alarms)
-
-                print(
-                    "\nMean Load Current: "
-                    + str(round(self.read_bsmp_variable(33, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Load Current 1: "
-                    + str(round(self.read_bsmp_variable(34, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Load Current 2: "
-                    + str(round(self.read_bsmp_variable(35, "float"), 3))
-                    + " A"
-                )
-
-                print(
-                    "\nArm Current 1: "
-                    + str(round(self.read_bsmp_variable(36, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "Arm Current 2: "
-                    + str(round(self.read_bsmp_variable(37, "float"), 3))
-                    + " A"
-                )
-
-                print(
-                    "\nIGBT 1 Current Mod 1: "
-                    + str(round(self.read_bsmp_variable(38, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 2 Current Mod 1: "
-                    + str(round(self.read_bsmp_variable(39, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 1 Current Mod 2: "
-                    + str(round(self.read_bsmp_variable(40, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 2 Current Mod 2: "
-                    + str(round(self.read_bsmp_variable(41, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 1 Current Mod 3: "
-                    + str(round(self.read_bsmp_variable(42, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 2 Current Mod 3: "
-                    + str(round(self.read_bsmp_variable(43, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 1 Current Mod 4: "
-                    + str(round(self.read_bsmp_variable(44, "float"), 3))
-                    + " A"
-                )
-                print(
-                    "IGBT 2 Current Mod 4: "
-                    + str(round(self.read_bsmp_variable(45, "float"), 3))
-                    + " A"
-                )
-
-                print(
-                    "\nDC-Link Voltage Mod 1: "
-                    + str(round(self.read_bsmp_variable(50, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "DC-Link Voltage Mod 2: "
-                    + str(round(self.read_bsmp_variable(51, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "DC-Link Voltage Mod 3: "
-                    + str(round(self.read_bsmp_variable(52, "float"), 3))
-                    + " V"
-                )
-                print(
-                    "DC-Link Voltage Mod 4: "
-                    + str(round(self.read_bsmp_variable(53, "float"), 3))
-                    + " V"
-                )
-
-                print(
-                    "\nMean Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(54, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "Differential Duty-Cycle: "
-                    + str(round(self.read_bsmp_variable(55, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "\nIGBT 1 Duty-Cycle Mod 1: "
-                    + str(round(self.read_bsmp_variable(56, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 2 Duty-Cycle Mod 1: "
-                    + str(round(self.read_bsmp_variable(57, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 1 Duty-Cycle Mod 2: "
-                    + str(round(self.read_bsmp_variable(58, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 2 Duty-Cycle Mod 2: "
-                    + str(round(self.read_bsmp_variable(59, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 1 Duty-Cycle Mod 3: "
-                    + str(round(self.read_bsmp_variable(60, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 2 Duty-Cycle Mod 3: "
-                    + str(round(self.read_bsmp_variable(61, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 1 Duty-Cycle Mod 4: "
-                    + str(round(self.read_bsmp_variable(62, "float"), 3))
-                    + " %"
-                )
-                print(
-                    "IGBT 2 Duty-Cycle Mod 4: "
-                    + str(round(self.read_bsmp_variable(63, "float"), 3))
-                    + " %"
-                )
-
-                if not iib == 0:
-                    print(
-                        "\nIIB "
-                        + str(iib)
-                        + " Input Voltage: "
-                        + str(
-                            round(self.read_bsmp_variable(64 + iib_offset, "float"), 3)
-                        )
-                        + " V"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Output Voltage: "
-                        + str(
-                            round(self.read_bsmp_variable(65 + iib_offset, "float"), 3)
-                        )
-                        + " V"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " IGBT 1 Current: "
-                        + str(
-                            round(self.read_bsmp_variable(66 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " IGBT 2 Current: "
-                        + str(
-                            round(self.read_bsmp_variable(67 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " IGBT 1 Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(68 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " IGBT 2 Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(69 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Driver Voltage: "
-                        + str(
-                            round(self.read_bsmp_variable(70 + iib_offset, "float"), 3)
-                        )
-                        + " V"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Driver Current 1: "
-                        + str(
-                            round(self.read_bsmp_variable(71 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Driver Current 2: "
-                        + str(
-                            round(self.read_bsmp_variable(72 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Inductor Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(73 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Heat-Sink Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(74 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Ground Leakage Current: "
-                        + str(
-                            round(self.read_bsmp_variable(75 + iib_offset, "float"), 3)
-                        )
-                        + " A"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Board Temp: "
-                        + str(
-                            round(self.read_bsmp_variable(76 + iib_offset, "float"), 3)
-                        )
-                        + " °C"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Board RH: "
-                        + str(
-                            round(self.read_bsmp_variable(77 + iib_offset, "float"), 3)
-                        )
-                        + " %"
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Interlocks: "
-                        + str(
-                            round(
-                                self.read_bsmp_variable(78 + iib_offset, "uint32_t"), 3
-                            )
-                        )
-                    )
-                    print(
-                        "IIB "
-                        + str(iib)
-                        + " Alarms: "
-                        + str(
-                            round(
-                                self.read_bsmp_variable(79 + iib_offset, "uint32_t"), 3
-                            )
-                        )
-                    )
-
-                time.sleep(dt)
-
-        finally:
-            self.slave_addr = old_add
-
-    def read_vars_fap_225A(self, n=1, com_add=1, dt=0.5):
-        vars = {}
-        old_add = self.slave_addr
-
-        try:
-            for _ in range(n):
-                self.slave_addr = com_add
-
-                vars = {
-                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "igbt": {
-                        "current_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                        "current_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                        "duty_cycle_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)}%",
-                        "duty_cycle_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)}%",
-                        "differential_duty_cycle": f"{round(self.read_bsmp_variable(38, 'float'), 3)}%",
-                    },
-                }
-
-                vars = self._include_interlocks(
-                    vars, list_fap_225A_soft_interlocks, list_fap_225A_hard_interlocks
-                )
-                prettier_print(vars)
-
-                time.sleep(dt)
-            return vars
-        finally:
-            self.slave_addr = old_add
-
-    def read_vars_fac_2p_acdc_imas(self, n=1, add_mod_a=2, dt=0.5):
-        vars = {}
-        old_add = self.slave_addr
-
-        try:
-            for _ in range(n):
-
-                self.slave_addr = add_mod_a
-
-                vars["module_a"] = {
-                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
-                    "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)}%",
-                }
-
-                vars["module_a"] = self._include_interlocks(
-                    vars["module_a"],
-                    list_fac_2p_acdc_imas_soft_interlocks,
-                    list_fac_2p_acdc_imas_hard_interlocks,
-                )
-
-                self.slave_addr = add_mod_a + 1
-
-                vars["module_b"] = {
-                    "cap_bank_voltage": f"{round(self.read_bsmp_variable(33, 'float'), 3)} V",
-                    "rectifier_current": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "duty_cycle": f"{round(self.read_bsmp_variable(35, 'float'), 3)}%",
-                }
-
-                vars["module_b"] = self._include_interlocks(
-                    vars["module_b"],
-                    list_fac_2p_acdc_imas_soft_interlocks,
-                    list_fac_2p_acdc_imas_hard_interlocks,
-                )
-
-                prettier_print(vars)
-                time.sleep(dt)
-            return vars
-        finally:
-            self.slave_addr = old_add
-            raise  # TODO: Raise proper exception
-
-    def read_vars_fac_2p_dcdc_imas(self, n=1, com_add=1, dt=0.5, iib=0):
-        vars = {}
-        old_add = self.slave_addr
-
-        try:
-            for _ in range(n):
-                self.slave_addr = com_add
-                vars = {
-                    "sync_pulse_counter": self.read_bsmp_variable(5, "uint32_t"),
-                    "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
-                    "load_current_error": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
-                    "arm_1_current": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
-                    "arm_2_current": f"{round(self.read_bsmp_variable(36, 'float'), 3)} A",
-                    "arms_current_diff": f"{round(self.read_bsmp_variable(37, 'float'), 3)} A",
-                    "cap_bank_voltage_1": f"{round(self.read_bsmp_variable(38, 'float'), 3)} V",
-                    "cap_bank_voltage_2": f"{round(self.read_bsmp_variable(39, 'float'), 3)} V",
-                    "duty_cycle_1": f"{round(self.read_bsmp_variable(40, 'float'), 3)}%",
-                    "duty_cycle_2": f"{round(self.read_bsmp_variable(41, 'float'), 3)}%",
-                    "differential_duty_cycle": f"{round(self.read_bsmp_variable(41, 'float'), 3)}%",
-                }
-                vars = self._include_interlocks(
-                    vars,
-                    list_fac_2p_dcdc_imas_soft_interlocks,
-                    list_fac_2p_dcdc_imas_hard_interlocks,
-                )
+            vars_dict["iib_cmd_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_cmd_interlocks_raw"],
+                fac.list_acdc_iib_cmd_interlocks,
+            )
+
+            vars_dict["iib_cmd_alarms"] = self.decode_interlocks(
+                vars_dict["iib_cmd_alarms_raw"],
+                fac.list_acdc_iib_cmd_alarms,
+            )
+        return vars_dict
+
+
+    def read_vars_fac_dcdc(self, iib: bool = True) -> dict:
+        """Reads FAC DCDC power supply variables
+
+        Parameters
+        -------
+        iib
+            Whether or not IIB interlocks should be parsed and returned alongside other data
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        vars_dict = self._read_vars_generic(
+            fac.bsmp_dcdc,
+            fac.list_dcdc_soft_interlocks,
+            fac.list_dcdc_hard_interlocks,
+        )
+
+        vars_dict["wfmref_index"] = round(
+            (
+                float(vars_dict["p_wfmref_end_0"])
+                - float(vars_dict["wfmref_offset"].split(" ")[0])
+            )
+            / 2
+            + 1,
+            3,
+        )
+
+        if iib:
+            vars_dict["iib_interlocks_raw"] = vars_dict["iib_interlocks"]
+            vars_dict["iib_alarms_raw"] = vars_dict["iib_alarms"]
+
+            vars_dict["iib_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_interlocks_raw"],
+                fac.list_dcdc_iib_interlocks,
+            )
+
+            vars_dict["iib_cmd_alarms"] = self.decode_interlocks(
+                vars_dict["iib_alarms_raw"],
+                fac.list_dcdc_iib_alarms,
+            )
+
+        return vars_dict
+
+    def read_vars_fac_dcdc_ema(self, iib=False) -> dict:
+        """Reads FAC DCDC EMA power supply variables
+
+        Parameters
+        -------
+        iib
+            Whether or not IIB interlocks should be parsed and returned alongside other data
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        vars_dict = self._read_vars_generic(
+            fac.bsmp_dcdc_ema,
+            fac.list_dcdc_ema_soft_interlocks,
+            fac.list_dcdc_ema_hard_interlocks,
+        )
+
+        if iib:
+            vars_dict["iib_interlocks_raw"] = vars_dict["iib_interlocks"]
+            vars_dict["iib_alarms_raw"] = vars_dict["iib_alarms"]
+
+            vars_dict["iib_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_interlocks_raw"],
+                fac.list_dcdc_ema_iib_interlocks,
+            )
+
+            vars_dict["iib_alarms"] = self.decode_interlocks(
+                vars_dict["iib_alarms_raw"],
+                fac.list_dcdc_ema_iib_alarms,
+            )
+
+        return vars_dict
+
+    def _read_fac_2s_acdc_module(self, iib: bool) -> dict:
+        vars_dict = self._read_vars_generic(
+            fac.bsmp_2s_acdc,
+            fac.list_2s_acdc_soft_interlocks,
+            fac.list_2s_acdc_hard_interlocks,
+            399,
+        )
+
+        if iib:
+            vars_dict["iib_cmd_alarms_raw"] = vars_dict.pop("iib_alarms_cmd")
+            vars_dict["iib_cmd_interlocks_raw"] = vars_dict.pop("iib_interlocks_cmd")
+            vars_dict["iib_is_alarms_raw"] = vars_dict.pop("iib_alarms_is")
+            vars_dict["iib_is_interlocks_raw"] = vars_dict.pop("iib_interlocks_is")
+
+            vars_dict["iib_is_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_is_interlocks_raw"],
+                fac.list_2s_acdc_iib_is_interlocks,
+            )
+
+            vars_dict["iib_is_alarms"] = self.decode_interlocks(
+                vars_dict["iib_is_alarms_raw"], fac.list_2s_acdc_iib_is_alarms
+            )
+
+            vars_dict["iib_cmd_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_cmd_interlocks_raw"],
+                fac.list_2s_acdc_iib_cmd_interlocks,
+            )
+
+            vars_dict["iib_cmd_alarms"] = self.decode_interlocks(
+                vars_dict["iib_cmd_alarms_raw"], fac.list_2s_acdc_iib_cmd_alarms
+            )
+
+        return vars_dict
+
+    def read_vars_fac_2s_acdc(self, iib=False) -> dict:
+        """Reads FAC 2S ACDC power supply variables
+
+        Parameters
+        -------
+        iib
+            Whether or not IIB interlocks should be parsed and returned alongside other data
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        return self._read_fac_2s_acdc_module(iib)
+
+    def read_vars_fac_2s_dcdc(self, iib=False) -> dict:
+        """Reads FAC 2S DCDC power supply variables
+
+        Parameters
+        -------
+        iib
+            Whether or not IIB interlocks should be parsed and returned alongside other data
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        vars_dict = self._read_vars_generic(
+            fac.bsmp_2s_dcdc,
+            fac.list_2s_dcdc_soft_interlocks,
+            fac.list_2s_dcdc_hard_interlocks,
+        )
+
+        if iib:
+            for i in range(1, 2):
+                vars_dict[f"iib_interlocks_{i}_raw"] = vars_dict[f"iib_interlocks_{i}"]
+                vars_dict[f"iib_alarms_{i}_raw"] = vars_dict[f"iib_alarms_{i}"]
+
+                vars_dict[f"iib_interlocks_{i}"] = self.decode_interlocks(
+                    vars_dict[f"iib_interlocks_{i}_raw"],
+                    fac.list_2s_dcdc_iib_interlocks,
+                )
+
+                vars_dict[f"iib_alarms_{i}"] = self.decode_interlocks(
+                    vars_dict[f"iib_alarms_{i}_raw"],
+                    fac.list_2s_dcdc_iib_alarms,
+                )
+
+        return vars_dict
+
+    def read_vars_fac_2p4s_acdc(self, iib=0) -> dict:
+        """Reads FAC 2P4S ACDC power supply variables (alias for `read_vars_fac_2s_acdc`)
+
+        Parameters
+        -------
+        iib
+            Whether or not IIB interlocks should be parsed and returned alongside other data
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+
+        """
+        return self.read_vars_fac_2s_acdc(iib)
+
+    def read_vars_fac_2p4s_dcdc(self) -> dict:
+        """Reads FAC 2P4S DCDC power supply variables
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        vars_dict = self._read_vars_generic(
+            fac.bsmp_2p4s_dcdc,
+            fac.list_2p4s_dcdc_soft_interlocks,
+            fac.list_2p4s_dcdc_hard_interlocks,
+        )
+
+        for i in ["a", "b"]:
+            vars_dict[f"iib_interlocks_{i}_raw"] = vars_dict[f"iib_interlocks_{i}"]
+            vars_dict[f"iib_alarms_{i}_raw"] = vars_dict[f"iib_alarms_{i}"]
+
+            vars_dict[f"iib_interlocks_{i}"] = self.decode_interlocks(
+                vars_dict[f"iib_interlocks_{i}_raw"], fac.list_2p4s_dcdc_iib_interlocks
+            )
+            vars_dict[f"iib_alarms_{i}"] = self.decode_interlocks(
+                vars_dict[f"iib_alarms_{i}_raw"], fac.list_2p4s_dcdc_iib_alarms
+            )
+
+        return vars_dict
+
+    def read_vars_fap(self, iib=True) -> dict:
+        """Reads FAP power supply variables
+
+        Parameters
+        -------
+        iib
+            Whether or not IIB interlocks should be parsed and returned alongside other data
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        vars_dict = self._read_vars_generic(
+            fap.bsmp, fap.list_soft_interlocks, fap.list_hard_interlocks
+        )
+
+        if iib:
+            vars_dict["iib_interlocks_raw"] = vars_dict["iib_interlocks"]
+            vars_dict["iib_alarms_raw"] = vars_dict["iib_alarms"]
+
+            vars_dict["iib_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_interlocks_raw"], fap.list_iib_interlocks
+            )
+
+            vars_dict["iib_alarms"] = self.decode_interlocks(
+                vars_dict["iib_alarms_raw"], fap.list_iib_alarms
+            )
+
+        return vars_dict
+
+    def read_vars_fap_4p(self) -> dict:
+        vars_dict = self._read_vars_generic(
+            fap.bsmp_4p, fap.list_4p_soft_interlocks, fap.list_4p_hard_interlocks
+        )
+
+        for i in range(1, 4):
+            vars_dict[f"iib_interlocks_{i}_raw"] = vars_dict[f"iib_interlocks_{i}"]
+            vars_dict[f"iib_alarms_{i}_raw"] = vars_dict[f"iib_alarms_{i}"]
+
+            vars_dict[f"iib_interlocks_{i}"] = (
+                self.decode_interlocks(
+                    vars_dict[f"iib_interlocks_{i}_raw"],
+                    fap.list_4p_iib_interlocks,
+                ),
+            )
+
+            vars_dict[f"iib_alarms_{i}"] = self.decode_interlocks(
+                vars_dict[f"iib_alarms_{i}_raw"],
+                fap.list_4p_iib_alarms,
+            )
+
+        return vars_dict
+
+    def read_vars_fap_2p2s(self) -> dict:
+        vars_dict = self._read_vars_generic(
+            fap.bsmp_2p2s, fap.list_2p2s_soft_interlocks, fap.list_2p2s_hard_interlocks
+        )
+
+        for i in range(1, 4):
+            vars_dict[f"iib_interlocks_{i}_raw"] = vars_dict[f"iib_interlocks_{i}"]
+            vars_dict[f"iib_alarms_{i}_raw"] = vars_dict[f"iib_alarms_{i}"]
+
+            vars_dict[f"iib_interlocks_{i}"] = (
+                self.decode_interlocks(
+                    vars_dict[f"iib_interlocks_{i}_raw"],
+                    fap.list_4p_iib_interlocks,
+                ),
+            )
+
+            vars_dict[f"iib_alarms_{i}"] = self.decode_interlocks(
+                vars_dict[f"iib_alarms_{i}_raw"],
+                fap.list_4p_iib_alarms,
+            )
+
+        return vars_dict
+
+    def read_vars_fap_225A(self) -> dict:
+        vars_dict = {
+            "load_current": f"{round(self.read_bsmp_variable(33, 'float'), 3)} A",
+            "igbt_current_1": f"{round(self.read_bsmp_variable(34, 'float'), 3)} A",
+            "igbt_current_2": f"{round(self.read_bsmp_variable(35, 'float'), 3)} A",
+            "igbt_duty_cycle_1": f"{round(self.read_bsmp_variable(36, 'float'), 3)} %",
+            "igbt_duty_cycle_2": f"{round(self.read_bsmp_variable(37, 'float'), 3)} %",
+            "igbt_differential_duty_cycle": f"{round(self.read_bsmp_variable(38, 'float'), 3)} %",
+        }
+
+        vars_dict = self._include_interlocks(
+            vars_dict,
+            fap.list_225A_soft_interlocks,
+            fap.list_225A_hard_interlocks,
+        )
+
+        return vars_dict
+
+    def read_vars_fac_2p_acdc_imas(self) -> dict:
+        """
+        Read FAC 2P ACDC IMAS specific power supply variables
+
+        Returns
+        -------
+        dict
+            Dict containing FAC 2P ACDC IMAS variables
+        """
+        return self._read_vars_generic(
+            fac.bsmp_2p_acdc_imas,
+            fac.list_2p_acdc_imas_soft_interlocks,
+            fac.list_2p_acdc_imas_hard_interlocks,
+        )
+
+    def read_vars_fac_2p_dcdc_imas(self, com_add=1) -> dict:
+        """
+        Read FAC 2P DCDC IMAS specific power supply variables
+
+
+        Returns
+        -------
+        dict
+            Dict containing FAC 2P DCDC IMAS variables
+        """
+        return self._read_vars_generic(
+            fac.bsmp_2p_dcdc_imas,
+            fac.list_2p_dcdc_imas_soft_interlocks,
+            fac.list_2p_dcdc_imas_hard_interlocks,
+        )
+
+    def check_param_bank(self, param_file: str):
 
-                prettier_print(vars)
-                time.sleep(dt)
-            return vars
-        finally:
-            self.slave_addr = old_add
-            raise  # TODO: Raise proper exception
-
-    def check_param_bank(self, param_file):
         ps_param_list = []
 
         # max_sampling_freq = 600000
@@ -3381,62 +2206,44 @@ class BaseDRS(object):
                 ps_param_list.append(row)
 
         for param in ps_param_list:
-            if str(param[0]) == "Num_PS_Modules" and param[1] > 4:
-                print(
-                    "Invalid " + str(param[0]) + ": " + str(param[1]) + ". Maximum is 4"
-                )
+            if (str(param[0]) == "Num_PS_Modules" and param[1] > 4) or (
+                str(param[0]) == "Freq_ISR_Controller" and param[1] > 6000000
+            ):
+                raise AttributeError(f"Invalid {param[0]} : {param[1]}. Maximum is 4")
 
-            elif str(param[0]) == "Freq_ISR_Controller" and param[1] > 6000000:
-                print(
-                    "Invalid " + str(param[0]) + ": " + str(param[1]) + ". Maximum is 4"
-                )
+            for n in range(64):
+                try:
+                    print(str(param[0]) + "[" + str(n) + "]: " + str(param[n + 1]))
+                    print(self.set_param(str(param[0]), n, float(param[n + 1])))
+                except Exception:
+                    break
 
-            else:
-                for n in range(64):
-                    try:
-                        print(str(param[0]) + "[" + str(n) + "]: " + str(param[n + 1]))
-                        print(self.set_param(str(param[0]), n, float(param[n + 1])))
-                    except:
-                        break
-
+    # TODO: Fix siriuspy dependency
+    """
+    @staticmethod
     def get_default_ramp_waveform(
-        self, interval=500, nrpts=4000, ti=None, fi=None, forms=None
+        interval=500, nrpts=4000, ti=None, fi=None, forms=None
     ):
         from siriuspy.magnet.util import get_default_ramp_waveform
 
         return get_default_ramp_waveform(interval, nrpts, ti, fi, forms)
+    """
 
-    def save_ramp_waveform(self, ramp):
-        filename = input("Digite o nome do arquivo: ")
+    @staticmethod
+    def save_ramp_waveform(ramp: dict, filename: str):
         with open(filename + ".csv", "w", newline="") as f:
             writer = csv.writer(f, delimiter=";")
             writer.writerow(ramp)
 
-    def save_ramp_waveform_col(self, ramp):
-        filename = input("Digite o nome do arquivo: ")
+    @staticmethod
+    def save_ramp_waveform_col(ramp: dict, filename: str):
         with open(filename + ".csv", "w", newline="") as f:
             writer = csv.writer(f)
             for val in ramp:
                 writer.writerow([val])
 
-    def read_vars_fac_n(self, n=1, dt=0.5):
-        old_add = self.slave_addr
-        try:
-            for i in range(n):
-                print(
-                    "\n--- Measurement #"
-                    + str(i + 1)
-                    + " ------------------------------------------\n"
-                )
-                self.slave_addr = 1
-                self.read_vars_fac_dcdc()
-                print("\n-----------------------\n")
-                self.slave_addr = 2
-                self.read_vars_fac_acdc()
-                time.sleep(dt)
-            self.slave_addr = old_add
-        except:
-            self.slave_addr = old_add
+    def read_vars_fac_n(self):
+        raise NotImplementedError
 
     def set_buf_samples_freq(self, fs):
         self.set_param("Freq_TimeSlicer", 1, fs)
@@ -3448,7 +2255,7 @@ class BaseDRS(object):
         ki = kp * r_load / l_load
         if send_drs:
             self.set_dsp_coeffs(3, dsp_id, [kp, ki, 0.95, -0.95])
-        return [kp, ki]
+        return {"kp": kp, "ki": ki}
 
     def store_dsp_modules_bank_csv(self, bank):
         filename = input("Digite o nome do arquivo: ")
@@ -3473,13 +2280,31 @@ class BaseDRS(object):
         self.set_param("Freq_TimeSlicer", 1, freq)
         self.save_param_bank(type_memory)
 
-    @print_deprecated
     def get_dsp_modules_bank(
         self,
-        list_dsp_classes=[1, 2, 3, 4, 5, 6],
-        print_modules=True,
+        list_dsp_classes=None,
         return_floathex=False,
-    ):
+    ) -> dict:
+        """
+        Gets DSP modules parameter bank
+
+        Parameters
+        -------
+        list_dsp_classes
+            List of DSP classes to get
+        print_modules
+            Print prettified dict to terminal
+        return_floathex
+            Return hexadecimal representation of float alongside float
+
+        Returns
+        -------
+        dict
+            Dict containing DSP modules parameter bank
+        """
+        if list_dsp_classes is None:
+            list_dsp_classes = [1, 2, 3, 4, 5, 6]
+
         dsp_modules_bank = {}
         for dsp_class in list_dsp_classes:
             dsp_modules_bank[dsp_classes_names[dsp_class]] = {
@@ -3499,23 +2324,40 @@ class BaseDRS(object):
                         dsp_coeffs.append(coeff)
                         dsp_coeffs_hex += coeff_hex
                     except SerialInvalidCmd:
-                        dsp_coeffs.append("nan")
-                        dsp_coeffs_hex += b"\x00\x00\x00\x00"
+                        if return_floathex:
+                            dsp_coeffs.append("nan")
+                            dsp_coeffs_hex += b"\x00\x00\x00\x00"
+                        else:
+                            dsp_modules_bank[dsp_classes_names[dsp_class]][
+                                "coeffs"
+                            ].append(dsp_coeffs)
+
                 if return_floathex:
-                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(
-                        [dsp_coeffs, dsp_coeffs_hex]
-                    )
+                    dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append([
+                        dsp_coeffs,
+                        dsp_coeffs_hex,
+                    ])
                 else:
                     dsp_modules_bank[dsp_classes_names[dsp_class]]["coeffs"].append(
                         dsp_coeffs
                     )
 
-        if print_modules:
-            prettier_print(dsp_modules_bank)
 
         return dsp_modules_bank
 
-    def set_dsp_modules_bank(self, dsp_modules_file, save_eeprom=0):
+    def set_dsp_modules_bank(
+        self, dsp_modules_file: str, save_eeprom: bool = False
+    ) -> dict:
+        """
+        Writes DSP modules parameter bank from CSV file to memory
+
+        Parameters
+        -------
+        dsp_modules_file
+            CSV file
+        save_eeprom
+            Whether or not parameters should be saved to EEPROM as well
+        """
         dsp_coeffs = {}
         with open(dsp_modules_file, newline="") as f:
             reader = csv.reader(f)
@@ -3545,9 +2387,19 @@ class BaseDRS(object):
 
         return dsp_coeffs
 
-    def read_csv_dsp_modules_bank(self, dsp_modules_file_csv):
+    @staticmethod
+    def read_csv_dsp_modules_bank(dsp_modules_file_csv: str):
         """
-        Returns:
+        Reads CSV file containing DSP modules parameter banks
+
+        Parameters
+        -------
+        dsp_modules_file_csv
+            CSV file
+
+        Returns
+        -------
+
         dict[dsp_class_name] = {"class":int, "coeffs":[float]}
         """
         dsp_coeffs_from_csv = {}
@@ -3667,7 +2519,7 @@ class BaseDRS(object):
 
             ps_model = int(input(" Digite o numero correspondente: "))
 
-            if ps_model == 0 or ps_model == 1:
+            if ps_model in (0, 1):
 
                 crate = input(
                     "\n Digite a posicao do bastidor, de cima para baixo. Leve em conta os bastidores que ainda nao foram instalados : "
@@ -3761,7 +2613,7 @@ class BaseDRS(object):
 
         r = input("\n Tem certeza que deseja prosseguir? [Y/N]: ")
 
-        if (r != "Y") and (r != "y"):
+        if r.lower() != "y":
             print(" \n *** OPERAÇÃO CANCELADA ***\n")
             return
         self.slave_addr = add
@@ -3815,7 +2667,7 @@ class BaseDRS(object):
 
         return {
             "enable": self.read_bsmp_variable(6, "uint16_t"),
-            "type": list_sig_gen_types[int(self.read_bsmp_variable(7, "uint16_t"))],
+            "type": common.sig_gen_types[int(self.read_bsmp_variable(7, "uint16_t"))],
             "num_cycles": self.read_bsmp_variable(8, "uint16_t"),
             "index": self.read_bsmp_variable(9, "float"),
             "frequency": self.read_bsmp_variable(10, "float"),
@@ -3831,26 +2683,26 @@ class BaseDRS(object):
 
         if clear_ps:
             # CLEAR PS PARAMETERS
-            for param in list(list_parameters.keys())[:51]:
-                for n in range(list_parameters[param]["n"]):
+            for param in list(common.params.keys())[:51]:
+                for n in range(common.params[param]["n"]):
                     self.set_param(param, n, 0)
             # ARM - Defaults
-            self.set_param(list_parameters["PS_Model"]["id"], 0, 31)
-            self.set_param(list_parameters["Num_PS_Modules"]["id"], 0, 1)
-            self.set_param(list_parameters["RS485_Baudrate"]["id"], 0, 6000000)
-            self.set_param(list_parameters["RS485_Address"]["id"], 0, 1)
-            self.set_param(list_parameters["RS485_Address"]["id"], 1, 30)
-            self.set_param(list_parameters["RS485_Address"]["id"], 2, 30)
-            self.set_param(list_parameters["RS485_Address"]["id"], 3, 30)
-            self.set_param(list_parameters["RS485_Termination"]["id"], 0, 1)
-            self.set_param(list_parameters["Buzzer_Volume"]["id"], 0, 1)
+            self.set_param(common.params["PS_Model"]["id"], 0, 31)
+            self.set_param(common.params["Num_PS_Modules"]["id"], 0, 1)
+            self.set_param(common.params["RS485_Baudrate"]["id"], 0, 6000000)
+            self.set_param(common.params["RS485_Address"]["id"], 0, 1)
+            self.set_param(common.params["RS485_Address"]["id"], 1, 30)
+            self.set_param(common.params["RS485_Address"]["id"], 2, 30)
+            self.set_param(common.params["RS485_Address"]["id"], 3, 30)
+            self.set_param(common.params["RS485_Termination"]["id"], 0, 1)
+            self.set_param(common.params["Buzzer_Volume"]["id"], 0, 1)
 
         if clear_dsp:
             # CLEAR DSP PARAMETERS
             for dsp_class in [1, 2, 3, 4, 5, 6]:
                 for dsp_id in range(num_dsp_modules[dsp_class]):
-                    for dsp_coeff in range(num_coeffs_dsp_modules[dsp_class]):
-                        coeff, coeff_hex = self.set_dsp_coeffs(dsp_class, dsp_id, [0])
+                    for _ in range(num_coeffs_dsp_modules[dsp_class]):
+                        self.set_dsp_coeffs(dsp_class, dsp_id, [0])
 
         # Store values into BID
         time.sleep(0.5)
@@ -3920,7 +2772,7 @@ class BaseDRS(object):
 
         r = input("\n Tem certeza que deseja prosseguir? [Y/N]: ")
 
-        if (r != "Y") and (r != "y"):
+        if r.lower() != "y":
             print(" \n *** OPERAÇÃO CANCELADA ***\n")
             return
 
@@ -3954,10 +2806,10 @@ class BaseDRS(object):
 
         print("\n Banco de parametros da memoria onboard:\n")
 
-        max_param = list_parameters["Scope_Source"]["id"]
+        max_param = common.params["Scope_Source"]["id"]
         param_bank_onboard = []
 
-        for param in list_parameters.keys()[0:max_param]:
+        for param in common.params.keys()[0:max_param]:
             val = self.get_param(param, 0)
             print(param + ":", val)
             param_bank_onboard.append(val)
@@ -3986,7 +2838,7 @@ class BaseDRS(object):
         try:
             param_bank_offboard = []
 
-            for param in list_parameters.keys()[0:max_param]:
+            for param in common.params.keys()[0:max_param]:
                 val = self.get_param(param, 0)
                 print(param, val)
                 param_bank_offboard.append(val)
@@ -3996,7 +2848,7 @@ class BaseDRS(object):
             else:
                 print("\n Placa BID reprovada!\n")
 
-        except:
+        except Exception:
             print(" Placa BID reprovada!\n")
 
     def upload_parameters_bid(self, password):

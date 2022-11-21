@@ -1,11 +1,4 @@
-"""""" """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" """''
-======================================================================
-                    Listas de Entidades BSMP
-        A posição da entidade na lista corresponde ao seu ID BSMP
-======================================================================
-""" """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" """""" ""
-
-list_ps_models = [
+ps_models = [
     "Empty",
     "FBP",
     "FBP_DCLink",
@@ -40,7 +33,7 @@ list_ps_models = [
     "Uninitialized",
 ]
 
-list_common_vars = [
+vars = [
     "ps_status",
     "ps_setpoint",
     "ps_reference",
@@ -64,10 +57,10 @@ list_common_vars = [
     "p_wfmref_idx",
 ]
 
-# list_curv = ['wfmref','buf_samples_ctom','buf_samples_mtoc']
-list_curv = ["wfmref_data_0", "wfmref_data_1", "buf_samples_ctom"]
+# curv = ['wfmref','buf_samples_ctom','buf_samples_mtoc']
+curves = ["wfmref_data_0", "wfmref_data_1", "buf_samples_ctom"]
 
-list_func = [
+functions = [
     "turn_on",
     "turn_off",
     "open_loop",
@@ -114,7 +107,7 @@ list_func = [
     "reset_udc",
 ]
 
-list_op_mode = [
+op_modes = [
     "Off",
     "Interlock",
     "Initializing",
@@ -126,7 +119,7 @@ list_op_mode = [
     "FastRef",
 ]
 
-list_sig_gen_types = [
+sig_gen_types = [
     "Sine",
     "DampedSine",
     "Trapezoidal",
@@ -134,7 +127,20 @@ list_sig_gen_types = [
     "Square",
 ]
 
-list_parameters = {
+wfmref_sync_modes = ["SampleBySample", "SampleBySample_OneCycle", "OneShot"]
+
+versions = [
+    "udc_arm",
+    "udc_c28",
+    "hradc0_cpld",
+    "hradc1_cpld",
+    "hradc2_cpld",
+    "hradc3_cpld",
+    "iib_arm",
+    "ihm_pic",
+]
+
+params = {
     "PS_Name": {"id": 0, "n": 64},
     "PS_Model": {"id": 1, "n": 1},
     "Num_PS_Modules": {"id": 2, "n": 1},
@@ -187,16 +193,42 @@ list_parameters = {
     "Soft_Interlocks_Reset_Time": {"id": 49, "n": 32},
     "Scope_Sampling_Frequency": {"id": 50, "n": 4},
     "Scope_Source": {"id": 51, "n": 4},
-    "": {"id": 52, "n": 1},
-    "": {"id": 53, "n": 1},
-    "": {"id": 54, "n": 1},
-    "": {"id": 55, "n": 1},
-    "": {"id": 56, "n": 1},
-    "": {"id": 57, "n": 1},
-    "": {"id": 58, "n": 1},
-    "": {"id": 59, "n": 1},
-    "": {"id": 60, "n": 1},
     "": {"id": 61, "n": 1},
     "Password": {"id": 62, "n": 4},
     "Enable_Onboard_EEPROM": {"id": 63, "n": 1},
+}
+
+bsmp = {
+    "ps_status": {"addr": 0, "format": "H", "size": 2, "egu": ""},
+    "ps_setpoint": {"addr": 1, "format": "f", "size": 4, "egu": "A"},
+    "ps_reference": {"addr": 2, "format": "f", "size": 4, "egu": "A"},
+    "firmware_version": {"addr": 3, "format": "128s", "size": 128, "egu": ""},
+    "counter_set_slowref": {"addr": 4, "format": "I", "size": 4, "egu": ""},
+    "counter_sync_pulse": {"addr": 5, "format": "I", "size": 4, "egu": ""},
+    "siggen_enable": {"addr": 6, "format": "H", "size": 2, "egu": ""},
+    "siggen_type": {"addr": 7, "format": "H", "size": 2, "egu": ""},
+    "siggen_num_cycles": {"addr": 8, "format": "H", "size": 2, "egu": ""},
+    "siggen_n": {"addr": 9, "format": "f", "size": 4, "egu": ""},
+    "siggen_freq": {"addr": 10, "format": "f", "size": 4, "egu": "Hz"},
+    "siggen_amplitude": {"addr": 11, "format": "f", "size": 4, "egu": "A"},
+    "siggen_offset": {"addr": 12, "format": "f", "size": 4, "egu": "A"},
+    "siggen_aux_param_0": {"addr": 13, "format": "f", "size": 4, "egu": ""},
+    "siggen_aux_param_1": {"addr": 13, "format": "f", "size": 4, "egu": ""},
+    "siggen_aux_param_2": {"addr": 13, "format": "f", "size": 4, "egu": ""},
+    "siggen_aux_param_3": {"addr": 13, "format": "f", "size": 4, "egu": ""},
+    "wfmref_selected": {"addr": 14, "format": "H", "size": 2, "egu": ""},
+    "wfmref_sync_mode": {"addr": 15, "format": "H", "size": 2, "egu": ""},
+    "wfmref_frequency": {"addr": 16, "format": "f", "size": 4, "egu": "Hz"},
+    "wfmref_gain": {"addr": 17, "format": "f", "size": 4, "egu": "A"},
+    "wfmref_offset": {"addr": 18, "format": "f", "size": 4, "egu": "A"},
+    "p_wfmref_start_0": {"addr": 19, "format": "I", "size": 4, "egu": ""},
+    "p_wfmref_end_0": {"addr": 20, "format": "I", "size": 4, "egu": ""},
+    "p_wfmref_idx_0": {"addr": 21, "format": "I", "size": 4, "egu": ""},
+    "p_wfmref_start_1": {"addr": 22, "format": "I", "size": 4, "egu": ""},
+    "p_wfmref_end_1": {"addr": 23, "format": "I", "size": 4, "egu": ""},
+    "p_wfmref_idx_1": {"addr": 24, "format": "I", "size": 4, "egu": ""},
+    "scope_frequency": {"addr": 25, "format": "f", "size": 4, "egu": "Hz"},
+    "scope_duration": {"addr": 26, "format": "f", "size": 4, "egu": "s"},
+    "scope source_data": {"addr": 27, "format": "I", "size": 4, "egu": ""},
+    "period_sync_pulse": {"addr": 28, "format": "I", "size": 4, "egu": ""},
 }

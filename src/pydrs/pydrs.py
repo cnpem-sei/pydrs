@@ -1,3 +1,4 @@
+"""Communication overload types"""
 import re
 import socket
 import struct
@@ -6,9 +7,12 @@ import typing
 import serial
 
 from .base import BaseDRS
-from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST, ETH_RESET_CMD
-from .utils import checksum, get_logger
+from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST, ETH_RESET_CMD, ETH_CMD_WRITE, common
+from .utils import checksum, get_logger, index_to_hex
 from .validation import SerialErrPckgLen, validate
+
+
+
 
 logger = get_logger(name=__file__)
 
@@ -16,16 +20,11 @@ logger = get_logger(name=__file__)
 class SerialDRS(BaseDRS):
     """DRS communication through serial ports"""
 
-    def __init__(self, port: str = None, baud: int = 115200):
+    def __init__(self, port: str, baud: int = 115200):
         super().__init__()
         self.ser: typing.Optional[serial.Serial] = None
 
-        if port is None:
-            print(
-                "From 2.0.0 onwards, creating the object then using 'connect' to connect will be deprecated. Please use 'SerialDRS(port, baud)' instead."
-            )
-        else:
-            self.connect(port, baud)
+        self.connect(port, baud)
 
     def _transfer_write(self, msg: str):
         full_msg = (self._slave_addr + msg).encode("ISO-8859-1")
@@ -36,7 +35,7 @@ class SerialDRS(BaseDRS):
         self._transfer_write(msg)
         return self.ser.read(size)
 
-    def _reset_input_buffer(self):
+    def reset_input_buffer(self):
         self.ser.reset_input_buffer()
 
     @property
@@ -82,21 +81,23 @@ class SerialDRS(BaseDRS):
 class EthDRS(BaseDRS):
     """DRS communication through TCP/IP"""
 
-    def __init__(self, address: str = None, port: int = 5000):
+    def __init__(self, address: str, port: int = 5000):
         super().__init__()
         self._serial_timeout = 50
-        if address is None:
-            print(
-                "From 2.0.0 onwards, creating the object then using 'connect' to connect will be deprecated. Please use 'EthDRS(address, port)' instead."
-            )
-        else:
-            self.connect(address, port)
+        self.connect(address, port)
 
     def _format_message(self, msg: bytes, msg_type: bytes) -> bytes:
-        msg = msg_type + struct.Struct(">f").pack(self._serial_timeout) + msg
+        if (msg_type == ETH_CMD_WRITE):
+            if (msg[4] == common.functions.index("reset_udc")): # Do not wait for a reply
+                msg = msg_type + struct.Struct(">f").pack(0.0) + msg
+            else:
+                msg = msg_type + struct.Struct(">f").pack(self._serial_timeout) + msg
+        else:
+            msg = msg_type + struct.Struct(">f").pack(self._serial_timeout) + msg
+
         return msg[0:1] + struct.pack(">I", (len(msg) - 1)) + msg[1:]
 
-    def _reset_input_buffer(self):
+    def reset_input_buffer(self):
         self.socket.sendall(ETH_RESET_CMD)
         self.socket.recv(16)
 
@@ -104,7 +105,7 @@ class EthDRS(BaseDRS):
     def _parse_reply_size(reply: bytes) -> int:
         return struct.unpack(">I", reply[1:])[0]
 
-    def _get_reply(self, size: int = None) -> bytes:
+    def _get_reply(self, _: int = None) -> bytes:
         data_size = self._parse_reply_size(self.socket.recv(5))
         payload = b""
 
@@ -117,7 +118,7 @@ class EthDRS(BaseDRS):
             if payload[0] == ETH_ANSWER_ERR:
                 raise TimeoutError("Server timed out waiting for serial response")
         except IndexError:
-            self._reset_input_buffer()
+            self.reset_input_buffer()
             raise SerialErrPckgLen(
                 "Received empty response, check if the controller is on and connected. If you receive garbled output, try disconnecting and reconnecting."
             )
@@ -133,13 +134,13 @@ class EthDRS(BaseDRS):
 
     def _transfer_write(self, msg: str):
         base_msg = (self._slave_addr + msg).encode("ISO-8859-1")
-        full_msg = self._format_message(checksum(base_msg), ETH_CMD_REQUEST)
+        full_msg = self._format_message(checksum(base_msg), ETH_CMD_WRITE)
         self.socket.sendall(full_msg)
         try:
             self._get_reply()
             return
-        except:
-            return
+        except SerialErrPckgLen:
+            pass
 
     @property
     def timeout(self) -> float:
@@ -151,19 +152,11 @@ class EthDRS(BaseDRS):
         self.socket.settimeout(new_timeout)
 
     def is_open(self) -> bool:
-        try:
-            data = self.socket.recv(4, socket.MSG_DONTWAIT | socket.MSG_PEEK)
-            if len(data) == 0:
-                return False
-        except BlockingIOError:
-            return True
-        except ConnectionResetError:
-            return False
-        return True
+        raise NotImplementedError
 
     def connect(self, address: str = "127.0.0.1", port: int = 5000):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(2)
+        self.socket.settimeout(5)
 
         self.socket.connect((address, port))
         self.socket.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
@@ -176,5 +169,5 @@ def GenericDRS(com_or_address: str, port_or_baud: int):
     """Factory for DRS communication classes"""
     if re.match(r"(([0-9]{1,3}\.){3}[0-9]{1,3})", com_or_address):
         return EthDRS(com_or_address, port_or_baud)
-    else:
-        return SerialDRS(com_or_address, port_or_baud)
+
+    return SerialDRS(com_or_address, port_or_baud)

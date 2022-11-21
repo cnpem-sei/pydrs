@@ -1,6 +1,8 @@
 import unittest
+
 from pydrs.validation import (
     SerialErrCheckSum,
+    SerialError,
     SerialErrPckgLen,
     SerialForbidden,
     SerialInvalidCmd,
@@ -19,7 +21,7 @@ class TestValidation(unittest.TestCase):
             return x
 
         self.transfer = transfer
-        self._reset_input_buffer = lambda: ()
+        self.reset_input_buffer = lambda: ()
 
     def test_empty(self):
         with self.assertRaises(SerialErrPckgLen):
@@ -60,6 +62,10 @@ class TestValidation(unittest.TestCase):
     def test_forbidden_new_eth(self):
         with self.assertRaises(SerialForbidden):
             self.transfer(self, b"!\x05\x53\x00\x01\x04\xa3", 6)
+
+    def test_serial_error(self):
+        with self.assertRaises(SerialError):
+            self.transfer(self, b"!\x05\x53\x00\x01\x06\xa1", 6)
 
     def test_valid(self):
         self.assertEqual(

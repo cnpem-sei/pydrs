@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath("../src"))
 # -- Project information -----------------------------------------------------
 
 project = "pydrs"
-copyright = "2022, Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas"
-author = "Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas"
+copyright = "2022, Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas, Patricia Nallin"
+author = "Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas, Patricia Nallin"
 
 # The full version, including alpha/beta/rc tags
-release = "1.2.0"
+release = "2.0.1"
 
 
 # -- General configuration ---------------------------------------------------
@@ -47,7 +47,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
+html_theme = "classic"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

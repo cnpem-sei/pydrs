@@ -6,6 +6,7 @@
 *.py[cod]
 *.so
 *.spec
+*.swp
 .Python
 .code-workspace
 .coverage
@@ -33,3 +34,5 @@ var/
 wheels/
 secrets.json
 .pytest_cache
+*.xlsx
+bench.py
