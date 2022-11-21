@@ -7,9 +7,12 @@ import typing
 import serial
 
 from .base import BaseDRS
-from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST, ETH_RESET_CMD
-from .utils import checksum, get_logger
+from .consts import ETH_ANSWER_ERR, ETH_CMD_REQUEST, ETH_RESET_CMD, ETH_CMD_WRITE, common
+from .utils import checksum, get_logger, index_to_hex
 from .validation import SerialErrPckgLen, validate
+
+
+
 
 logger = get_logger(name=__file__)
 
@@ -84,7 +87,14 @@ class EthDRS(BaseDRS):
         self.connect(address, port)
 
     def _format_message(self, msg: bytes, msg_type: bytes) -> bytes:
-        msg = msg_type + struct.Struct(">f").pack(self._serial_timeout) + msg
+        if (msg_type == ETH_CMD_WRITE):
+            if (msg[4] == common.functions.index("reset_udc")): # Do not wait for a reply
+                msg = msg_type + struct.Struct(">f").pack(0.0) + msg
+            else:
+                msg = msg_type + struct.Struct(">f").pack(self._serial_timeout) + msg
+        else:
+            msg = msg_type + struct.Struct(">f").pack(self._serial_timeout) + msg
+
         return msg[0:1] + struct.pack(">I", (len(msg) - 1)) + msg[1:]
 
     def reset_input_buffer(self):
@@ -124,7 +134,7 @@ class EthDRS(BaseDRS):
 
     def _transfer_write(self, msg: str):
         base_msg = (self._slave_addr + msg).encode("ISO-8859-1")
-        full_msg = self._format_message(checksum(base_msg), ETH_CMD_REQUEST)
+        full_msg = self._format_message(checksum(base_msg), ETH_CMD_WRITE)
         self.socket.sendall(full_msg)
         try:
             self._get_reply()

@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath("../src"))
 # -- Project information -----------------------------------------------------
 
 project = "pydrs"
-copyright = "2022, Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas"
-author = "Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas"
+copyright = "2022, Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas, Patricia Nallin"
+author = "Gabriel Brunheira, Allef Araujo, Marcelo Martins, Rogério Marcondelli, Claudio Carneiro, Guilherme Freitas, Patricia Nallin"
 
 # The full version, including alpha/beta/rc tags
-release = "2.0.0"
+release = "2.0.1"
 
 
 # -- General configuration ---------------------------------------------------
