@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.0] - 2022-01-18
+### Added:
+- SWLS resonant converter PS module specification
+
+### Changed:
+- Fixed variable type for IIB interlock and alarm registers from FAC-DCDC-EMA PS module
+
+### Removed:
+- Obsolete ListVar list from consts
+
 ## [1.2.5] - 2022-08-15
 ### Added:
 - `read_csv_dsp_modules_bank`

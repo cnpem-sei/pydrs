@@ -376,8 +376,8 @@ bsmp_dcdc_ema = {
     "i_leakage_iib": {"addr": 46, "format": "f", "size": 4, "egu": "A"},
     "temp_board_iib": {"addr": 47, "format": "f", "size": 4, "egu": "°C"},
     "rh_iib": {"addr": 48, "format": "f", "size": 4, "egu": "%"},
-    "iib_interlocks": {"addr": 49, "format": "f", "size": 4, "egu": ""},
-    "iib_alarms": {"addr": 50, "format": "f", "size": 4, "egu": ""},
+    "iib_interlocks": {"addr": 49, "format": "I", "size": 4, "egu": ""},
+    "iib_alarms": {"addr": 50, "format": "I", "size": 4, "egu": ""},
     "ps_alarms": {"addr": 51, "format": "I", "size": 4, "egu": ""},
 }
 
