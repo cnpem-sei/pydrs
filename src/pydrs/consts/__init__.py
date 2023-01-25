@@ -22,7 +22,7 @@ COM_READ_VAR = "\x10\x00\x01"
 COM_REQUEST_CURVE = "\x40"
 COM_SEND_WFM_REF = "\x41"
 
-UDC_FIRMWARE_VERSION = "0.44 2022-06-30"
+UDC_FIRMWARE_VERSION = "0.44.01    08/22"
 
 ufm_offset = {
     "serial": 0,
@@ -52,55 +52,6 @@ type_size = {"uint8_t": 6, "uint16_t": 7, "uint32_t": 9, "float": 9}
 
 num_blocks_curves_fax = [16, 16, 16]
 size_curve_block = [1024, 1024, 1024]
-
-ListVar = [
-    "iLoad1",
-    "iLoad2",
-    "iMod1",
-    "iMod2",
-    "iMod3",
-    "iMod4",
-    "vLoad",
-    "vDCMod1",
-    "vDCMod2",
-    "vDCMod3",
-    "vDCMod4",
-    "vOutMod1",
-    "vOutMod2",
-    "vOutMod3",
-    "vOutMod4",
-    "temp1",
-    "temp2",
-    "temp3",
-    "temp4",
-    "ps_OnOff",
-    "ps_OpMode",
-    "ps_Remote",
-    "ps_OpenLoop",
-    "ps_SoftInterlocks",
-    "ps_HardInterlocks",
-    "iRef",
-    "wfmRef_Gain",
-    "wfmRef_Offset",
-    "sigGen_Enable",
-    "sigGen_Type",
-    "sigGen_Ncycles",
-    "sigGenPhaseStart",
-    "sigGen_PhaseEnd",
-    "sigGen_Freq",
-    "sigGen_Amplitude",
-    "sigGen_Offset",
-    "sigGen_Aux",
-    "dp_ID",
-    "dp_Class",
-    "dp_Coeffs",
-    "ps_Model",
-    "wfmRef_PtrBufferStart",
-    "wfmRef_PtrBufferEnd",
-    "wfmRef_PtrBufferK",
-    "wfmRef_SyncMode",
-]
-
 
 hradc_variant = [
     "HRADC-FBP",

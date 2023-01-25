@@ -26,6 +26,7 @@ from .consts import (
     fac,
     fap,
     fbp,
+    resonant,
     num_blocks_curves_fax,
     num_blocks_curves_fbp,
     num_coeffs_dsp_modules,
@@ -1688,8 +1689,12 @@ class BaseDRS:
                 vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "V"
                 vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "V"
         else:
-            vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "%"
-            vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "%"
+            if (vars_dict["status"]["model"] == "RESONANT_SWLS"):
+                vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "Hz"
+                vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "Hz"
+            else:
+                vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "%"
+                vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "%"
 
         vars_dict["siggen_type"] = common.sig_gen_types[int(vars_dict["siggen_type"])]
         vars_dict["wfmref_sync_mode"] = common.wfmref_sync_modes[
@@ -2191,6 +2196,22 @@ class BaseDRS:
             fac.bsmp_2p_dcdc_imas,
             fac.list_2p_dcdc_imas_soft_interlocks,
             fac.list_2p_dcdc_imas_hard_interlocks,
+        )
+
+    def read_vars_swls_resonant_converter(self) -> dict:
+        """
+        Reads SWLS resonant converter power supply variables
+
+
+        Returns
+        -------
+        dict
+            Dictionary with power supply variables
+        """
+        return self._read_vars_generic(
+            resonant.bsmp,
+            resonant.list_soft_interlocks,
+            resonant.list_hard_interlocks,
         )
 
     def check_param_bank(self, param_file: str):
