@@ -3,6 +3,8 @@
 ## [2.1.0] - 2022-01-18
 ### Added:
 - SWLS resonant converter PS module specification
+- Leakage overcurrent interlock for FAC-DCDC and FAC-DCDC-EMA
+
 
 ### Changed:
 - Fixed variable type for IIB interlock and alarm registers from FAC-DCDC-EMA PS module
