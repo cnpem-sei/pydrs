@@ -85,6 +85,7 @@ list_dcdc_hard_interlocks = [
     "IIB Interlock",
     "External Interlock",
     "Rack Interlock",
+    "Leakage_Overcurrent",
 ]
 
 list_dcdc_iib_interlocks = [
@@ -239,6 +240,7 @@ list_dcdc_ema_hard_interlocks = [
     "Load Waterflow",
     "Load Overtemperature",
     "IIB Itlk",
+    "Leakage_Overcurrent",
 ]
 
 list_dcdc_ema_iib_interlocks = [
