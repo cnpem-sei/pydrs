@@ -1,10 +1,17 @@
 # Changelog
 
-## [2.1.0] - 2022-01-18
+## [2.2.0] - 2023-02-27
+### Changed:
+- ID of BSMP variables in FAC-DCDC and FAC-DCDC-EMA 
+- ID of BSMP variables in FAP-4P and FAP-2P2S 
+
+### Removed:
+- "Ground Leakage Overcurrent" from FAC-DCDC and FAC-DCDC-EMA module alarm and interlock lists
+
+## [2.1.0] - 2023-01-18
 ### Added:
 - SWLS resonant converter PS module specification
 - Leakage overcurrent interlock for FAC-DCDC and FAC-DCDC-EMA
-
 
 ### Changed:
 - Fixed variable type for IIB interlock and alarm registers from FAC-DCDC-EMA PS module
