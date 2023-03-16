@@ -16,6 +16,8 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import mysql.connector
+from mysql.connector import Error
 
 from datetime import datetime
 
@@ -990,6 +992,105 @@ class SerialDRS(object):
                      'iin_gain': iin_gain, 'iin_offset': iin_offset,
                      'vref_p': vref_p, 'vref_n': vref_n, 'gnd': gnd}
         return boardData
+        
+    def InitHRADC_BoardData_From_BBD(self):
+        #Estabelece a conexão com o banco de dados remoto
+        connection = mysql.connector.connect(host='10.0.6.81',port='3306', database='serverdb', user='python-user', password='531_G&0uP')
+        print("Iniciando")
+        try: 
+            if connection.is_connected():#Se tem conexão
+
+                #Exibe indormações do banco de dados conectado 
+                db_Info = connection.get_server_info()
+                print("Connected to MySQL Server version ", db_Info)
+                cursor = connection.cursor()
+                cursor.execute("select database();")
+                record = cursor.fetchone()
+                print("You're connected to database: ", record)
+                mycursor = connection.cursor()
+
+                numero_serie_hradc = input("Enter numero_serie_hradc: ")#Pede o numero de série pelo teclado
+                print(numero_serie_hradc)
+
+                mycursor.execute("show COLUMNS from CalibHradc;")#Executa o comando que retorna o nome das campos em cada coluna da tabela CalibHradc
+                f = mycursor.fetchall()
+                fields = np.array(f)#Converte em um vetor
+                #Executa o comando que retorna os valores corespondente ao numero de série 
+                mycursor.execute("SELECT numero_serie_hradc, data, temperatura_hradc, ganho_vin, offset_vin, ganho_lin, offset_lin,vref_p, vref_n, gnd FROM CalibHradc WHERE numero_serie_hradc = "+numero_serie_hradc)#1043148092
+                v = mycursor.fetchall()
+                if v != []:#Se a resposta não estiver vazia
+                    print('#########################################################################################')
+                    print(v)
+                    print('#########################################################################################')
+                else:
+                    print('\n\n ###Not found values### \n\n')
+                #Executa o comando que retorna os valores corespondente ao numero de série 
+                mycursor.execute("SELECT variante, resistor_burden FROM Hradc WHERE numero_serie = "+numero_serie_hradc)#1043148092
+                v2 = mycursor.fetchall()
+                if v2 != []:#Se a resposta não estiver vazia
+                    print('#########################################################################################')
+                    print(v2)
+                    print('#########################################################################################')
+                else:
+                    print('\n\n ###Not found values### \n\n')
+        except Error as e:
+            print("Error while connecting to MySQL", e)
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+                print("MySQL connection is closed")
+        if (v != [] and v2 != []):
+            serial = v[0][0]
+            print("Serial:",serial)
+
+            variant = v2[0][0]
+            print("Variant: "+variant)
+
+            rburden = v2[0][1]
+            print("Rburden: ",rburden)
+
+            data = v[0][1]
+            print("Day: ",data.day)
+            print("Mon: ",data.month)
+            print("Year: ",data.year)
+            print("Hour: ",data.hour)
+            print("Min: ",data.minute)
+
+            calibtemp = v[0][2]
+            print("Calibtemp: ",calibtemp)
+
+            vin_gain = v[0][3]
+            print("Vin_gain: ",vin_gain)
+
+            vin_offset = v[0][4]
+            print("Vin_offset: ",vin_offset)
+
+            iin_gain = v[0][5]
+            print("iin_gain: ",iin_gain)
+
+            iin_offset = v[0][6]
+            print("iin_offset: ",iin_offset)
+
+            vref_p = v[0][7]
+            print("Vref_p: ",vref_p)
+
+            vref_n = v[0][8]
+            print("Vref_n: ",vref_n)
+
+            gnd = v[0][9]
+            print("Gnd :",gnd)
+
+            boardData = {'serial': serial, 'variant': variant, 'rburden': rburden,
+                                'tm_mday': data.day, 'tm_mon': data.month, 'tm_year': data.year,
+                                'tm_hour': data.hour, 'tm_min': data.minute, 'calibtemp': calibtemp,
+                                'vin_gain': vin_gain, 'vin_offset': vin_offset,
+                                'iin_gain': iin_gain, 'iin_offset': iin_offset,
+                                'vref_p': vref_p, 'vref_n': vref_n, 'gnd': gnd}
+        else:
+            boardData = []
+
+        return boardData
 
     def WriteHRADC_BoardData(self,hradcID,boardData):
         print('Configurando placa em UFM mode...')
@@ -1072,6 +1173,7 @@ class SerialDRS(object):
 
         print('\nEnviando vref_p...')
         ufmdata_16 = self._convertToUint16List(boardData['vref_p'],'float')
+        print(boardData['vref_p'])
         for i in range(len(ufmdata_16)):
             self.WriteHRADC_UFM(hradcID,i+ufmOffset['vref_p'],ufmdata_16[i])
             time.sleep(0.1)
@@ -1109,7 +1211,7 @@ class SerialDRS(object):
         reply_msg = self.ser.read(1+1+2+56+1)
         print(reply_msg)
         print(len(reply_msg))
-        val = struct.unpack('BBHLLHHHHHHfffffffffB',reply_msg)
+        val = struct.unpack('BBHiiHHHHHHfffffffffB',reply_msg)
         try:
             boardData = self.InitHRADC_BoardData(val[3]+val[4]*pow(2,32),val[5],
                                                 val[6],val[7],val[8],val[9],
@@ -1118,7 +1220,7 @@ class SerialDRS(object):
                                                 val[16],val[17],val[18],val[19])
         except:
             print('\n### Placa não inicializada ###\n')
-            boardData = self.InitHRADC_BoardData(serial = int(input('Digite o S/N: ')))
+            boardData = []
             print('\n')
 
         print('Colocando a placa em Sampling mode...')
@@ -1133,69 +1235,96 @@ class SerialDRS(object):
             variant = int(input("Enter HRADC variant number:\n  0: HRADC-FBP\n  1: HRADC-FAX-A\n  2: HRADC-FAX-B\n  3: HRADC-FAX-C\n  4: HRADC-FAX-D\n\n>>> "))
         variant = hradcVariant[variant]
         
-        boardData = self.ReadHRADC_BoardData(hradcID)
-        boardData['variant'] = variant
-        boardData['vin_offset'] = np.float32(0)
-        boardData['iin_offset'] = np.float32(0)
-        
-        if variant == 'HRADC-FBP':
-            boardData['rburden'] = np.float32(20)
-            boardData['vin_gain'] = np.float32(1)
-            boardData['iin_gain'] = np.float32(1)
-            print(boardData['vin_gain'])
-            print(boardData['variant'])
-        
-        elif variant == 'HRADC-FAX-A':
+        #boardData = self.ReadHRADC_BoardData(hradcID)
+        boardData = self.InitHRADC_BoardData_From_BBD()
+
+        if variant == 'HRADC-FAX-A':
+            boardData['vin_offset'] = np.float32(0)
+            boardData['iin_offset'] = np.float32(0)
             boardData['rburden'] = np.float32(0)
             boardData['vin_gain'] = np.float32(6.0/5.0)
             boardData['iin_gain'] = np.float32(6.0/5.0)
-            print(boardData['vin_gain'])
-            print(boardData['variant'])
+            
             
         elif variant == 'HRADC-FAX-B':
+            boardData['vin_offset'] = np.float32(0)
+            boardData['iin_offset'] = np.float32(0)
             boardData['rburden'] = np.float32(0)
             boardData['vin_gain'] = np.float32(1)
             boardData['iin_gain'] = np.float32(1)
-            print(boardData['vin_gain'])
-            print(boardData['variant'])
+            
 
         elif variant == 'HRADC-FAX-C':
+            boardData['vin_offset'] = np.float32(0)
+            boardData['iin_offset'] = np.float32(0)
             boardData['rburden'] = np.float32(5)
             boardData['vin_gain'] = np.float32(1)
             boardData['iin_gain'] = np.float32(1)
-            print(boardData['vin_gain'])
-            print(boardData['variant'])
+            
             
         elif variant == 'HRADC-FAX-D':
+            boardData['vin_offset'] = np.float32(0)
+            boardData['iin_offset'] = np.float32(0)
             boardData['rburden'] = np.float32(1)
             boardData['vin_gain'] = np.float32(1)
             boardData['iin_gain'] = np.float32(1)
-            print(boardData['vin_gain'])
-            print(boardData['variant'])
+            
             
         print('\n\nBoard data from HRADC of slot #' + str(hradcID) + ' is about to be overwritten by the following data:')
+        boardData_new = self.ReadHRADC_BoardData(hradcID)
+        print('\n\n')
+        print(boardData_new)
         print(boardData)
+        print('\n\n')
         
-        i = input('\n Do you want to proceed? [y/n]: ')
-        
-        if i is 'Y' or i is 'y':
-            self.ConfigHRADCOpMode(hradcID,1)
-            time.sleep(0.1)
-            self.EraseHRADC_UFM(hradcID)
-            time.sleep(0.5)
-            self.ResetHRADCBoards(1)
-            time.sleep(0.5)
-            self.ResetHRADCBoards(0)
-            time.sleep(1.5)
-            self.WriteHRADC_BoardData(hradcID,boardData)
-            boardData_new = self.ReadHRADC_BoardData(hradcID)
-            print(boardData_new)
-            print(boardData)
-            if boardData_new == boardData:
-                print('\n\n ### Operation was successful !!! ### \n\n')
-            else:
-                print('\n\n ### Operation failed !!! ### \n\n')
+        if(boardData_new != []):
+            for i in boardData:
+                if(boardData[i] != boardData_new[i]):
+                    if(type(boardData[i]) == float and type(boardData_new[i]) == float):
+                        if(abs(boardData[i]-boardData_new[i])>0.00001):
+                            print('\n\n ### Parâmetros diferentes ### \n\n')
+                            print(i+" lido no banco de dados = ",boardData[i])
+                            print(i+" lido na plac
+                            a antes do upload = ",boardData_new[i])
+                            print('\n\n')
+                    else:
+                        print('\n\n ### Parâmetros diferentes ### \n\n')
+                        print(i+" lido no banco de dados = ",boardData[i])
+                        print(i+" lido na placa antes do upload = ",boardData_new[i])
+                        print('\n\n')
+        if(boardData != []):
+            i = input('\n Do you want to proceed? [y/n]: ')
+            
+            if (i is 'Y' or i is 'y'):
+                self.ConfigHRADCOpMode(hradcID,1)
+                time.sleep(0.1)
+                self.EraseHRADC_UFM(hradcID)
+                time.sleep(0.5)
+                self.ResetHRADCBoards(1)
+                time.sleep(0.5)
+                self.ResetHRADCBoards(0)
+                time.sleep(1.5)
+                self.WriteHRADC_BoardData(hradcID,boardData)
+                boardData_new = self.ReadHRADC_BoardData(hradcID)
+                print('\n\n')
+                print(boardData_new)
+                print(boardData)
+                print('\n\n')
                 
+                for i in boardData:
+                    if(boardData[i] != boardData_new[i]):
+                        if(type(boardData[i]) == float and type(boardData_new[i]) == float):
+                            if(abs(boardData[i]-boardData_new[i])>0.00001):
+                                print('\n\n ### Parâmetros diferentes ### \n\n')
+                                print(i+" lido no banco de dados = ",boardData[i])
+                                print(i+" lido na placa apos upload = ",boardData_new[i])
+                                print('\n\n')
+                        else:
+                            print('\n\n ### Parâmetros diferentes ### \n\n')
+                            print(i+" lido no banco de dados = ",boardData[i])
+                            print(i+" lido na placa apos upload = ",boardData_new[i])
+                            print('\n\n')
+
         return [boardData, boardData_new]
     
     def GetHRADCs_BoardData(self,numHRADC):
