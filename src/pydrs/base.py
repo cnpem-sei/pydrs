@@ -2198,21 +2198,39 @@ class BaseDRS:
             fac.list_2p_dcdc_imas_hard_interlocks,
         )
 
-    def read_vars_swls_resonant_converter(self) -> dict:
+    def read_vars_swls_resonant_converter(self, iib=True) -> dict:
         """
         Reads SWLS resonant converter power supply variables
 
+        Parameters
+        -------
+        iib
+            Whether or not IIB interlocks should be parsed and returned alongside other data
 
         Returns
         -------
         dict
             Dictionary with power supply variables
         """
-        return self._read_vars_generic(
+        vars_dict = self._read_vars_generic(
             resonant.bsmp,
             resonant.list_soft_interlocks,
             resonant.list_hard_interlocks,
         )
+
+        if iib:
+            vars_dict["iib_interlocks_raw"] = vars_dict["iib_interlocks"]
+            vars_dict["iib_alarms_raw"] = vars_dict["iib_alarms"]
+
+            vars_dict["iib_interlocks"] = self.decode_interlocks(
+                vars_dict["iib_interlocks_raw"], resonant.list_iib_interlocks
+            )
+
+            vars_dict["iib_alarms"] = self.decode_interlocks(
+                vars_dict["iib_alarms_raw"], resonant.list_iib_alarms
+            )
+
+        return vars_dict
 
     def check_param_bank(self, param_file: str):
 
