@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.3.0] - 2023-05-09
+### Changed:
+- SWLS resonant converter BSMP specification, including new variables, alarms and interlocks
+
 ## [2.2.0] - 2023-02-27
 ### Changed:
 - ID of BSMP variables in FAC-DCDC and FAC-DCDC-EMA 
