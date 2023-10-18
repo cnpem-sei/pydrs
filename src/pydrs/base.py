@@ -1689,7 +1689,7 @@ class BaseDRS:
                 vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "V"
                 vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "V"
         else:
-            if (vars_dict["status"]["model"] == "RESONANT_SWLS"):
+            if (vars_dict["status"]["model"] == "SWLS_RESONANT_CONVERTER"):
                 vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "Hz"
                 vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "Hz"
             else:

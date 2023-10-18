@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.3.1] - 2023-10-18
+### Changed:
+- SWLS resonant converter name correction for reading variables 
+
 ## [2.3.0] - 2023-05-09
 ### Changed:
 - SWLS resonant converter BSMP specification, including new variables, alarms and interlocks
