@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.3.2] - 2024-02-15
+### Changed:
+- SWLS resonant converter updated PT100 sensor nomenclature 
+- Added driver channel 2 current reading for auxiliary board
+
 ## [2.3.1] - 2023-10-18
 ### Changed:
 - SWLS resonant converter name correction for reading variables 
