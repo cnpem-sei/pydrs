@@ -22,7 +22,7 @@ COM_READ_VAR = "\x10\x00\x01"
 COM_REQUEST_CURVE = "\x40"
 COM_SEND_WFM_REF = "\x41"
 
-UDC_FIRMWARE_VERSION = "0.45.00    05/23"
+UDC_FIRMWARE_VERSION = "0.46.00swls11/24"
 
 ufm_offset = {
     "serial": 0,

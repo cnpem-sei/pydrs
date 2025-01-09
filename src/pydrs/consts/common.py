@@ -15,7 +15,7 @@ ps_models = [
     "FAP_IMAS",
     "FAC_2P_ACDC_IMAS",
     "FAC_2P_DCDC_IMAS",
-    "SWLS_RESONANT_CONVERTER",
+    "SWLS_RESONANT_CONVERTER_SIRIUS",
     "Invalid",
     "Invalid",
     "Invalid",

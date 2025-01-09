@@ -26,7 +26,7 @@ from .consts import (
     fac,
     fap,
     fbp,
-    resonant,
+    resonant_sirius,
     num_blocks_curves_fax,
     num_blocks_curves_fbp,
     num_coeffs_dsp_modules,
@@ -1689,7 +1689,7 @@ class BaseDRS:
                 vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "V"
                 vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "V"
         else:
-            if (vars_dict["status"]["model"] == "SWLS_RESONANT_CONVERTER"):
+            if (vars_dict["status"]["model"] == "SWLS_RESONANT_CONVERTER_SIRIUS"):
                 vars_dict["ps_setpoint"] = vars_dict["ps_setpoint"][:-1] + "Hz"
                 vars_dict["ps_reference"] = vars_dict["ps_reference"][:-1] + "Hz"
             else:
@@ -2198,9 +2198,9 @@ class BaseDRS:
             fac.list_2p_dcdc_imas_hard_interlocks,
         )
 
-    def read_vars_swls_resonant_converter(self, iib=True) -> dict:
+    def read_vars_swls_resonant_converter_sirius(self, iib=True) -> dict:
         """
-        Reads SWLS resonant converter power supply variables
+        Reads SWLS resonant converter sirius power supply variables
 
         Parameters
         -------
@@ -2213,9 +2213,9 @@ class BaseDRS:
             Dictionary with power supply variables
         """
         vars_dict = self._read_vars_generic(
-            resonant.bsmp,
-            resonant.list_soft_interlocks,
-            resonant.list_hard_interlocks,
+            resonant_sirius.bsmp,
+            resonant_sirius.list_soft_interlocks,
+            resonant_sirius.list_hard_interlocks,
         )
 
         if iib:
@@ -2223,11 +2223,11 @@ class BaseDRS:
             vars_dict["iib_alarms_raw"] = vars_dict["iib_alarms"]
 
             vars_dict["iib_interlocks"] = self.decode_interlocks(
-                vars_dict["iib_interlocks_raw"], resonant.list_iib_interlocks
+                vars_dict["iib_interlocks_raw"], resonant_sirius.list_iib_interlocks
             )
 
             vars_dict["iib_alarms"] = self.decode_interlocks(
-                vars_dict["iib_alarms_raw"], resonant.list_iib_alarms
+                vars_dict["iib_alarms_raw"], resonant_sirius.list_iib_alarms
             )
 
         return vars_dict

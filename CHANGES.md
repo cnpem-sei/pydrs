@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.4.0] - 2024-12-11
+### Changed:
+- SWLS resonant converter PS module specification for SIRIUS 
+
 ## [2.3.2] - 2024-02-15
 ### Changed:
 - SWLS resonant converter updated PT100 sensor nomenclature 
